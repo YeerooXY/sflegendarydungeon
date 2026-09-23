@@ -139,7 +139,8 @@ std::string state_digest(const State& s) {
 }
 std::string json_string(std::string_view text) {
     std::ostringstream out; out << '"';
-    for (unsigned char ch : text) {
+    for (char value : text) {
+        const auto ch = static_cast<unsigned char>(value);
         if (ch == '"' || ch == '\\') out << '\\' << ch;
         else if (ch < 32) out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << unsigned(ch) << std::dec;
         else out << ch;

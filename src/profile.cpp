@@ -74,7 +74,7 @@ Profile Profile::load(const std::string& path) {
     const std::string raw((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     Profile p;
     std::uint64_t hash = UINT64_C(14695981039346656037);
-    for (unsigned char c : raw) { hash ^= c; hash *= UINT64_C(1099511628211); }
+    for (char c : raw) { hash ^= static_cast<unsigned char>(c); hash *= UINT64_C(1099511628211); }
     std::ostringstream hex; hex << std::hex << hash; p.fingerprint = hex.str();
     std::map<std::string, std::string> fields;
     std::istringstream input(raw);
