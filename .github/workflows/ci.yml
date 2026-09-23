@@ -1,0 +1,67 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: g++
+            executable: build/sfld
+          - os: ubuntu-latest
+            compiler: clang++
+            executable: build/sfld
+          - os: windows-latest
+            compiler: cl
+            executable: build/Release/sfld.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Exercise sweeps
+        run: ${{ matrix.executable }} compare --allow-assumptions --sweep gems --runs 1000 --threads 2 --output results/gems.json
+      - name: Record a trace
+        run: ${{ matrix.executable }} simulate --allow-assumptions --runs 1 --trace results/run.tsv --output results/run.json
+      - name: Verify trace
+        run: ${{ matrix.executable }} replay --allow-assumptions --trace results/run.tsv
+      - name: Upload executable and sample reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sfld-${{ matrix.os }}-${{ matrix.compiler }}
+          path: |
+            ${{ matrix.executable }}
+            profiles/
+            results/
+            README.md
+            LICENSE
+          retention-days: 14
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DSFLD_SANITIZERS=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Exercise spending and random transitions
+        run: build/sfld compare --allow-assumptions --sweep budgets --runs 1000 --threads 2 --rerolls 3 --output results/budgets.json

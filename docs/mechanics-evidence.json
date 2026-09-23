@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "researched_on": "2026-09-23",
+  "game_mode": "Shakes & Fidget Legendary Dungeon",
+  "purpose": "Evidence inventory, separate from runnable synthetic scenarios; insufficient for calibrated complete runs",
+  "calibrated_to_live_game": false,
+  "hp_unit": "fraction_of_maximum_dungeon_hp",
+  "sources": {
+    "official_overview": {
+      "url": "https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/57-legendary-dungeon/",
+      "kind": "publisher_documentation"
+    },
+    "official_chests": {
+      "url": "https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/283-legendary-dungeon---chests/",
+      "kind": "publisher_documentation"
+    },
+    "ld_gadget": {
+      "url": "https://ldgadget.12hp.de/",
+      "implementation_url": "https://ldgadget.12hp.de/res/scripts/main.js",
+      "served_implementation_url": "https://ldgadget.12hp.de/res/scripts/main.min.js",
+      "page_reported_modified_at": "2026-09-20 14:12",
+      "kind": "community_calculator",
+      "raw_fight_dataset_obtained": false
+    },
+    "api_research": {
+      "url": "https://github.com/DasAoD/sf-ld-research/blob/4edd63fd0f628e89e0beb0dba959231c06173767/ld_api_research.md",
+      "commit": "4edd63fd0f628e89e0beb0dba959231c06173767",
+      "repository_last_pushed_at": "2026-09-22T21:54:20Z",
+      "kind": "community_research_notes",
+      "raw_run_dataset_obtained": false
+    }
+  },
+  "documented_rules": {
+    "room_count": {"value": 100, "source": "official_overview"},
+    "boss_rooms": {"value": [25, 50, 75, 100], "source": "official_overview"},
+    "paid_step_hp": {"value": 0.2, "source": "official_overview"},
+    "paid_step_mushrooms": {
+      "value": [10, 15, 20],
+      "last_value_repeats": true,
+      "scope": "per_run",
+      "source": "official_overview",
+      "caution": "Does not specify the separate full-refill pricing schedule"
+    },
+    "diamond_of_time_traveler_barrel_curse_probability": {
+      "value": 1.0,
+      "source": "official_chests",
+      "caution": "Combined-gem precedence and curse replacement interactions require validation"
+    }
+  },
+  "community_recovery_model": {
+    "sources": ["ld_gadget", "api_research"],
+    "full_recovery_hours": 24,
+    "minimum_reentry_hp": 0.2,
+    "twenty_point_recovery_minutes_derived": 288,
+    "live_trace_validated_here": false
+  },
+  "conflicting_final_boss_damage_profiles": [
+    {
+      "source": "ld_gadget",
+      "minimum": 0.4303,
+      "maximum": 0.525,
+      "midpoint_derived": 0.47765,
+      "status": "community_calculator_bounds_not_guaranteed_live_bounds",
+      "distribution": null,
+      "sample_mean": null,
+      "sample_count": null,
+      "applicable_game_version": null
+    },
+    {
+      "source": "api_research",
+      "minimum": 0.3396,
+      "maximum": 0.5663,
+      "reported_average": 0.453,
+      "status": "conflicting_community_table",
+      "distribution": null,
+      "sample_count": null,
+      "applicable_game_version": null
+    }
+  ],
+  "required_unknowns": {
+    "joint_door_offer_distribution_by_state": null,
+    "trap_distribution_by_state": null,
+    "hidden_room_distribution_given_door_and_state": null,
+    "baseline_barrel_blessing_probability": null,
+    "barrel_effect_identity_strength_distribution": null,
+    "baseline_escape_probability": null,
+    "escape_modifier_semantics_and_caps": null,
+    "key_drop_distribution": null,
+    "damage_distribution_by_encounter_and_modifiers": null,
+    "shop_offer_and_reroll_distribution": null,
+    "gem_offer_distribution_and_current_pool": null,
+    "special_room_distributions_by_theme": null,
+    "exact_effect_tick_and_death_order": null,
+    "full_refill_price_schedule": null,
+    "ultimate_fee_scope_and_current_amount": null,
+    "target_event_deadline": null,
+    "player_availability_schedule": null
+  }
+}
