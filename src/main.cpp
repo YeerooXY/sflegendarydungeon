@@ -16,7 +16,7 @@
 using namespace sfld;
 namespace {
 void help() {
-    std::cout << R"(sfld 0.2.0 - offline Legendary Dungeon simulation research
+    std::cout << R"(sfld 0.3.0 - offline Legendary Dungeon simulation research
 
 Commands: audit, simulate, compare, replay, state-template
   --profile PATH          Explicit scenario (default profiles/synthetic.profile)
@@ -33,8 +33,10 @@ Commands: audit, simulate, compare, replay, state-template
   --revive-hp FRACTION    Recovery target, 0.2..1; bosses use a higher threshold
   --login-hours H         Return on H-hour grid during free recovery (default 0)
   --rerolls N             Maximum rerolls at each shop (default 0)
+  --shop-policy POLICY    adaptive, one-hit, one-hit-8 (default adaptive)
+  --recovery-budget N     Cap paid recovery within --budget; 0 spends only on rerolls
   --prefer-gem ID         Prioritize this gem when actually offered
-  --sweep KIND           compare: barrels, gems, budgets, revive, rerolls
+  --sweep KIND           compare: barrels, gems, budgets, revive, rerolls, shops
   --budgets N,N,...       Budget sweep (default 0,10,25,50,100)
   --max-actions N         Abort a stuck run; invalidates deadline statistics
   --output PATH          JSON report (otherwise stdout)
@@ -109,12 +111,12 @@ int main(int argc, char** argv) {
     try {
         if (argc < 2 || std::string_view(argv[1]) == "--help" || std::string_view(argv[1]) == "help") { help(); return 0; }
         const std::string command = argv[1];
-        if (command == "--version") { std::cout << "sfld 0.2.0\n"; return 0; }
+        if (command == "--version") { std::cout << "sfld " << engine_version << '\n'; return 0; }
         if (command != "audit" && command != "simulate" && command != "compare" && command != "replay" && command != "state-template")
             throw std::invalid_argument("Unknown command: " + command);
         const std::set<std::string> accepted{"--profile", "--runs", "--threads", "--seed", "--budget", "--deadline-hours",
             "--barrels", "--barrel-hp", "--revive-hp", "--login-hours", "--rerolls", "--prefer-gem", "--sweep", "--budgets",
-            "--max-actions", "--output", "--trace", "--run-number", "--state"};
+            "--max-actions", "--output", "--trace", "--run-number", "--state", "--shop-policy", "--recovery-budget"};
         std::map<std::string, std::string> args;
         bool allowed = false;
         for (int i = 2; i < argc; ++i) {
@@ -187,6 +189,11 @@ int main(int argc, char** argv) {
         policy.revive_hp = numeric<double>(get("--revive-hp", ".2"));
         policy.login_interval_hours = numeric<double>(get("--login-hours", "0"));
         policy.reroll_limit = numeric<int>(get("--rerolls", "0"));
+        policy.shop = shop_policy_from(get("--shop-policy", "adaptive"));
+        if (args.contains("--recovery-budget")) {
+            policy.recovery_budget = numeric<int>(args.at("--recovery-budget"));
+            if (policy.recovery_budget < 0) throw std::invalid_argument("--recovery-budget must be nonnegative");
+        }
         if (args.contains("--prefer-gem")) policy.preferred_gem = gem_from(args.at("--prefer-gem"));
         policy.validate();
         // Validate options even for the one-run trace path.
@@ -223,6 +230,14 @@ int main(int argc, char** argv) {
                 if (options.limits.budget == 0) throw std::invalid_argument("Reroll sweep needs a nonzero mushroom budget");
                 for (int limit : {0, 1, 3, 5}) {
                     auto p = policy; p.reroll_limit = limit; p.label = "rerolls:" + std::to_string(limit); experiments.emplace_back(p, options);
+                }
+            } else if (sweep == "shops") {
+                if (options.limits.budget == 0 || policy.reroll_limit == 0)
+                    throw std::invalid_argument("Shop-policy sweep needs a nonzero --budget and --rerolls limit");
+                auto baseline = policy; baseline.shop = ShopPolicy::adaptive; baseline.reroll_limit = 0; baseline.label = "shop:no-rerolls";
+                experiments.emplace_back(baseline, options);
+                for (auto shop : {ShopPolicy::adaptive, ShopPolicy::one_hit, ShopPolicy::one_hit_8}) {
+                    auto p = policy; p.shop = shop; p.label = "shop:" + std::string(name(shop)); experiments.emplace_back(p, options);
                 }
             } else throw std::invalid_argument("Unknown sweep: " + sweep);
         }

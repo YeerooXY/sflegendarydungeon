@@ -14,6 +14,16 @@
       "url": "https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/283-legendary-dungeon---chests/",
       "kind": "publisher_documentation"
     },
+    "official_golden_rooms": {
+      "url": "https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/284-legendary-dungeons---golden-rooms/",
+      "kind": "publisher_documentation"
+    },
+    "maintainer_2026_09_23": {
+      "kind": "player_report_in_project_conversation",
+      "raw_trace_obtained": false,
+      "sample_count": null,
+      "game_version": null
+    },
     "ld_gadget": {
       "url": "https://ldgadget.12hp.de/",
       "implementation_url": "https://ldgadget.12hp.de/res/scripts/main.js",
@@ -45,6 +55,27 @@
       "value": 1.0,
       "source": "official_chests",
       "caution": "Combined-gem precedence and curse replacement interactions require validation"
+    },
+    "cleansing_fountain_clears_curses": {
+      "value": true,
+      "source": "official_golden_rooms",
+      "caution": "This is a separate variant; its spawn probability is unknown"
+    }
+  },
+  "adopted_player_observations": {
+    "key_moment_two_key_probability": {
+      "value": 0.70,
+      "sources": ["maintainer_2026_09_23", "ld_gadget"],
+      "status": "tooltip_report_corroborates_community_table_not_a_sample_estimate"
+    },
+    "blessing_shop_offer_count": {"value": 2, "source": "maintainer_2026_09_23"},
+    "blessing_shop_identities_are_distinct": {"value": true, "source": "maintainer_2026_09_23"},
+    "blessing_shop_purchase_ends_visit": {"value": true, "source": "maintainer_2026_09_23"},
+    "blessing_shop_strong_probability_estimate": {
+      "value": 0.50,
+      "source": "maintainer_2026_09_23",
+      "status": "rough_player_estimate_no_sample_count",
+      "caution": "Independent strength rolls and equal identity weights remain simulator assumptions; does not establish barrel odds"
     }
   },
   "community_recovery_model": {
@@ -91,6 +122,7 @@
     "gem_offer_distribution_and_current_pool": null,
     "special_room_distributions_by_theme": null,
     "exact_effect_tick_and_death_order": null,
+    "floor_and_theme_specific_combat_curse_mapping": null,
     "full_refill_price_schedule": null,
     "ultimate_fee_scope_and_current_amount": null,
     "target_event_deadline": null,

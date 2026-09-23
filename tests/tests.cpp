@@ -439,15 +439,219 @@ void final_boss_forecast_reports_only_remaining_time() {
     CHECK(result.complete); CHECK(result.actions == 1); near(result.hours, 2.0 / 3600);
     CHECK(result.mushrooms == 0); CHECK(result.deaths == 0);
 }
-void legacy_fresh_run_traces_still_replay() {
+void old_engine_traces_require_their_original_version() {
     auto p = profile(); Policy policy; std::ostringstream output;
     run_one(p, policy, 12, {}, &output);
     auto text = output.str();
-    text.replace(0, std::string("#sfld-trace-v2\t0.2.0").size(), "#sfld-trace-v1");
+    const auto current = text;
+    text.replace(0, std::string("#sfld-trace-v2\t0.3.0").size(), "#sfld-trace-v1");
     const auto start = text.find("#start\tfresh\t0\n#actions\n"); CHECK(start != std::string::npos);
     text.erase(start, std::string("#start\tfresh\t0\n#actions\n").size());
     Temp file; { std::ofstream out(file.path); out << text; }
-    CHECK(replay(p, file.path.string()) > 100);
+    rejects([&] { replay(p, file.path.string()); });
+    text = current; text.replace(text.find("0.3.0"), 5, "0.2.0");
+    { std::ofstream out(file.path); out << text; }
+    rejects([&] { replay(p, file.path.string()); });
+}
+void fountain_variants_and_narrator_have_distinct_effects() {
+    auto p = fixed_damage(); p.blessing_weights = {0,1,0,0,0,0,0,0}; p.strong_effect = 1;
+    auto s = encounter(Encounter::fountain, 30); s.hp = .3;
+    s.curses.give(effect_template(EffectKind::poison, false));
+    s.curses.give(effect_template(EffectKind::broken_armor, false));
+    s.blessings.give(effect_template(EffectKind::lockpick, false));
+    Game plain(p, 3, s); plain.step({ActionKind::interact});
+    near(plain.state().hp, .5); CHECK(plain.state().curses.size == 2);
+    s.encounter = Encounter::cleansing_fountain;
+    Game clean(p, 3, s); clean.step({ActionKind::interact});
+    near(clean.state().hp, .55); CHECK(clean.state().curses.size == 0);
+    CHECK(clean.state().effect(EffectKind::lockpick)->remaining == 2);
+    s.encounter = Encounter::narrator;
+    Game narrator(p, 3, s); narrator.step({ActionKind::interact});
+    near(narrator.state().hp, .5); CHECK(narrator.state().curses.size == 2);
+    CHECK(narrator.state().effect(EffectKind::one_hit)->remaining == 8);
+    s.curses.clear(); Game skip(p, 3, s); skip.step({ActionKind::skip});
+    near(skip.state().hp, .3); CHECK(!skip.state().effect(EffectKind::one_hit));
+}
+void eight_room_one_hit_expires_and_still_awards_keys() {
+    auto p = fixed_damage(); p.key_chance = 1; p.door_weights.fill(0); p.door_weights[ix(Door::monster)] = 1;
+    p.trap_chance = 0;
+    auto s = encounter(Encounter::empty, 10); s.phase = Phase::shop; s.hp = .25; s.keys = 4;
+    s.offers[0] = {effect_template(EffectKind::one_hit, true), 4};
+    Game game(p, 5, s); game.step({ActionKind::buy, 0});
+    CHECK(game.state().keys == 0); CHECK(game.state().shop_purchases == 1);
+    CHECK(game.state().strong_one_hit_purchases == 1); CHECK(game.state().effect(EffectKind::one_hit)->remaining == 8);
+    for (int i = 0; i < 8; ++i) {
+        game.step({ActionKind::choose_door, 0}); game.step({ActionKind::fight}); near(game.state().hp, .25);
+    }
+    CHECK(game.state().keys == 8); CHECK(!game.state().effect(EffectKind::one_hit));
+    game.step({ActionKind::choose_door, 0}); game.step({ActionKind::fight}); near(game.state().hp, .05);
+}
+void key_moment_rolls_two_keys_at_seventy_percent() {
+    auto p = fixed_damage(0); p.key_chance = 0;
+    auto s = encounter(); s.blessings.give(effect_template(EffectKind::key_moment, true));
+    near(s.blessings.slots[0].magnitude, .7);
+    int successes = 0;
+    for (std::uint64_t seed = 0; seed < 10000; ++seed) {
+        Game game(p, seed, s); game.step({ActionKind::fight});
+        CHECK(game.state().keys == 0 || game.state().keys == 2);
+        successes += game.state().keys == 2 ? 1 : 0;
+        CHECK(game.state().effect(EffectKind::key_moment)->remaining == 7);
+    }
+    CHECK(successes > 6700 && successes < 7300);
+    p.escape_chance = 1;
+    Game flee(p, 2, s); flee.step({ActionKind::flee});
+    CHECK(flee.state().keys == 0); CHECK(flee.state().effect(EffectKind::key_moment)->remaining == 8);
+}
+void gold_curse_reduces_chest_rewards_and_combines_with_raider() {
+    auto p = fixed_damage(); p.container_weights = {0,0,1,0};
+    for (auto e : {Encounter::crate, Encounter::silver, Encounter::bronze, Encounter::sarcophagus}) {
+        auto s = encounter(e, 30);
+        s.curses.give(effect_template(EffectKind::gold_hangover, false));
+        Game cursed(p, 4, s); cursed.step({ActionKind::interact}); near(cursed.state().gold_units, .5);
+        CHECK(cursed.state().gold_rewards == 1);
+        s.blessings.give(effect_template(EffectKind::raider, false));
+        Game both(p, 4, s); both.step({ActionKind::interact}); near(both.state().gold_units, 1);
+        s.curses.clear(); Game blessed(p, 4, s); blessed.step({ActionKind::interact}); near(blessed.state().gold_units, 2);
+    }
+}
+void generated_shop_offers_are_distinct_with_independent_strengths() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::empty, 30); s.phase = Phase::doors;
+    s.doors = {{{Door::shop}, {Door::wall}}};
+    int strong = 0, both_strong = 0, both_weak = 0;
+    for (std::uint64_t seed = 0; seed < 2000; ++seed) {
+        Game game(p, seed, s); game.step({ActionKind::choose_door, 0});
+        const auto& offers = game.state().offers;
+        CHECK(offers[0].effect.kind != offers[1].effect.kind);
+        int count = 0;
+        for (const auto& o : offers) {
+            const auto weak = effect_template(o.effect.kind, false);
+            count += o.effect.remaining > weak.remaining || o.effect.magnitude > weak.magnitude ? 1 : 0;
+        }
+        strong += count; both_strong += count == 2 ? 1 : 0; both_weak += count == 0 ? 1 : 0;
+    }
+    CHECK(strong > 1800 && strong < 2200); CHECK(both_strong > 300); CHECK(both_weak > 300);
+    p.shop_blessing_weights = {0,1,0,0,0,0,0,0}; rejects([&] { p.validate(); });
+}
+void rerolls_do_not_tick_effects_or_spend_keys_and_buy_ends_shop() {
+    auto p = fixed_damage(); p.shop_blessing_weights = {0,1,0,0,0,0,1,0}; p.shop_strong_effect = 1;
+    auto s = encounter(Encounter::empty, 30); s.phase = Phase::shop; s.keys = 4; s.hp = .4;
+    s.blessings.give(effect_template(EffectKind::recovery, false));
+    s.curses.give(effect_template(EffectKind::poison, false));
+    Game game(p, 8, s, {2});
+    for (int i = 0; i < 2; ++i) {
+        game.step({ActionKind::reroll}); near(game.state().hp, .4); CHECK(game.state().room == 30);
+        CHECK(game.state().turn == 29); CHECK(game.state().keys == 4);
+        CHECK(game.state().effect(EffectKind::poison)->remaining == 5);
+        CHECK(game.state().effect(EffectKind::recovery)->remaining == 3);
+    }
+    CHECK(game.state().mushrooms == 2); CHECK(game.state().reroll_mushrooms == 2);
+    CHECK(!game.legal({ActionKind::reroll}));
+    const int slot = game.state().offers[0].effect.kind == EffectKind::one_hit ? 0 : 1;
+    game.step({ActionKind::buy, slot}); CHECK(game.state().room == 31); CHECK(game.state().keys == 0);
+    CHECK(!game.legal({ActionKind::buy, 1 - slot})); CHECK(!game.legal({ActionKind::reroll}));
+    CHECK(game.state().effect(EffectKind::one_hit)->remaining == 8); near(game.state().hp, .45);
+}
+void targeted_rerolls_reject_weak_one_hit_and_stop_at_strong() {
+    auto p = fixed_damage(); p.shop_blessing_weights = {0,1,0,0,0,0,1,0}; p.shop_strong_effect = 1;
+    auto s = encounter(Encounter::empty, 30); s.phase = Phase::shop; s.hp = .3; s.keys = 4;
+    s.offers = {{{effect_template(EffectKind::one_hit, false), 2}, {effect_template(EffectKind::elixir, true), 3}}};
+    Policy policy; policy.shop = ShopPolicy::one_hit_8; policy.reroll_limit = 5;
+    Game game(p, 19, s, {10}); CHECK(policy.choose(game).kind == ActionKind::reroll);
+    game.step(policy.choose(game)); const auto buy = policy.choose(game); CHECK(buy.kind == ActionKind::buy);
+    CHECK(game.state().offers[static_cast<std::size_t>(buy.index)].effect.kind == EffectKind::one_hit);
+    game.step(buy); CHECK(game.state().strong_one_hit_purchases == 1); CHECK(game.state().mushrooms == 1);
+    CHECK(game.state().effect(EffectKind::one_hit)->remaining == 8);
+    policy.shop = ShopPolicy::one_hit;
+    Game either(p, 19, s, {10}); const auto weak = policy.choose(either); CHECK(weak.kind == ActionKind::buy && weak.index == 0);
+}
+void targeted_rerolls_stop_when_capped_unaffordable_or_unavailable() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::empty, 30); s.phase = Phase::shop; s.keys = 4; s.hp = .3;
+    s.offers = {{{effect_template(EffectKind::one_hit, false), 2}, {effect_template(EffectKind::elixir, true), 3}}};
+    Policy policy; policy.shop = ShopPolicy::one_hit_8; policy.reroll_limit = 2;
+    Game no_budget(p, 5, s); CHECK(policy.choose(no_budget).kind == ActionKind::buy);
+    s.shop_rerolls = 2; Game capped(p, 5, s, {10}); CHECK(policy.choose(capped).kind == ActionKind::buy);
+    s.shop_rerolls = 0; s.keys = 3; Game poor(p, 5, s, {10}); CHECK(policy.choose(poor).kind == ActionKind::buy);
+    s.keys = 4; p.shop_strong_effect = 0; Game impossible(p, 5, s, {10}); CHECK(policy.choose(impossible).kind == ActionKind::buy);
+    p.shop_strong_effect = .5; s.blessings.give(effect_template(EffectKind::one_hit, true));
+    Game covered(p, 5, s, {10}); CHECK(policy.choose(covered).kind != ActionKind::reroll);
+    s.blessings.clear(); s.room = 99; s.turn = 98; Game last(p, 5, s, {10}); CHECK(policy.choose(last).kind != ActionKind::reroll);
+    s.room = 30; s.turn = 29; s.keys = 0;
+    for (auto shop : {ShopPolicy::adaptive, ShopPolicy::one_hit, ShopPolicy::one_hit_8}) {
+        policy.shop = shop; Game no_keys(p, 5, s, {10}); CHECK(policy.choose(no_keys).kind == ActionKind::skip);
+    }
+}
+void shop_policy_accounts_for_losing_oldest_blessing() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::empty, 30); s.phase = Phase::shop; s.keys = 4;
+    s.blessings.give(effect_template(EffectKind::one_hit, true));
+    s.blessings.give(effect_template(EffectKind::disarm, true));
+    s.blessings.give(effect_template(EffectKind::lockpick, true));
+    s.offers = {{{effect_template(EffectKind::escape, false), 3}, {effect_template(EffectKind::raider, false), 1}}};
+    Game game(p, 1, s); Policy policy; CHECK(policy.choose(game).kind == ActionKind::skip);
+}
+void recovery_budget_can_reserve_mushrooms_for_rerolls() {
+    auto p = fixed_damage(); auto s = encounter(); s.phase = Phase::recovery; s.hp = 0;
+    Policy policy; policy.recovery_budget = 0; policy.revive_hp = 1;
+    Game free(p, 1, s, {50}); CHECK(policy.choose(free).kind == ActionKind::wait);
+    policy.recovery_budget = 10; Game capped(p, 1, s, {50});
+    CHECK(policy.choose(capped).kind == ActionKind::heal_step); capped.step(policy.choose(capped));
+    CHECK(policy.choose(capped).kind == ActionKind::wait); CHECK(capped.state().mushrooms == 10);
+}
+void lantern_zombie_and_flying_tube_have_half_damage() {
+    auto p = fixed_damage();
+    for (auto e : {Encounter::undead, Encounter::tube, Encounter::beta}) {
+        auto s = encounter(e, 30); Game game(p, 1, s); game.step({ActionKind::fight}); near(game.state().hp, .9);
+        CHECK(game.state().lucky_coins == (e == Encounter::tube ? 10 : 0));
+        p.escape_chance = 1; Game flee(p, 1, s); flee.step({ActionKind::flee});
+        near(flee.state().hp, 1); CHECK(flee.state().lucky_coins == 0);
+    }
+}
+void pig_can_be_skipped_and_does_not_heal_a_lethal_fight() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::pig, 30); s.hp = .3;
+    Game skip(p, 1, s); Policy policy; CHECK(policy.choose(skip).kind == ActionKind::skip);
+    skip.step(policy.choose(skip)); near(skip.state().hp, .3);
+    Game lethal(p, 1, s); lethal.step({ActionKind::fight}); CHECK(lethal.state().phase == Phase::recovery);
+    near(lethal.state().hp, 0);
+    s.hp = .5; Game win(p, 1, s); win.step({ActionKind::fight}); near(win.state().hp, .7);
+}
+void armory_requires_eligible_equipment_and_generates_only_at_90_to_98() {
+    auto p = fixed_damage(); p.armory_legendary_chance = 1;
+    auto s = encounter(Encounter::armory, 90);
+    Game ineligible(p, 1, s); ineligible.step({ActionKind::interact}); CHECK(ineligible.state().legendaries == 0); CHECK(ineligible.state().epics == 1);
+    p.armory_bonus_eligible = true;
+    Game eligible(p, 1, s); eligible.step({ActionKind::interact}); CHECK(eligible.state().legendaries == 1);
+    p.golden_weights.fill(0); p.golden_weights[ix(Encounter::armory)] = 1;
+    s.phase = Phase::doors; s.doors = {{{Door::golden}, {Door::wall}}};
+    for (int room : {89,90,98,99}) {
+        s.room = room; s.turn = room - 1; Game game(p, 2, s); game.step({ActionKind::choose_door, 0});
+        CHECK(game.state().encounter == (room >= 90 && room <= 98 ? Encounter::armory : Encounter::empty));
+    }
+}
+void auction_item_is_not_automatically_epic() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::auction, 30);
+    p.auction_epic_chance = 0; Game ordinary(p, 2, s); ordinary.step({ActionKind::interact}); CHECK(ordinary.state().epics == 0);
+    p.auction_epic_chance = 1; Game epic(p, 2, s); epic.step({ActionKind::interact}); CHECK(epic.state().epics == 1);
+}
+void duration_gems_extend_acquired_effects_and_death_clears_them() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::empty, 30); s.phase = Phase::shop; s.keys = 4;
+    s.gems[ix(Gem::time_traveler)] = true; s.gems[ix(Gem::moonstone)] = true;
+    s.offers[0] = {effect_template(EffectKind::one_hit, true), 4};
+    Game blessing(p, 1, s); blessing.step({ActionKind::buy, 0});
+    CHECK(blessing.state().effect(EffectKind::one_hit)->remaining == 9);
+    s.phase = Phase::curse_shop; s.offers[0] = {effect_template(EffectKind::poison, true), 2};
+    Game curse(p, 1, s); curse.step({ActionKind::buy, 0});
+    CHECK(curse.state().effect(EffectKind::poison)->remaining == 11); CHECK(curse.state().keys == 6);
+    auto next = curse.state(); next.phase = Phase::encounter; next.encounter = Encounter::monster; next.hp = .1;
+    next.blessings.give(effect_template(EffectKind::lockpick, true));
+    Game death(p, 2, next); death.step({ActionKind::fight});
+    CHECK(death.state().curses.size == 0 && death.state().blessings.size == 0);
+    CHECK(death.state().has(Gem::time_traveler) && death.state().has(Gem::moonstone));
+}
+void one_hit_does_not_prevent_trap_or_poison_damage() {
+    auto p = fixed_damage(); auto s = encounter(Encounter::monster, 30); s.phase = Phase::doors;
+    s.doors = {{{Door::monster, true}, {Door::wall}}};
+    s.blessings.give(effect_template(EffectKind::one_hit, true)); s.curses.give(effect_template(EffectKind::poison, false));
+    Game game(p, 2, s); game.step({ActionKind::choose_door, 0}); near(game.state().hp, .9);
+    game.step({ActionKind::fight}); near(game.state().hp, .85);
 }
 }
 int main() {
@@ -472,7 +676,15 @@ int main() {
         TEST(run_specific_gem_pools_select_the_configured_choices), TEST(progress_can_continue_an_active_trial),
         TEST(progress_rejects_inconsistent_and_misspelled_states), TEST(progress_round_trips_without_hp_or_effect_rounding),
         TEST(progress_forecasts_and_traces_are_reproducible), TEST(final_boss_forecast_reports_only_remaining_time),
-        TEST(legacy_fresh_run_traces_still_replay)
+        TEST(old_engine_traces_require_their_original_version),
+        TEST(fountain_variants_and_narrator_have_distinct_effects), TEST(eight_room_one_hit_expires_and_still_awards_keys),
+        TEST(key_moment_rolls_two_keys_at_seventy_percent), TEST(gold_curse_reduces_chest_rewards_and_combines_with_raider),
+        TEST(generated_shop_offers_are_distinct_with_independent_strengths), TEST(rerolls_do_not_tick_effects_or_spend_keys_and_buy_ends_shop),
+        TEST(targeted_rerolls_reject_weak_one_hit_and_stop_at_strong), TEST(targeted_rerolls_stop_when_capped_unaffordable_or_unavailable),
+        TEST(shop_policy_accounts_for_losing_oldest_blessing), TEST(recovery_budget_can_reserve_mushrooms_for_rerolls),
+        TEST(lantern_zombie_and_flying_tube_have_half_damage), TEST(pig_can_be_skipped_and_does_not_heal_a_lethal_fight),
+        TEST(armory_requires_eligible_equipment_and_generates_only_at_90_to_98), TEST(auction_item_is_not_automatically_epic),
+        TEST(duration_gems_extend_acquired_effects_and_death_clears_them), TEST(one_hit_does_not_prevent_trap_or_poison_damage)
 #undef TEST
     };
     int failed = 0;

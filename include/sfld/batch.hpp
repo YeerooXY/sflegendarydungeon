@@ -15,6 +15,12 @@ struct Result {
     int room = 0;
     int barrels_opened = 0;
     int barrels_skipped = 0;
+    double gold_units = 0;
+    int lucky_coins = 0;
+    int epics = 0;
+    int legendaries = 0;
+    int shop_purchases = 0;
+    int strong_one_hit_purchases = 0;
     std::uint64_t actions = 0;
     std::array<bool, ix(Gem::count)> gems{};
 };

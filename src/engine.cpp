@@ -115,6 +115,10 @@ void Game::step(Action a) {
         finish_room(); break;
     case ActionKind::buy: {
         const auto offer = state_.offers[static_cast<std::size_t>(a.index)];
+        if (state_.phase == Phase::shop) {
+            ++state_.shop_purchases;
+            if (offer.effect.kind == EffectKind::one_hit && offer.effect.remaining >= 8) ++state_.strong_one_hit_purchases;
+        }
         state_.keys += (state_.phase == Phase::curse_shop ? offer.keys : -offer.keys);
         give(offer.effect); finish_room(); break;
     }
@@ -185,14 +189,18 @@ void Game::ensure_open_path() {
 }
 void Game::generate_shop(bool curses) {
     state_.phase = curses ? Phase::curse_shop : Phase::shop;
-    for (auto& offer : state_.offers) {
-        offer.effect = random_effect(curses, Stream::shop);
-        const bool strong = offer.effect.kind == EffectKind::elixir ? offer.effect.magnitude > .25 :
-            (offer.effect.kind == EffectKind::recovery ? offer.effect.magnitude > .1 :
-            offer.effect.remaining > (offer.effect.kind == EffectKind::lockpick ? 2 :
-            ((offer.effect.kind == EffectKind::escape || offer.effect.kind == EffectKind::raider ||
-                offer.effect.kind == EffectKind::poison || offer.effect.kind == EffectKind::clumsy ||
-                offer.effect.kind == EffectKind::gold_hangover) ? 5 : 4)));
+    // Player-observed: two different effect identities, with separate strengths.
+    // Weighted sampling without replacement and independent strength rolls are
+    // explicit distribution assumptions, not measured server probabilities.
+    auto blessing_weights = profile_.shop_blessing_weights;
+    auto curse_weights = profile_.shop_curse_weights;
+    for (std::size_t i = 0; i < state_.offers.size(); ++i) {
+        auto& offer = state_.offers[i];
+        const auto kind = curses ? random_.weighted(Stream::shop, curse_weights.data(), curse_weights.size()) :
+            random_.weighted(Stream::shop, blessing_weights.data(), blessing_weights.size());
+        if (curses) curse_weights[kind] = 0; else blessing_weights[kind] = 0;
+        const bool strong = random_.chance(Stream::shop, profile_.shop_strong_effect);
+        offer.effect = effect_template(static_cast<EffectKind>(kind + (curses ? 8 : 0)), strong);
         if (curses) {
             constexpr int prices[] = {1, 1, 2, 1, 2};
             offer.keys = prices[ix(offer.effect.kind) - ix(EffectKind::broken_armor)] * (strong ? 2 : 1);
@@ -232,7 +240,12 @@ void Game::enter(DoorView door) {
         if (state_.has(Gem::kidney) && random_.chance(Stream::contents, .2)) state_.encounter = Encounter::cursed_chest;
         if (state_.has(Gem::deceit) && random_.chance(Stream::contents, profile_.hidden_monster_chance)) state_.encounter = Encounter::monster;
         break;
-    case Door::golden: state_.encounter = sample(profile_.golden_weights); break;
+    case Door::golden: {
+        auto weights = profile_.golden_weights;
+        if (state_.room < 90 || state_.room > 98) weights[ix(Encounter::armory)] = 0;
+        state_.encounter = std::accumulate(weights.begin(), weights.end(), 0.0) > 0 ? sample(weights) : Encounter::empty;
+        break;
+    }
     case Door::shop: state_.encounter = Encounter::empty; generate_shop(false); break;
     case Door::cursed: state_.encounter = Encounter::cursed_chest; give(random_effect(true), true); break;
     case Door::sacrifice: state_.encounter = Encounter::sacrifice_chest; break;
@@ -288,8 +301,15 @@ double Game::flee_probability() const {
 }
 double Game::damage_ceiling(bool boss) const {
     if (boss) return profile_.boss_damage[band(state_.room)].high;
-    return std::max(profile_.monster_damage[band(state_.room)].high * battle_multiplier(false),
-        profile_.escape_damage[band(state_.room)].high * battle_multiplier(true));
+    double fight = profile_.monster_damage[band(state_.room)].high;
+    double escape = profile_.escape_damage[band(state_.room)].high;
+    if (state_.encounter == Encounter::undead || state_.encounter == Encounter::tube || state_.encounter == Encounter::beta) {
+        fight *= .5; escape *= .5;
+    }
+    if (state_.encounter == Encounter::shakes) fight = escape = .3;
+    if (state_.encounter == Encounter::valaraukar) fight = escape = .6;
+    if (state_.encounter == Encounter::pig) fight = escape = .4;
+    return std::max(fight * battle_multiplier(false), escape * battle_multiplier(true));
 }
 void Game::award_keys() {
     if (const auto* e = state_.effect(EffectKind::key_moment)) {
@@ -327,6 +347,7 @@ void Game::fight(bool fleeing) {
             award_keys();
             if (encounter == Encounter::mimic) ++state_.epics;
             if (encounter == Encounter::pig) heal(.6);
+            if (encounter == Encounter::tube) state_.lucky_coins += 10;
             if (encounter == Encounter::shakes) give(random_effect(false));
             if (encounter == Encounter::valaraukar) give({EffectKind::recovery, .1, 3, Clock::room});
             if (state_.has(Gem::kidney) && random_.chance(Stream::effects, .1)) give(random_effect(false));
@@ -377,9 +398,12 @@ void Game::finish_room() {
     if (lethal_tick) die();
 }
 Effect Game::random_effect(bool curse, Stream stream) {
-    std::size_t kind = curse ? random_.weighted(stream, profile_.curse_weights.data(), 5) + 8 :
-        random_.weighted(stream, profile_.blessing_weights.data(), 8);
-    const double strong_chance = profile_.strong_effect + ((curse && state_.has(Gem::explorer)) ? .2 : 0) +
+    const auto& curses = profile_.curse_weights;
+    const auto& blessings = profile_.blessing_weights;
+    const std::size_t kind = curse ? random_.weighted(stream, curses.data(), curses.size()) + 8 :
+        random_.weighted(stream, blessings.data(), blessings.size());
+    const double strong_chance = profile_.strong_effect +
+        ((curse && state_.has(Gem::explorer)) ? .2 : 0) +
         ((!curse && state_.encounter == Encounter::barrel && state_.has(Gem::thirsty)) ? .4 : 0);
     const bool strong = random_.chance(stream, strong_chance);
     return effect_template(static_cast<EffectKind>(kind), strong);
@@ -403,8 +427,17 @@ void Game::random_reward() {
     weights[0] = 0;
     if (std::accumulate(weights.begin(), weights.end(), 0.0) == 0) return;
     const auto outcome = random_.weighted(Stream::contents, weights.data(), weights.size());
-    if (outcome == 2) state_.gold_rewards += state_.effect(EffectKind::raider) ? 2 : 1;
+    if (outcome == 2) award_gold(true);
     // Ordinary items are deliberately not valued in the completion objective.
+}
+void Game::award_gold(bool chest) {
+    double units = 1;
+    if (chest) {
+        if (const auto* e = state_.effect(EffectKind::raider)) units *= 1 + e->magnitude;
+        if (const auto* e = state_.effect(EffectKind::gold_hangover)) units *= 1 - e->magnitude;
+    }
+    ++state_.gold_rewards;
+    state_.gold_units += units;
 }
 void Game::interact(int choice) {
     const auto encounter = state_.encounter;
@@ -418,8 +451,12 @@ void Game::interact(int choice) {
     case Encounter::skeleton:
         if (random_.chance(Stream::contents, profile_.skeleton_wakes)) { state_.encounter = Encounter::monster; return; }
         random_reward(); break;
-    case Encounter::epic: case Encounter::locker: case Encounter::armory:
+    case Encounter::epic: case Encounter::locker:
         if (!state_.has(Gem::hero) || random_.chance(Stream::contents, .75)) ++state_.epics;
+        break;
+    case Encounter::armory:
+        if (profile_.armory_bonus_eligible && random_.chance(Stream::contents, profile_.armory_legendary_chance)) ++state_.legendaries;
+        else ++state_.epics;
         break;
     case Encounter::cursed_chest: give(random_effect(true)); ++state_.resources[0]; break;
     case Encounter::sacrifice_chest:
@@ -434,7 +471,7 @@ void Game::interact(int choice) {
     case Encounter::prize:
         if (state_.pending_trial_reward >= 4 && random_.chance(Stream::contents, profile_.trial_legendary_chance)) ++state_.legendaries;
         else if (state_.pending_trial_reward >= 2) ++state_.epics;
-        else ++state_.gold_rewards;
+        else award_gold(true);
         state_.pending_trial_reward = 0; break;
     case Encounter::fountain: heal(.25); break;
     case Encounter::cleansing_fountain: state_.curses.clear(); heal(.25); break;
@@ -454,8 +491,11 @@ void Game::interact(int choice) {
         if (outcome == 2) { if (hurt(.1)) return; give(random_effect(true)); }
         break;
     }
-    case Encounter::sewers: case Encounter::auction: ++state_.epics; break;
-    case Encounter::sarcophagus: ++state_.gold_rewards; break;
+    case Encounter::sewers: ++state_.epics; break;
+    case Encounter::auction:
+        if (random_.chance(Stream::contents, profile_.auction_epic_chance)) ++state_.epics;
+        break;
+    case Encounter::sarcophagus: award_gold(true); break;
     case Encounter::locked_sarcophagus:
         state_.keys -= door_cost(Door::locked); state_.blessings.consume(Clock::door, state_.turn); ++state_.epics; break;
     case Encounter::wheel: {
@@ -464,7 +504,7 @@ void Game::interact(int choice) {
         if (outcome == 1) give(random_effect(true));
         if (outcome == 2) ++state_.keys;
         if (outcome == 3) state_.keys = std::max(0, state_.keys - 1);
-        if (outcome == 4) ++state_.gold_rewards;
+        if (outcome == 4) award_gold(false);
         break;
     }
     case Encounter::spider_legs: case Encounter::spider_head: case Encounter::spider_full: {

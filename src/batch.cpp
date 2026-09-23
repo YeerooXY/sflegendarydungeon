@@ -16,7 +16,7 @@ Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed,
     if (start) limits.run_number = start->state.run_number;
     Game game = start ? Game(profile, seed, *start, limits) : Game(profile, seed, limits);
     if (trace) {
-        *trace << "#sfld-trace-v2\t0.2.0\t" << seed << '\t' << profile.fingerprint << '\t' << limits.budget
+        *trace << "#sfld-trace-v2\t" << engine_version << '\t' << seed << '\t' << profile.fingerprint << '\t' << limits.budget
             << '\t' << std::setprecision(17) << limits.deadline_hours << '\t' << limits.max_actions << '\t' << limits.run_number << '\n';
         const auto input = start ? start->encode() : std::string{};
         *trace << "#start\t" << (start ? start->fingerprint() : "fresh") << '\t' << std::count(input.begin(), input.end(), '\n')
@@ -42,6 +42,8 @@ Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed,
     r.active_hours = s.active_hours; r.mushrooms = s.mushrooms; r.recovery_mushrooms = s.recovery_mushrooms;
     r.reroll_mushrooms = s.reroll_mushrooms; r.deaths = s.deaths; r.room = s.room;
     r.barrels_opened = s.barrels_opened; r.barrels_skipped = s.barrels_skipped; r.actions = s.actions; r.gems = s.gems;
+    r.gold_units = s.gold_units; r.lucky_coins = s.lucky_coins; r.epics = s.epics; r.legendaries = s.legendaries;
+    r.shop_purchases = s.shop_purchases; r.strong_one_hit_purchases = s.strong_one_hit_purchases;
     return r;
 }
 std::vector<Result> run_batch(const Profile& profile, const Policy& policy, const BatchOptions& options) {
@@ -100,6 +102,7 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
     std::vector<double> finished;
     double sum_hours = 0, sum_active = 0, spend = 0, recovery_spend = 0, reroll_spend = 0, deaths = 0;
     double opened = 0, skipped = 0;
+    double gold_units = 0, lucky_coins = 0, epics = 0, legendaries = 0, purchases = 0, strong_one_hits = 0;
     std::uint64_t actions = 0;
     std::size_t capped = 0;
     std::array<std::size_t, ix(Gem::count)> picked{};
@@ -108,6 +111,8 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
         sum_hours += r.hours; sum_active += r.active_hours; spend += r.mushrooms;
         recovery_spend += r.recovery_mushrooms; reroll_spend += r.reroll_mushrooms;
         deaths += r.deaths; opened += r.barrels_opened; skipped += r.barrels_skipped; actions += r.actions;
+        gold_units += r.gold_units; lucky_coins += r.lucky_coins; epics += r.epics; legendaries += r.legendaries;
+        purchases += r.shop_purchases; strong_one_hits += r.strong_one_hit_purchases;
         capped += r.action_limit ? 1 : 0;
         for (std::size_t i = 0; i < picked.size(); ++i)
             picked[i] += r.gems[i] && !(options.start && options.start->state.gems[i]) ? 1 : 0;
@@ -126,7 +131,7 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
     for (double h : finished) squared += (h - mean) * (h - mean);
     const double se = finished.size() > 1 ? std::sqrt(squared / (successes - 1) / successes) : 0;
     std::ostringstream out; out << std::setprecision(17);
-    out << "{\n  \"schema_version\": 2,\n  \"engine_version\": \"0.2.0\",\n  \"profile\": " << json_string(profile.id)
+    out << "{\n  \"schema_version\": 2,\n  \"engine_version\": " << json_string(engine_version) << ",\n  \"profile\": " << json_string(profile.id)
         << ",\n  \"profile_fingerprint\": " << json_string(profile.fingerprint)
         << ",\n  \"evidence\": \"synthetic\",\n  \"calibrated_to_live_game\": false,\n"
         << "  \"interpretation\": \"Conditional on the supplied assumptions; intervals measure Monte Carlo sampling error only.\",\n"
@@ -148,6 +153,10 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
         << ",\n  \"policy\": " << json_string(policy.label) << ",\n  \"barrels\": " << json_string(name(policy.barrels))
         << ",\n  \"barrel_hp_threshold\": " << policy.barrel_hp << ",\n  \"revive_hp\": " << policy.revive_hp
         << ",\n  \"login_interval_hours\": " << policy.login_interval_hours << ",\n  \"reroll_limit\": " << policy.reroll_limit
+        << ",\n  \"shop_policy\": " << json_string(name(policy.shop))
+        << ",\n  \"paid_recovery_budget\": " << (policy.recovery_budget < 0 ? "null" : std::to_string(policy.recovery_budget))
+        << ",\n  \"shop_strong_effect_probability\": " << profile.shop_strong_effect
+        << ",\n  \"shop_offer_model\": \"distinct identities; weighted without replacement; independent strength draws\""
         << ",\n  \"preferred_gem\": " << (policy.preferred_gem ? json_string(name(*policy.preferred_gem)) : "null")
         << ",\n  \"seed\": " << options.seed << ",\n  \"runs\": " << results.size()
         << ",\n  \"run_number_within_event\": " << run_number
@@ -170,6 +179,11 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
         << ",\n  \"mean_recovery_mushrooms\": " << recovery_spend / n << ",\n  \"mean_reroll_mushrooms\": " << reroll_spend / n
         << ",\n  \"mean_deaths\": " << deaths / n << ",\n  \"mean_barrels_opened\": " << opened / n
         << ",\n  \"mean_barrels_skipped\": " << skipped / n << ",\n  \"total_actions\": " << actions
+        << ",\n  \"mean_shop_purchases\": " << purchases / n
+        << ",\n  \"mean_strong_one_hit_purchases\": " << strong_one_hits / n
+        << ",\n  \"mean_gold_reward_units\": " << gold_units / n
+        << ",\n  \"mean_lucky_coins\": " << lucky_coins / n
+        << ",\n  \"mean_epics\": " << epics / n << ",\n  \"mean_legendaries\": " << legendaries / n
         << ",\n  \"gem_pick_counts\": {";
     for (std::size_t i = 0; i < picked.size(); ++i) {
         if (i) out << ',';
@@ -187,9 +201,10 @@ std::size_t replay(const Profile& profile, const std::string& path) {
     std::uint64_t seed = 0; Limits limits;
     if (!(header >> magic) || (magic != "#sfld-trace-v1" && magic != "#sfld-trace-v2"))
         throw std::invalid_argument("Invalid trace header");
+    if (magic == "#sfld-trace-v1") throw std::invalid_argument("Legacy trace: replay with engine 0.2.0; mechanics changed in 0.3.0");
     if (magic == "#sfld-trace-v2") {
         std::string version;
-        if (!(header >> version) || version != "0.2.0") throw std::invalid_argument("Trace engine version does not match");
+        if (!(header >> version) || version != engine_version) throw std::invalid_argument("Trace engine version does not match; use the version recorded in its header");
     }
     if (!(header >> seed >> fingerprint >> limits.budget >> limits.deadline_hours >> limits.max_actions >> limits.run_number))
         throw std::invalid_argument("Invalid trace limits");

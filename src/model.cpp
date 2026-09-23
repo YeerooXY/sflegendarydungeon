@@ -53,7 +53,8 @@ bool is_enemy(Encounter e) {
     }
 }
 bool is_optional(Encounter e) {
-    return e == Encounter::mimic || (!is_enemy(e) && e != Encounter::lava && e != Encounter::rocks && e != Encounter::wood);
+    return e == Encounter::mimic || e == Encounter::pig ||
+        (!is_enemy(e) && e != Encounter::lava && e != Encounter::rocks && e != Encounter::wood);
 }
 Effect effect_template(EffectKind k, bool strong) {
     const int twice = strong ? 2 : 1;
@@ -155,6 +156,8 @@ std::string state_digest(const State& s) {
         s.deaths, s.paid_steps, s.mushrooms, s.recovery_mushrooms, s.reroll_mushrooms,
         s.shop_rerolls, s.epics, s.legendaries, s.gold_rewards, s.barrels_opened, s.barrels_skipped})
         add(static_cast<std::uint64_t>(n));
+    real(s.gold_units); add(static_cast<std::uint64_t>(s.lucky_coins));
+    add(static_cast<std::uint64_t>(s.shop_purchases)); add(static_cast<std::uint64_t>(s.strong_one_hit_purchases));
     add(s.actions); real(s.elapsed_hours); real(s.active_hours);
     std::ostringstream out; out << std::hex << h; return out.str();
 }

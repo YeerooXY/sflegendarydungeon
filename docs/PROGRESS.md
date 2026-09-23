@@ -137,6 +137,11 @@ offers=elixir:strong:1:3,one_hit:weak:4:2
 
 That is a strong elixir for three keys, or four rooms of One Hit for two keys.
 Use zero when an offer is free. Recorded offers stay fixed; rerolls are sampled.
+Generated blessing-shop offers have different effect identities and separate
+weak/strong rolls. The shipped 50/50 strength chance is a player estimate.
+For hunting an eight-room One Hit Wonder from your current shop, use
+`--shop-policy one-hit-8 --rerolls 10 --budget 10 --recovery-budget 0`.
+See [SHOPS.md](SHOPS.md) and [the reroll example](../examples/reroll-shop.state).
 `offers=unknown` samples the initial offers as well.
 
 ### Doors, walls and stones

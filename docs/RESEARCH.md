@@ -37,6 +37,24 @@ Other issues to resolve before treating a simulator as calibrated:
 - Prices and progression of the full-refill option compared with repeated 20-point purchases.
 - First-run exceptions versus later runs.
 
+### Maintainer observations, 2026-09-23
+
+The project maintainer reports that Key Moment's game text says **70% for two
+keys**. This corroborates LD Gadget; the conflicting 50% comment quoted by the
+API notes is not used. This is a player report, not a captured tooltip or a
+frequency measurement.
+
+They also report **two distinct blessing identities** in the Key Master's shop,
+potentially different strengths, and **one purchase per visit**. Their impression
+is a 50/50 weak/strong split. Version 0.3 enforces distinct identities and adopts
+0.50 as an explicitly estimated shop-strength probability. It does not change
+barrel strength/outcome probabilities. Equal identity weights, independent
+strength rolls and the same model for curse shops remain assumptions.
+
+The reported fountain cleansing agrees with the officially documented special
+variant; both fountain variants were already modeled. This observation alone
+does not establish how often the cleansing variant appears.
+
 The research notes themselves flag unresolved details. The linked upstream bot PR returned HTTP 404 during this check, so its implementation was not independently verified.
 
 ## What the available strategy advice supports

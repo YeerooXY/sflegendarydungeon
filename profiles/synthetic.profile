@@ -25,6 +25,16 @@ trap_chance=0.10
 cursed_trap_chance=0.05
 barrel_blessing=0.50
 strong_effect=0.25
+# Shop offers have DISTINCT identities. Frequencies below remain hypothetical.
+shop_blessings=1,1,1,1,1,1,1,1
+shop_curses=1,1,1,1,1
+# Player estimate on 2026-09-23, not an observed sample proportion.
+shop_strong_effect=0.50
+# Account has two weapons or weapon + shield, per LD Gadget's Armory rule.
+armory_bonus_eligible=false
+armory_legendary_chance=0.10
+# Placeholder: the auction promises an item, only sometimes epic.
+auction_epic_chance=0.50
 escape_chance=0.50
 key_chance=0.50
 combat_curse_chance=0.10

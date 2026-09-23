@@ -1,8 +1,10 @@
-# Model v0.2
+# Model v0.3
 
 This document describes the implemented engine. It is not a claim that all of
 these transitions match the server. Sources were inspected on 2026-09-23; the
 research links and disagreements are recorded in [RESEARCH.md](RESEARCH.md).
+The [mechanics audit](MECHANICS.md) maps effects and golden-room variants to
+their implementation, evidence and remaining gaps.
 
 ## Evidence boundary
 
@@ -101,6 +103,8 @@ Ordinary key drops use the profile rate plus Lodestone +0.30 and Spying -0.15.
 Key Moment replaces that with two keys at probability 0.70. A survived normal
 fight after floor one can add a curse at the profile rate, plus 0.10 with
 Misadventurer. Special enemies use simplified damage/reward rules (see below).
+The 70% tooltip was also reported by the project maintainer on 2026-09-23;
+the 50% value in another project's comments is not used.
 
 ## Effects and timing
 
@@ -128,13 +132,18 @@ effect categories while preserving gems, keys, resources and progress.
 | Broken Armor | +0.50 combat damage multiplier; 4 rooms | 8 rooms |
 | Poison | Lose 0.05 max HP; 5 rooms | 10 rooms |
 | Clumsy | -0.80 escape probability; 5 rooms | 10 rooms |
-| Gold Hangover | Stored but not applied to valued currency; 5 rooms | 10 rooms |
+| Gold Hangover | Chest gold reward units halved; 5 rooms | 10 rooms |
 | Hard Lock | Double key cost; 4 rooms | 8 rooms |
 
 The default strong-effect probability is 0.25. Explorer adds 0.20 for curses;
 Thirsty adds 0.40 for barrel blessings. Time Traveler adds one charge/room to all
 lasting blessings; Moonstone adds one to all lasting curses. Extending non-room
 counters this way is a convention requiring confirmation.
+Shops have separate strength odds (0.50 in the shipped scenario); barrel odds
+are not inferred from the maintainer's shop observations. Chest gold is recorded
+as relative units: Raider multiplies by 2, Gold Hangover by 0.5. Multiplicative
+stacking is provisional. Gold reward event count is separate from these units;
+neither is a real account gold balance.
 
 ## Gems and generation assumptions
 
@@ -182,9 +191,18 @@ strength from effect tables. Crates, silver and bronze containers share one
 synthetic reward mixture. Skeletons wake at a configured chance, otherwise use
 that mixture. Mimics are optional fights. Curse shops exchange a curse for keys;
 blessing shops exchange keys for an effect. One purchase completes the room.
-Rerolling costs one mushroom and replaces both offers independently. Offer
-strengths, independence, key prices and all-in-one purchase semantics need replay
-validation. Blessing weak key costs are 1,2,3,2,1,1,1,1 in profile effect order;
+Rerolling costs one mushroom and replaces both offers without advancing the
+room, consuming an effect charge, triggering poison/recovery, or spending keys.
+The maintainer reports that blessing-shop offers always have different effect
+identities, can have different strengths, and only one can be bought. Identities
+are now sampled without replacement from `shop_blessings`; separate independent
+strength draws use `shop_strong_effect`. Its default 0.50 is the maintainer's
+estimate, not a measured frequency. `shop_curses` uses the same distinct-offer
+model provisionally; the observation specifically described the blessing shop.
+Missing shop weight tables fall back to the corresponding general effect table;
+each shop table requires at least two positive weights. Slot order and outcome
+independence still need observed data. Blessing weak key costs are
+1,2,3,2,1,1,1,1 in profile effect order;
 strong costs double, except strong elixir/recovery cost 3. Curse weak rewards are
 1,1,2,1,2; strong rewards double.
 
@@ -199,11 +217,13 @@ Special encounters use explicit placeholders where exact rules are missing:
 | Flooded | A single action taking at least 10 seconds kills; faster action exits |
 | Wishing well | Equal chance blessing or epic, with no modeled gold payment |
 | Rock/paper/scissors | Uniform opponent; win blessing, loss 0.10 HP plus curse, draw exits |
-| Sewers, auction, armory, locker | Simplified epic reward, no inventory/auction economy |
+| Sewers, locker | Epic reward, no inventory economy |
+| Auction | Item, with configurable epic chance (0.50 is a placeholder); ordinary items are not valued |
+| Armory | Generates only in rooms 90-98; epic or eligible legendary, see below |
 | Sarcophagus | Abstract gold; locked version spends a key for an epic |
 | Wheel | Equal blessing, curse, key gain, key loss or gold |
 | Spider legs/head/full | Key reward 1/2/5 at probability 0.80/0.50/0.20; otherwise poison |
-| Undead, tube, beta | Half ordinary base damage |
+| Undead, tube, beta | Half ordinary base damage; tube victory also awards 10 lucky coins |
 | Shakes, Valaraukar, pig | Base damage 0.30/0.60/0.40; survived fights give blessing/recovery/heal |
 | Rainbow | Lose 0.20 HP and gain a blessing |
 
@@ -211,10 +231,18 @@ Theme encounters outside the default golden table still have callable transition
 but are not all present in default runs. This catalog is coverage for experimentation,
 not faithful implementation of every live sub-choice, cost or reward.
 
-In particular, Flying Tube lucky coins and the Armory's class-dependent legendary
-reward are not modeled. Generic and theme-specific golden encounter types have
-transitions, but several costs, reward quantities, theme restrictions and outcome
-probabilities remain simplified. Catalog coverage is not complete game fidelity.
+`armory_bonus_eligible=true` selects the community-described two-weapon or
+weapon-and-shield equipment condition. The provisional legendary probability
+is `armory_legendary_chance=0.10`. This implementation replaces the epic with a
+legendary on success; the precise reward transaction still needs validation.
+Generation masks Armory outside rooms 90-98. A custom golden table containing
+only Armory yields an empty room outside that range. Explicitly entered
+encounters are preserved. The generic table contains no theme-exclusive rooms;
+custom golden weights or entered encounters can exercise their transitions.
+Pig rooms allow a free skip. A lethal pig fight grants no healing, and the
+baseline skips it when the modeled damage ceiling is at least current HP.
+Several costs, reward quantities, theme restrictions and outcome probabilities
+remain simplified. Catalog coverage is not complete game fidelity.
 
 Trials can start once, after floor one and early enough in a floor to avoid a boss.
 The synthetic generator allows them through room 18 of later floors. Victories
@@ -248,13 +276,27 @@ boss), then buys affordable recovery or waits. It compares full-refill cost with
 the necessary 20-point steps. It does not reserve a globally optimal amount for
 future shops, decide optimally between partial waiting and buying, or optimize
 the last minutes before a deadline.
+`--recovery-budget N` caps additional paid recovery within the shared mushroom
+budget. With `--recovery-budget 0`, all spending is on shop rerolls and recovery
+is natural. Omitting it leaves recovery limited only by the shared budget.
 
 ## Policy and reporting limits
 
 The supplied policy uses fixed door scores, early-floor key farming and mostly
-escaping afterward. It values shop effects by rough saved-HP weights, only
-rerolling when no current offer has positive heuristic value. It does not account
-fully for eviction of another effect or future key value. Barrel policies are
+escaping afterward. The `adaptive` shop policy values effects by rough saved-HP
+weights and only rerolls when no current offer has positive net value. It now
+subtracts the estimated value of an effect displaced from a full set of slots.
+Room-effect valuation excludes boss rooms, where those effects do not help.
+`one-hit` searches for either One Hit Wonder strength; `one-hit-8` searches for
+an offer with at least eight rooms. Both can pass up other useful blessings.
+They stop at an affordable useful target, the per-shop reroll limit, or the
+shared budget. They also avoid rerolling for a target that the profile cannot
+generate, that the player cannot afford, or that existing One Hit already
+covers. At the stopping limit they buy the best currently useful offer or leave.
+These are bounded heuristics, not an optimal stopping solution; future key
+value, offer correlations and health risk still need better models.
+`compare --sweep shops` compares no rerolls with adaptive, one-hit and one-hit-8
+at a common reroll cap. Barrel policies are
 skip, always open, low-HP except Time Traveler, and adaptive (also avoid replacing
 One Hit; favor Gambler at HP below 0.80). These are reproducible baselines, not a
 dynamic-programming solution.
@@ -272,9 +314,13 @@ completion-probability and restricted-mean statistics and exits the CLI with cod
 Profile fingerprints are FNV-1a over raw bytes (including comments and line endings),
 for reproducibility rather than cryptographic security. Traces verify recorded
 actions against the same simulator; they are not an observation importer. Version
-2 traces include the starting snapshot and engine version; version 1 fresh-run
-traces remain readable. Reports identify the measurement origin and starting
+2 traces include the starting snapshot and engine version. The 0.3 mechanics
+and state-digest changes require replaying older traces with their original
+engine (0.2.0 also reads version-1 traces). Reports identify the measurement origin and starting
 snapshot. Gem-pick counts include new picks only, excluding initially held gems.
+Reports also include shop purchases, eight-room One Hit purchases, separate
+recovery/reroll spend, relative gold units, lucky coins, epics and legendaries.
+Reward totals are provisional; they are not a live-game loot forecast.
 
 There is no current calibrated damage distribution, empirical spawn model,
 whole-event multi-run model, Ultimate mode, reward-value optimizer, graphical

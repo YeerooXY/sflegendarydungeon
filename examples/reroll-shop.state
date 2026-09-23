@@ -1,0 +1,15 @@
+# Current shop: a weak One Hit Wonder and a strong Elixir of Life.
+# Compare buying now with paying for new offers. Replace with your own values.
+schema=1
+room=42
+run_number=2
+phase=shop
+hp_percent=40
+keys=4
+gems=rabbit
+blessings=none
+curses=none
+offers=one_hit:weak:4:2,elixir:strong:1:3
+shop_rerolls=0
+paid_heals=0
+resources=0,0,0,0,0,0

@@ -93,3 +93,32 @@ execute_process(COMMAND "${SFLD}" replay --profile "${profile}" --allow-assumpti
 if(NOT status EQUAL 0)
   message(FATAL_ERROR "Progress replay should not need its original input file: ${details}")
 endif()
+
+execute_process(COMMAND "${SFLD}" compare --profile "${profile}" --allow-assumptions
+  --state "${SOURCE_DIR}/examples/shop.state" --sweep shops --budget 10 --recovery-budget 0 --rerolls 5
+  --runs 32 --threads 2 --output "${WORK_DIR}/shop-comparison.json"
+  RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Shop-policy comparison failed: ${details}")
+endif()
+file(READ "${WORK_DIR}/shop-comparison.json" report)
+string(JSON count LENGTH "${report}" experiments)
+string(JSON target GET "${report}" experiments 3 shop_policy)
+if(NOT count EQUAL 4 OR NOT target STREQUAL "one-hit-8")
+  message(FATAL_ERROR "Missing no-reroll baseline or target shop strategies")
+endif()
+foreach(index RANGE 0 3)
+  string(JSON healing GET "${report}" experiments ${index} mean_recovery_mushrooms)
+  string(JSON spend GET "${report}" experiments ${index} mean_mushrooms_per_started_run)
+  string(JSON strength GET "${report}" experiments ${index} shop_strong_effect_probability)
+  if(NOT healing EQUAL 0 OR spend GREATER 10 OR NOT strength EQUAL 0.5)
+    message(FATAL_ERROR "Shop comparison violated budget, recovery cap or strength assumptions")
+  endif()
+endforeach()
+foreach(option IN ITEMS --shop-policy --recovery-budget)
+  execute_process(COMMAND "${SFLD}" simulate --profile "${profile}" --allow-assumptions
+    --runs 1 ${option} invalid RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+  if(NOT status EQUAL 1)
+    message(FATAL_ERROR "CLI accepted invalid ${option}")
+  endif()
+endforeach()

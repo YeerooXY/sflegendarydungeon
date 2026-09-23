@@ -193,7 +193,8 @@ void StartState::validate(const Profile& profile) const {
     // Historical result counters are intentionally not part of this input format.
     if (s.elapsed_hours != 0 || s.active_hours != 0 || s.actions != 0 || s.mushrooms != 0 || s.recovery_mushrooms != 0 ||
         s.reroll_mushrooms != 0 || s.deaths != 0 || s.barrels_opened != 0 || s.barrels_skipped != 0 ||
-        s.epics != 0 || s.legendaries != 0 || s.gold_rewards != 0)
+        s.epics != 0 || s.legendaries != 0 || s.gold_rewards != 0 || s.gold_units != 0 || s.lucky_coins != 0 ||
+        s.shop_purchases != 0 || s.strong_one_hit_purchases != 0)
         throw std::invalid_argument("Progress result counters must start at zero; budgets and time are measured from now");
     for (int resource : s.resources) if (resource < 0 || resource > 1000000) throw std::invalid_argument("Invalid resource balance");
     const auto count = std::count(s.gems.begin(), s.gems.end(), true);

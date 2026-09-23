@@ -7,6 +7,7 @@
 #include <vector>
 
 namespace sfld {
+inline constexpr std::string_view engine_version = "0.3.0";
 enum class Phase { doors, encounter, shop, curse_shop, gems, recovery, complete };
 enum class Door { monster, mystery, locked, double_locked, unlocked, epic, golden,
     shop, cursed, sacrifice, blessing, destiny, wood, stone, souls, metal, arcane,
@@ -90,9 +91,13 @@ struct State {
     int recovery_mushrooms = 0;
     int reroll_mushrooms = 0;
     int shop_rerolls = 0;
+    int shop_purchases = 0;
+    int strong_one_hit_purchases = 0;
     int epics = 0;
     int legendaries = 0;
     int gold_rewards = 0;
+    double gold_units = 0; // Relative reward units, not account gold.
+    int lucky_coins = 0;
     int barrels_opened = 0;
     int barrels_skipped = 0;
     std::uint64_t actions = 0;
@@ -138,6 +143,13 @@ struct Profile {
     double trial_legendary_chance = 0;
     int initial_resources = 10;
     bool free_first_level_shops = true;
+    // Unknown shop distributions are independently configurable from barrels.
+    std::array<double, 8> shop_blessing_weights{};
+    std::array<double, 5> shop_curse_weights{};
+    double shop_strong_effect = .50;
+    bool armory_bonus_eligible = false;
+    double armory_legendary_chance = .10;
+    double auction_epic_chance = .50;
     static Profile load(const std::string&);
     void validate() const;
 };

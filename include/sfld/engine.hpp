@@ -39,6 +39,7 @@ private:
     Effect random_effect(bool curse, Stream = Stream::effects);
     void random_reward();
     void award_keys();
+    void award_gold(bool chest);
     double battle_multiplier(bool fleeing) const;
     double flee_probability() const;
 };

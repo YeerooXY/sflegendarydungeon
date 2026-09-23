@@ -4,7 +4,7 @@ An independent C++20 research simulator for Shakes & Fidget's Legendary Dungeon.
 Compare gem preferences, barrel decisions, shop rerolls, recovery thresholds and
 mushroom budgets using reproducible Monte Carlo experiments.
 
-**Version 0.2 is an experimental model, not a validated reconstruction of the live
+**Version 0.3 is an experimental model, not a validated reconstruction of the live
 game.** Public documentation describes many rules, but does not supply the joint
 door distribution, complete outcome probabilities or raw validation runs. The
 included scenario fills those gaps with explicit assumptions. Its results must
@@ -25,12 +25,15 @@ Shakes & Fidget belongs to its respective owners; this project is unaffiliated.
   thread counts on the same build.
 - JSON summaries, completion-probability intervals, deadline-aware time metrics
   and deterministic action traces with replay verification.
-- Five policy sweeps: barrels, gems, budgets, revival thresholds and reroll limits.
+- Six policy sweeps: barrels, gems, budgets, revival thresholds, reroll limits
+  and shop strategies, including hunting for eight-room One Hit Wonder.
 - Forecasts from entered progress, including observed doors, walls, shop/gem
   offers, recovery, active effects and previous healing purchases.
 
 Many numerical rules and some special-room transitions remain approximations.
 Read [the model and limitations](docs/MODEL.md) before interpreting output.
+The [mechanics audit](docs/MECHANICS.md) lists every modeled blessing, curse and
+golden-room variant, including what remains uncertain or simplified.
 
 ## Build
 
@@ -106,6 +109,20 @@ Recovery and reroll spending are reported separately. The
 attempts. It is a cohort ratio, not the expected expense of an unlimited retry
 strategy, and it excludes Ultimate entry fees. The shipped recovery policy is a
 baseline heuristic; these sweeps are not a proof of global optimality.
+
+To compare reroll strategies while healing only through waiting:
+
+```sh
+build/sfld compare --allow-assumptions --sweep shops --rerolls 10 --budget 30 --recovery-budget 0 --deadline-hours 72 --runs 100000 --output results/shop-strategies.json
+build/sfld simulate --state examples/reroll-shop.state --allow-assumptions --shop-policy one-hit-8 --rerolls 10 --budget 10 --recovery-budget 0 --runs 100000 --output results/hunt-one-hit.json
+```
+
+Each shop offers two different blessings. Weak/strong chances are configurable;
+the shipped 50/50 strength split is a player estimate. `one-hit-8` can reject a
+four-room version while searching for an eight-room one. It stops at the cap or
+budget, then buys the best useful current offer or leaves. Four keys are normally
+needed for the strong version; first-run first-floor freebies are supported.
+The [shop guide](docs/SHOPS.md) explains these choices and their assumptions.
 
 ## Inspect a run
 

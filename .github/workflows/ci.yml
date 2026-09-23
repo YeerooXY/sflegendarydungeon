@@ -39,6 +39,8 @@ jobs:
         run: ${{ matrix.executable }} compare --allow-assumptions --sweep gems --runs 1000 --threads 2 --output results/gems.json
       - name: Forecast from observed progress
         run: ${{ matrix.executable }} compare --allow-assumptions --state examples/gem-choice.state --sweep gems --runs 1000 --threads 2 --output results/progress-gems.json
+      - name: Compare targeted shop rerolls
+        run: ${{ matrix.executable }} compare --allow-assumptions --state examples/reroll-shop.state --sweep shops --rerolls 10 --budget 30 --recovery-budget 0 --runs 1000 --threads 2 --output results/shop-strategies.json
       - name: Record a trace
         run: ${{ matrix.executable }} simulate --allow-assumptions --runs 1 --trace results/run.tsv --output results/run.json
       - name: Verify trace
@@ -69,3 +71,5 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Exercise spending and random transitions
         run: build/sfld compare --allow-assumptions --state examples/progress.state --sweep budgets --runs 1000 --threads 2 --rerolls 3 --output results/budgets.json
+      - name: Exercise targeted shop rerolls
+        run: build/sfld compare --allow-assumptions --state examples/reroll-shop.state --sweep shops --rerolls 10 --budget 30 --recovery-budget 0 --runs 1000 --threads 2 --output results/shops.json
