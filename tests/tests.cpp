@@ -196,7 +196,9 @@ void only_offered_gems_can_be_selected() {
     CHECK(action.index == 0); game.step(action); CHECK(game.state().has(Gem::greasy)); CHECK(!game.state().has(Gem::rabbit));
 }
 void free_shops_are_first_run_only() {
-    auto p = fixed_damage(); auto s = encounter(); s.phase = Phase::doors; s.room = 5;
+    auto p = fixed_damage(); Limits later_limits; later_limits.run_number = 2;
+    Game from_limits(p, 1, later_limits); CHECK(from_limits.state().run_number == 2);
+    auto s = encounter(); s.phase = Phase::doors; s.room = 5;
     s.doors = {{{Door::shop}, {Door::wall}}};
     Game first(p, 1, s); first.step({ActionKind::choose_door, 0}); CHECK(first.state().offers[0].keys == 0);
     s.run_number = 2;

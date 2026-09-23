@@ -17,11 +17,10 @@ void check_limits(Limits limits) {
         throw std::invalid_argument("Invalid run limits");
 }
 }
-Game::Game(const Profile& profile, std::uint64_t seed, Limits limits, int run_number)
+Game::Game(const Profile& profile, std::uint64_t seed, Limits limits)
     : profile_(profile), random_(seed), limits_(limits) {
     check_limits(limits);
-    if (run_number < 1) throw std::invalid_argument("Run number must be positive");
-    state_.run_number = run_number;
+    state_.run_number = limits.run_number;
     state_.resources.fill(profile.initial_resources);
     generate_doors();
 }

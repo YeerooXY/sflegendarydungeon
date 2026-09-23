@@ -13,7 +13,7 @@
 
 namespace sfld {
 Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed, Limits limits, std::ostream* trace) {
-    Game game(profile, seed, limits, limits.run_number);
+    Game game(profile, seed, limits);
     if (trace) *trace << "#sfld-trace-v1\t" << seed << '\t' << profile.fingerprint << '\t' << limits.budget
         << '\t' << std::setprecision(17) << limits.deadline_hours << '\t' << limits.max_actions << '\t' << limits.run_number << '\n';
     while (game.state().phase != Phase::complete && game.state().elapsed_hours < limits.deadline_hours && game.state().actions < limits.max_actions) {
@@ -165,7 +165,7 @@ std::size_t replay(const Profile& profile, const std::string& path) {
     if (!(header >> magic >> seed >> fingerprint >> limits.budget >> limits.deadline_hours >> limits.max_actions >> limits.run_number) || magic != "#sfld-trace-v1")
         throw std::invalid_argument("Invalid trace header");
     if (fingerprint != profile.fingerprint) throw std::invalid_argument("Trace profile fingerprint does not match");
-    Game game(profile, seed, limits, limits.run_number);
+    Game game(profile, seed, limits);
     std::size_t lines = 0;
     while (std::getline(file, line)) {
         if (line.empty()) continue;

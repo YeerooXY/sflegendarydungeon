@@ -4,7 +4,7 @@
 namespace sfld {
 class Game {
 public:
-    Game(const Profile&, std::uint64_t seed, Limits = {}, int run_number = 1);
+    Game(const Profile&, std::uint64_t seed, Limits = {});
     // Explicit fixture/research state; caller must supply a valid visible state.
     Game(const Profile&, std::uint64_t seed, State, Limits = {});
     const State& state() const { return state_; }
