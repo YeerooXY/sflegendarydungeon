@@ -1,5 +1,5 @@
 #pragma once
-#include "sfld/model.hpp"
+#include "sfld/progress.hpp"
 
 namespace sfld {
 class Game {
@@ -7,6 +7,7 @@ public:
     Game(const Profile&, std::uint64_t seed, Limits = {});
     // Explicit fixture/research state; caller must supply a valid visible state.
     Game(const Profile&, std::uint64_t seed, State, Limits = {});
+    Game(const Profile&, std::uint64_t seed, const StartState&, Limits = {});
     const State& state() const { return state_; }
     const Profile& profile() const { return profile_; }
     const Limits& limits() const { return limits_; }

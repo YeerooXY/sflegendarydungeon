@@ -33,6 +33,23 @@ Game::Game(const Profile& profile, std::uint64_t seed, State state, Limits limit
         throw std::invalid_argument("Invalid fixture state");
     random_.room(state_.room);
 }
+Game::Game(const Profile& profile, std::uint64_t seed, const StartState& start, Limits limits)
+    : Game(profile, seed, start.state, limits) {
+    start.validate(profile);
+    limits_.run_number = state_.run_number;
+    resume_phase_ = start.resume_phase;
+    const auto phase = start.decision_phase();
+    if (start.generate_current) {
+        if (phase == Phase::doors) generate_doors();
+        else if (phase == Phase::shop || phase == Phase::curse_shop) generate_shop(phase == Phase::curse_shop);
+        else if (phase == Phase::gems) generate_gems();
+    }
+    state_.phase = start.state.phase;
+    // Observed walls/locked doors must never be silently replaced by the synthetic
+    // generation safeguard. Invalid input should produce an actionable error.
+    if (phase == Phase::doors && !available(state_.doors[0]) && !available(state_.doors[1]))
+        throw std::invalid_argument("No accessible door in supplied progress; check walls, keys, resources and effects");
+}
 int Game::door_cost(Door door) const {
     int cost = door == Door::double_locked ? 2 : ((door == Door::locked || door == Door::epic) ? 1 : 0);
     if (state_.effect(EffectKind::lockpick)) return 0;
@@ -44,7 +61,7 @@ bool Game::available(DoorView door) const {
     if (state_.keys < door_cost(door.kind)) return false;
     const int resource = resource_index(door.kind);
     if (resource >= 0 && state_.resources[static_cast<std::size_t>(resource)] < 1) return false;
-    if (door.kind == Door::trial && (state_.trial_seen && state_.trial_depth == 0)) return false;
+    if (door.kind == Door::trial && ((state_.trial_seen && state_.trial_depth == 0) || state_.trial_depth >= 5)) return false;
     return true;
 }
 int Game::step_price() const { return state_.paid_steps == 0 ? 10 : (state_.paid_steps == 1 ? 15 : 20); }
@@ -188,7 +205,7 @@ void Game::generate_shop(bool curses) {
     }
 }
 void Game::generate_gems() {
-    auto pool = profile_.gem_pool;
+    auto pool = profile_.gems_for_run(state_.run_number);
     pool.erase(std::remove_if(pool.begin(), pool.end(), [this](Gem g) { return state_.has(g); }), pool.end());
     if (pool.size() < 3) throw std::logic_error("Insufficient distinct gem offers");
     for (std::size_t i = 0; i < 3; ++i) {
@@ -365,24 +382,7 @@ Effect Game::random_effect(bool curse, Stream stream) {
     const double strong_chance = profile_.strong_effect + ((curse && state_.has(Gem::explorer)) ? .2 : 0) +
         ((!curse && state_.encounter == Encounter::barrel && state_.has(Gem::thirsty)) ? .4 : 0);
     const bool strong = random_.chance(stream, strong_chance);
-    const int twice = strong ? 2 : 1;
-    const auto k = static_cast<EffectKind>(kind);
-    switch (k) {
-    case EffectKind::raider: return {k, 1, 5 * twice, Clock::room};
-    case EffectKind::one_hit: return {k, 1, 4 * twice, Clock::room};
-    case EffectKind::escape: return {k, .8, 5 * twice, Clock::room};
-    case EffectKind::disarm: return {k, 1, 4 * twice, Clock::trap};
-    case EffectKind::lockpick: return {k, 1, 2 * twice, Clock::door};
-    case EffectKind::key_moment: return {k, .7, 4 * twice, Clock::fight};
-    case EffectKind::elixir: return {k, strong ? .5 : .25, 1, Clock::room};
-    case EffectKind::recovery: return {k, strong ? .2 : .1, 3 * twice, Clock::room};
-    case EffectKind::broken_armor: return {k, .5, 4 * twice, Clock::room};
-    case EffectKind::poison: return {k, .05, 5 * twice, Clock::room};
-    case EffectKind::clumsy: return {k, .8, 5 * twice, Clock::room};
-    case EffectKind::gold_hangover: return {k, .5, 5 * twice, Clock::room};
-    case EffectKind::hard_lock: return {k, 2, 4 * twice, Clock::room};
-    default: throw std::logic_error("Unhandled effect");
-    }
+    return effect_template(static_cast<EffectKind>(kind), strong);
 }
 void Game::give(Effect effect, bool immediately) {
     if (effect.kind == EffectKind::elixir) { heal(effect.magnitude); return; }

@@ -4,7 +4,7 @@ An independent C++20 research simulator for Shakes & Fidget's Legendary Dungeon.
 Compare gem preferences, barrel decisions, shop rerolls, recovery thresholds and
 mushroom budgets using reproducible Monte Carlo experiments.
 
-**Version 0.1 is an experimental model, not a validated reconstruction of the live
+**Version 0.2 is an experimental model, not a validated reconstruction of the live
 game.** Public documentation describes many rules, but does not supply the joint
 door distribution, complete outcome probabilities or raw validation runs. The
 included scenario fills those gaps with explicit assumptions. Its results must
@@ -26,6 +26,8 @@ Shakes & Fidget belongs to its respective owners; this project is unaffiliated.
 - JSON summaries, completion-probability intervals, deadline-aware time metrics
   and deterministic action traces with replay verification.
 - Five policy sweeps: barrels, gems, budgets, revival thresholds and reroll limits.
+- Forecasts from entered progress, including observed doors, walls, shop/gem
+  offers, recovery, active effects and previous healing purchases.
 
 Many numerical rules and some special-room transitions remain approximations.
 Read [the model and limitations](docs/MODEL.md) before interpreting output.
@@ -47,6 +49,22 @@ On Linux/macOS the executable is `build/sfld`. Visual Studio generators place it
 at `build/Release/sfld.exe`. Run examples from the repository root or provide an
 explicit `--profile` path. Windows users with Visual Studio but no CMake on PATH
 can run `./tools/build.ps1`, which locates the bundled CMake and runs the tests.
+
+## Continue from your current position
+
+```sh
+build/sfld state-template --output my-run.state
+# Edit the example to match your current room, HP, keys, stones and effects.
+build/sfld audit --state my-run.state
+build/sfld simulate --state my-run.state --allow-assumptions --runs 100000 --deadline-hours 48 --budget 0 --output results/from-here.json
+```
+
+With `--state`, the deadline and mushroom budget apply **from that position
+onward**. Previous healing purchases affect the next price. Known choices stay
+fixed; unknown future rooms are sampled. The [progress guide](docs/PROGRESS.md)
+includes examples for recovery, shops and the three stones currently offered.
+First/later-run stone pools are configurable, but their actual split is not yet
+verified in the shipped scenario.
 
 ## Free-to-play completion time
 

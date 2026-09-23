@@ -1,4 +1,4 @@
-# Model v0.1
+# Model v0.2
 
 This document describes the implemented engine. It is not a claim that all of
 these transitions match the server. Sources were inspected on 2026-09-23; the
@@ -30,7 +30,10 @@ and complete. Actions have phase-specific legality checks before mutation. Bosse
 occupy rooms 25, 50, 75 and 100. The first three award an epic and a choice of one
 of three gems; room 100 completes the run and awards a legendary. The room-five
 shop and free first-floor shops apply to run one only. `--run-number 2` uses later
-run rules but still starts an independent run with fresh keys, resources and HP.
+run rules but, without `--state`, still starts an independent run with fresh keys,
+resources and HP. `--state` loads an existing position; see [PROGRESS.md](PROGRESS.md).
+Forecast time, spending and result counters start there, while healing-purchase
+history and the current shop's reroll count persist for future decisions.
 
 Key/HP/resource payment and encounter resolution are distinct stages. Death on
 an entry trap resumes the already-paid encounter. Death in combat retries that
@@ -44,13 +47,19 @@ effect weights and scalar probabilities. Independent door draws are an assumptio
 actual paired door offers could be correlated. The generator forces boss/shop
 rooms and applies gem modifiers. If both doors become inaccessible it replaces
 the second with an untrapped monster door. This synthetic progress safeguard also
-applies when death removes a lockpick. It is not an observed server rule.
+applies when death removes a lockpick. It is not an observed server rule. Two
+positions and impassable walls are documented; their ordinary joint distribution
+is the unknown. Entered observed pairs are preserved and rejected if inaccessible,
+instead of silently applying this generation safeguard.
 
 All door trap indicators are treated as visible. The engine does not expose the
 unrevealed encounter or future random draws to policies. Gem offers are sampled
 uniformly without replacement from the configured pool, excluding already held
 gems. The default pool follows the inspected calculator, not a verified current
-server pool. Theme-specific pools must be selected in profiles; there is no event
+server pool. Optional `gems_first_run`/`gems_later_runs` overrides select different
+future pools by run number; the shipped profile has no verified split and uses
+the common fallback. Explicitly observed offers and held gems are preserved.
+Theme-specific pools must be selected in profiles; there is no event
 calendar or automatic theme/version detection.
 
 A counter-based SplitMix64 generator separates door, content, damage, escape,
@@ -202,6 +211,11 @@ Theme encounters outside the default golden table still have callable transition
 but are not all present in default runs. This catalog is coverage for experimentation,
 not faithful implementation of every live sub-choice, cost or reward.
 
+In particular, Flying Tube lucky coins and the Armory's class-dependent legendary
+reward are not modeled. Generic and theme-specific golden encounter types have
+transitions, but several costs, reward quantities, theme restrictions and outcome
+probabilities remain simplified. Catalog coverage is not complete game fidelity.
+
 Trials can start once, after floor one and early enough in a floor to avoid a boss.
 The synthetic generator allows them through room 18 of later floors. Victories
 increment depth (up to five) and advance the normal room count; damage multipliers
@@ -257,7 +271,10 @@ completion-probability and restricted-mean statistics and exits the CLI with cod
 2. Normal successful experiments exit 0; invalid input/runtime errors exit 1.
 Profile fingerprints are FNV-1a over raw bytes (including comments and line endings),
 for reproducibility rather than cryptographic security. Traces verify recorded
-actions against the same simulator; they are not an observation importer.
+actions against the same simulator; they are not an observation importer. Version
+2 traces include the starting snapshot and engine version; version 1 fresh-run
+traces remain readable. Reports identify the measurement origin and starting
+snapshot. Gem-pick counts include new picks only, excluding initially held gems.
 
 There is no current calibrated damage distribution, empirical spawn model,
 whole-event multi-run model, Ultimate mode, reward-value optimizer, graphical

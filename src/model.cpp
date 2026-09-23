@@ -38,6 +38,8 @@ template<class T> T parse_enum(std::string_view value, std::size_t count) {
     throw std::invalid_argument("Unknown identifier: " + std::string(value));
 }
 Door door_from(std::string_view s) { return parse_enum<Door>(s, ix(Door::count)); }
+Phase phase_from(std::string_view s) { return parse_enum<Phase>(s, 7); }
+EffectKind effect_from(std::string_view s) { return parse_enum<EffectKind>(s, ix(EffectKind::count)); }
 Encounter encounter_from(std::string_view s) { return parse_enum<Encounter>(s, ix(Encounter::count)); }
 Gem gem_from(std::string_view s) { return parse_enum<Gem>(s, ix(Gem::count)); }
 ActionKind action_from(std::string_view s) { return parse_enum<ActionKind>(s, 14); }
@@ -52,6 +54,25 @@ bool is_enemy(Encounter e) {
 }
 bool is_optional(Encounter e) {
     return e == Encounter::mimic || (!is_enemy(e) && e != Encounter::lava && e != Encounter::rocks && e != Encounter::wood);
+}
+Effect effect_template(EffectKind k, bool strong) {
+    const int twice = strong ? 2 : 1;
+    switch (k) {
+    case EffectKind::raider: return {k, 1, 5 * twice, Clock::room};
+    case EffectKind::one_hit: return {k, 1, 4 * twice, Clock::room};
+    case EffectKind::escape: return {k, .8, 5 * twice, Clock::room};
+    case EffectKind::disarm: return {k, 1, 4 * twice, Clock::trap};
+    case EffectKind::lockpick: return {k, 1, 2 * twice, Clock::door};
+    case EffectKind::key_moment: return {k, .7, 4 * twice, Clock::fight};
+    case EffectKind::elixir: return {k, strong ? .5 : .25, 1, Clock::room};
+    case EffectKind::recovery: return {k, strong ? .2 : .1, 3 * twice, Clock::room};
+    case EffectKind::broken_armor: return {k, .5, 4 * twice, Clock::room};
+    case EffectKind::poison: return {k, .05, 5 * twice, Clock::room};
+    case EffectKind::clumsy: return {k, .8, 5 * twice, Clock::room};
+    case EffectKind::gold_hangover: return {k, .5, 5 * twice, Clock::room};
+    case EffectKind::hard_lock: return {k, 2, 4 * twice, Clock::room};
+    default: throw std::invalid_argument("Invalid effect kind");
+    }
 }
 const Effect* Effects::find(EffectKind k, int turn) const {
     for (int i = 0; i < size; ++i) {
@@ -146,5 +167,10 @@ std::string json_string(std::string_view text) {
         else out << ch;
     }
     out << '"'; return out.str();
+}
+std::string text_fingerprint(std::string_view text) {
+    std::uint64_t hash = UINT64_C(14695981039346656037);
+    for (char c : text) { hash ^= static_cast<unsigned char>(c); hash *= UINT64_C(1099511628211); }
+    std::ostringstream out; out << std::hex << hash; return out.str();
 }
 }

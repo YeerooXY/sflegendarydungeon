@@ -40,3 +40,56 @@ execute_process(COMMAND "${SFLD}" replay --profile "${profile}" --allow-assumpti
 if(NOT status EQUAL 0)
   message(FATAL_ERROR "CLI replay failed: ${details}")
 endif()
+
+file(REMOVE "${WORK_DIR}/template.state")
+execute_process(COMMAND "${SFLD}" state-template --output "${WORK_DIR}/template.state"
+  RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Template creation failed: ${details}")
+endif()
+execute_process(COMMAND "${SFLD}" audit --profile "${profile}" --state "${WORK_DIR}/template.state"
+  RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Generated template cannot be loaded: ${details}")
+endif()
+configure_file("${SOURCE_DIR}/examples/gem-choice.state" "${WORK_DIR}/progress.state" COPYONLY)
+set(progress "${WORK_DIR}/progress.state")
+file(SHA256 "${progress}" progress_hash)
+foreach(option IN ITEMS --trace --output)
+  execute_process(COMMAND "${SFLD}" simulate --profile "${profile}" --state "${progress}" --allow-assumptions
+    --runs 1 ${option} "${progress}" RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+  file(SHA256 "${progress}" after_hash)
+  if(NOT status EQUAL 1 OR NOT after_hash STREQUAL progress_hash)
+    message(FATAL_ERROR "CLI did not protect progress input from ${option}")
+  endif()
+endforeach()
+execute_process(COMMAND "${SFLD}" simulate --profile "${profile}" --state "${progress}" --allow-assumptions
+  --run-number 1 --runs 1 RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+if(NOT status EQUAL 1)
+  message(FATAL_ERROR "Conflicting run numbers should be rejected")
+endif()
+execute_process(COMMAND "${SFLD}" compare --profile "${profile}" --state "${progress}" --allow-assumptions
+  --sweep gems --runs 8 --threads 2 --output "${WORK_DIR}/gem-comparison.json"
+  RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Progress comparison failed: ${details}")
+endif()
+file(READ "${WORK_DIR}/gem-comparison.json" report)
+string(JSON count LENGTH "${report}" experiments)
+string(JSON room GET "${report}" experiments 0 starting_state room)
+string(JSON run_number GET "${report}" experiments 0 run_number_within_event)
+if(NOT count EQUAL 4 OR NOT room EQUAL 51 OR NOT run_number EQUAL 2)
+  message(FATAL_ERROR "Gem sweep did not use the three observed offers and progress")
+endif()
+execute_process(COMMAND "${SFLD}" simulate --profile "${profile}" --state "${progress}" --allow-assumptions
+  --runs 1 --trace "${WORK_DIR}/progress.tsv" --output "${WORK_DIR}/progress.json"
+  RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Progress trace failed: ${details}")
+endif()
+file(REMOVE "${progress}")
+execute_process(COMMAND "${SFLD}" replay --profile "${profile}" --allow-assumptions
+  --trace "${WORK_DIR}/progress.tsv" RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Progress replay should not need its original input file: ${details}")
+endif()

@@ -12,10 +12,16 @@
 #include <thread>
 
 namespace sfld {
-Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed, Limits limits, std::ostream* trace) {
-    Game game(profile, seed, limits);
-    if (trace) *trace << "#sfld-trace-v1\t" << seed << '\t' << profile.fingerprint << '\t' << limits.budget
-        << '\t' << std::setprecision(17) << limits.deadline_hours << '\t' << limits.max_actions << '\t' << limits.run_number << '\n';
+Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed, Limits limits, std::ostream* trace, const StartState* start) {
+    if (start) limits.run_number = start->state.run_number;
+    Game game = start ? Game(profile, seed, *start, limits) : Game(profile, seed, limits);
+    if (trace) {
+        *trace << "#sfld-trace-v2\t0.2.0\t" << seed << '\t' << profile.fingerprint << '\t' << limits.budget
+            << '\t' << std::setprecision(17) << limits.deadline_hours << '\t' << limits.max_actions << '\t' << limits.run_number << '\n';
+        const auto input = start ? start->encode() : std::string{};
+        *trace << "#start\t" << (start ? start->fingerprint() : "fresh") << '\t' << std::count(input.begin(), input.end(), '\n')
+            << '\n' << input << "#actions\n";
+    }
     while (game.state().phase != Phase::complete && game.state().elapsed_hours < limits.deadline_hours && game.state().actions < limits.max_actions) {
         auto action = policy.choose(game);
         const double left = limits.deadline_hours - game.state().elapsed_hours;
@@ -40,6 +46,7 @@ Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed,
 }
 std::vector<Result> run_batch(const Profile& profile, const Policy& policy, const BatchOptions& options) {
     profile.validate(); policy.validate();
+    if (options.start) options.start->validate(profile);
     if (options.runs == 0 || options.runs > 10000000 || options.threads == 0 || options.threads > 256)
         throw std::invalid_argument("Runs must be 1..10000000; threads must be 1..256");
     std::vector<Result> results(options.runs);
@@ -55,7 +62,7 @@ std::vector<Result> run_batch(const Profile& profile, const Policy& policy, cons
                 const auto end = std::min(options.runs, start + 64);
                 for (auto i = start; i < end; ++i) {
                     const auto seed = Random::mix(options.seed ^ static_cast<std::uint64_t>(i));
-                    try { results[i] = run_one(profile, policy, seed, options.limits); }
+                    try { results[i] = run_one(profile, policy, seed, options.limits, nullptr, options.start ? &*options.start : nullptr); }
                     catch (const std::exception& e) {
                         throw std::runtime_error("Run index " + std::to_string(i) + ", derived seed " + std::to_string(seed) + ": " + e.what());
                     }
@@ -102,7 +109,8 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
         recovery_spend += r.recovery_mushrooms; reroll_spend += r.reroll_mushrooms;
         deaths += r.deaths; opened += r.barrels_opened; skipped += r.barrels_skipped; actions += r.actions;
         capped += r.action_limit ? 1 : 0;
-        for (std::size_t i = 0; i < picked.size(); ++i) picked[i] += r.gems[i] ? 1 : 0;
+        for (std::size_t i = 0; i < picked.size(); ++i)
+            picked[i] += r.gems[i] && !(options.start && options.start->state.gems[i]) ? 1 : 0;
     }
     std::sort(finished.begin(), finished.end());
     const double n = static_cast<double>(results.size()), successes = static_cast<double>(finished.size());
@@ -118,16 +126,31 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
     for (double h : finished) squared += (h - mean) * (h - mean);
     const double se = finished.size() > 1 ? std::sqrt(squared / (successes - 1) / successes) : 0;
     std::ostringstream out; out << std::setprecision(17);
-    out << "{\n  \"schema_version\": 1,\n  \"engine_version\": \"0.1.0\",\n  \"profile\": " << json_string(profile.id)
+    out << "{\n  \"schema_version\": 2,\n  \"engine_version\": \"0.2.0\",\n  \"profile\": " << json_string(profile.id)
         << ",\n  \"profile_fingerprint\": " << json_string(profile.fingerprint)
         << ",\n  \"evidence\": \"synthetic\",\n  \"calibrated_to_live_game\": false,\n"
         << "  \"interpretation\": \"Conditional on the supplied assumptions; intervals measure Monte Carlo sampling error only.\",\n"
-        << "  \"policy\": " << json_string(policy.label) << ",\n  \"barrels\": " << json_string(name(policy.barrels))
+        << "  \"measurement_origin\": " << json_string(options.start ? "entered progress; additional time and spending" : "start of a new run")
+        << ",\n  \"starting_state\": ";
+    if (options.start) {
+        const auto& start = *options.start;
+        out << "{\"fingerprint\":" << json_string(start.fingerprint()) << ",\"room\":" << start.state.room
+            << ",\"phase\":" << json_string(name(start.state.phase)) << ",\"hp_percent\":" << start.state.hp * 100
+            << ",\"generate_current_decision\":" << (start.generate_current ? "true" : "false")
+            << ",\"snapshot\":" << json_string(start.encode()) << '}';
+    } else out << "null";
+    const int run_number = options.start ? options.start->state.run_number : options.limits.run_number;
+    out << ",\n  \"future_gem_pool\": [";
+    const auto& pool = profile.gems_for_run(run_number);
+    for (std::size_t i = 0; i < pool.size(); ++i) { if (i) out << ','; out << json_string(name(pool[i])); }
+    out << "],\n  \"future_gem_pool_source\": " << json_string(&pool == &profile.gem_pool ? "gems (fallback; run-specific split unverified)" :
+        (run_number == 1 ? "gems_first_run" : "gems_later_runs"))
+        << ",\n  \"policy\": " << json_string(policy.label) << ",\n  \"barrels\": " << json_string(name(policy.barrels))
         << ",\n  \"barrel_hp_threshold\": " << policy.barrel_hp << ",\n  \"revive_hp\": " << policy.revive_hp
         << ",\n  \"login_interval_hours\": " << policy.login_interval_hours << ",\n  \"reroll_limit\": " << policy.reroll_limit
         << ",\n  \"preferred_gem\": " << (policy.preferred_gem ? json_string(name(*policy.preferred_gem)) : "null")
         << ",\n  \"seed\": " << options.seed << ",\n  \"runs\": " << results.size()
-        << ",\n  \"run_number_within_event\": " << options.limits.run_number
+        << ",\n  \"run_number_within_event\": " << run_number
         << ",\n  \"max_actions_per_run\": " << options.limits.max_actions
         << ",\n  \"mushroom_budget_per_run\": " << options.limits.budget << ",\n  \"deadline_hours\": " << options.limits.deadline_hours
         << ",\n  \"completed\": " << finished.size() << ",\n  \"unfinished\": " << results.size() - finished.size()
@@ -162,10 +185,37 @@ std::size_t replay(const Profile& profile, const std::string& path) {
     if (!std::getline(file, line)) throw std::invalid_argument("Empty trace");
     std::istringstream header(line);
     std::uint64_t seed = 0; Limits limits;
-    if (!(header >> magic >> seed >> fingerprint >> limits.budget >> limits.deadline_hours >> limits.max_actions >> limits.run_number) || magic != "#sfld-trace-v1")
+    if (!(header >> magic) || (magic != "#sfld-trace-v1" && magic != "#sfld-trace-v2"))
         throw std::invalid_argument("Invalid trace header");
+    if (magic == "#sfld-trace-v2") {
+        std::string version;
+        if (!(header >> version) || version != "0.2.0") throw std::invalid_argument("Trace engine version does not match");
+    }
+    if (!(header >> seed >> fingerprint >> limits.budget >> limits.deadline_hours >> limits.max_actions >> limits.run_number))
+        throw std::invalid_argument("Invalid trace limits");
     if (fingerprint != profile.fingerprint) throw std::invalid_argument("Trace profile fingerprint does not match");
-    Game game(profile, seed, limits);
+    std::optional<StartState> start;
+    if (magic == "#sfld-trace-v2") {
+        if (!std::getline(file, line)) throw std::invalid_argument("Missing trace start block");
+        std::istringstream block(line); std::string marker, expected_fingerprint; std::size_t count = 0;
+        if (!(block >> marker >> expected_fingerprint >> count) || marker != "#start" || count > 100)
+            throw std::invalid_argument("Invalid trace start block");
+        std::string input;
+        for (std::size_t i = 0; i < count; ++i) {
+            if (!std::getline(file, line)) throw std::invalid_argument("Truncated trace start block");
+            input += line + '\n';
+            if (input.size() > 65536) throw std::invalid_argument("Oversized trace start block");
+        }
+        if (count) {
+            start = StartState::parse(input); start->validate(profile);
+            if (start->fingerprint() != expected_fingerprint || start->state.run_number != limits.run_number)
+                throw std::invalid_argument("Trace starting-state fingerprint/run number does not match");
+        } else if (expected_fingerprint != "fresh") throw std::invalid_argument("Missing trace starting state");
+        if (!std::getline(file, line)) throw std::invalid_argument("Missing trace actions marker");
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line != "#actions") throw std::invalid_argument("Missing trace actions marker");
+    }
+    Game game = start ? Game(profile, seed, *start, limits) : Game(profile, seed, limits);
     std::size_t lines = 0;
     while (std::getline(file, line)) {
         if (line.empty()) continue;

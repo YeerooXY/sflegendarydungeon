@@ -1,0 +1,14 @@
+# Recovering after death at the final boss. Two paid heals used earlier this run.
+# The next 20-point purchase costs 20 mushrooms in this model.
+schema=1
+room=100
+run_number=1
+phase=recovery
+resume_phase=encounter
+encounter=boss
+hp_percent=10
+keys=3
+gems=rabbit,moonstone,greasy
+paid_heals=2
+blessings=none
+curses=none

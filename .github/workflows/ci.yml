@@ -37,6 +37,8 @@ jobs:
         run: ctest --test-dir build -C Release --output-on-failure
       - name: Exercise sweeps
         run: ${{ matrix.executable }} compare --allow-assumptions --sweep gems --runs 1000 --threads 2 --output results/gems.json
+      - name: Forecast from observed progress
+        run: ${{ matrix.executable }} compare --allow-assumptions --state examples/gem-choice.state --sweep gems --runs 1000 --threads 2 --output results/progress-gems.json
       - name: Record a trace
         run: ${{ matrix.executable }} simulate --allow-assumptions --runs 1 --trace results/run.tsv --output results/run.json
       - name: Verify trace
@@ -48,6 +50,8 @@ jobs:
           path: |
             ${{ matrix.executable }}
             profiles/
+            examples/
+            docs/
             results/
             README.md
             LICENSE
@@ -64,4 +68,4 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
       - name: Exercise spending and random transitions
-        run: build/sfld compare --allow-assumptions --sweep budgets --runs 1000 --threads 2 --rerolls 3 --output results/budgets.json
+        run: build/sfld compare --allow-assumptions --state examples/progress.state --sweep budgets --runs 1000 --threads 2 --rerolls 3 --output results/budgets.json

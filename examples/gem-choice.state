@@ -1,0 +1,13 @@
+# Boss 50 has been defeated; the next room is 51, but the second gem is unchosen.
+# The current three offers are observations and stay fixed across simulations.
+schema=1
+room=51
+run_number=2
+phase=gems
+hp_percent=42
+keys=5
+gems=rabbit
+gem_offers=greasy,moonstone,spying
+blessings=lockpick:weak:1
+curses=none
+paid_heals=0

@@ -1,0 +1,19 @@
+# Example only: replace this with your actual current position.
+# Forecast time and mushroom budgets start from this position.
+schema=1
+room=42
+run_number=2
+phase=doors
+hp_percent=63
+keys=4
+gems=rabbit
+blessings=recovery:weak:2
+curses=none
+# Left and right positions. The right side here is an impassable wall.
+doors=golden,wall
+paid_heals=1
+shop_rerolls=0
+trial_seen=false
+trial_depth=0
+# Abstract donation units: wood, stone, souls, metal, arcane, hourglasses.
+resources=0,0,0,0,0,0

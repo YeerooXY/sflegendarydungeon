@@ -1,6 +1,6 @@
 # Legendary Dungeon: research and simulation feasibility
 
-Researched 2026-09-23. Scope: Shakes & Fidget's seasonal Legendary Dungeon, including separate free-to-play and mushroom-efficiency comparisons. This dossier records the public-source investigation that informed the experimental simulator. It is not a measured strategy ranking. For what version 0.1 actually implements, see [MODEL.md](MODEL.md); the design and acceptance criteria below also include future work.
+Researched 2026-09-23. Scope: Shakes & Fidget's seasonal Legendary Dungeon, including separate free-to-play and mushroom-efficiency comparisons. This dossier records the public-source investigation that informed the experimental simulator. It is not a measured strategy ranking. For what the current version actually implements, see [MODEL.md](MODEL.md); the design and acceptance criteria below also include future work.
 
 There is enough public information to begin an offline reconstruction. A trustworthy estimate of average completion time also needs probability distributions and validation data that I did not find published in the sources checked.
 

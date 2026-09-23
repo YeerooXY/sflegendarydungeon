@@ -34,6 +34,8 @@ std::string_view name(Encounter);
 std::string_view name(Gem);
 std::string_view name(EffectKind);
 std::string_view name(ActionKind);
+Phase phase_from(std::string_view);
+EffectKind effect_from(std::string_view);
 Door door_from(std::string_view);
 Encounter encounter_from(std::string_view);
 Gem gem_from(std::string_view);
@@ -49,6 +51,7 @@ struct Effect {
     Clock clock = Clock::room;
     int starts_at = 0;
 };
+Effect effect_template(EffectKind, bool strong);
 class Effects {
 public:
     std::array<Effect, 3> slots{};
@@ -109,6 +112,9 @@ struct Profile {
     std::array<double, ix(Encounter::count)> locked_weights{};
     std::array<double, ix(Encounter::count)> golden_weights{};
     std::vector<Gem> gem_pool;
+    // Optional overrides; empty means use gem_pool. Pool contents still need evidence.
+    std::vector<Gem> first_run_gem_pool, later_run_gem_pool;
+    const std::vector<Gem>& gems_for_run(int run_number) const;
     std::array<Range, 4> monster_damage{};
     std::array<Range, 4> escape_damage{};
     std::array<Range, 4> boss_damage{};
@@ -154,4 +160,5 @@ private:
 };
 std::string state_digest(const State&);
 std::string json_string(std::string_view);
+std::string text_fingerprint(std::string_view);
 }

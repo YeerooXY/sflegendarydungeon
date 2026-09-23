@@ -1,4 +1,5 @@
 #include "sfld/batch.hpp"
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -296,6 +297,158 @@ void profile_validation_rejects_guesses_disguised_as_verified() {
     { std::ofstream out(file.path); out << text << "\nbarrel_blessing=0.9\n"; }
     rejects([&] { Profile::load(file.path.string()); });
 }
+StartState example(const char* file) {
+    return StartState::load(std::string(SFLD_SOURCE_DIR) + "/examples/" + file);
+}
+void progress_preserves_observed_doors_and_walls() {
+    auto p = profile(); auto start = example("progress.state");
+    for (std::uint64_t seed = 0; seed < 20; ++seed) {
+        Game game(p, seed, start); CHECK(game.state().room == 42); CHECK(game.state().run_number == 2);
+        CHECK(game.state().doors[0].kind == Door::golden); CHECK(game.state().doors[1].kind == Door::wall);
+        CHECK(game.legal({ActionKind::choose_door, 0})); CHECK(!game.legal({ActionKind::choose_door, 1}));
+        near(game.state().hp, .63); CHECK(game.state().keys == 4); CHECK(game.state().has(Gem::rabbit));
+    }
+    start.state.doors = {{{Door::locked}, {Door::wall}}}; start.state.keys = 0;
+    rejects([&] { Game invalid(p, 1, start); });
+    start.state.doors = {{{Door::wall}, {Door::wall}}};
+    rejects([&] { Game invalid(p, 1, start); });
+}
+void progress_effects_apply_with_remaining_counters() {
+    const auto start = StartState::parse("schema=1\nroom=42\nrun_number=2\nphase=encounter\nhp_percent=50\nkeys=4\n"
+        "gems=hero\nencounter=monster\nblessings=recovery:weak:2\ncurses=broken_armor:weak:2,poison:weak:1\n");
+    auto p = fixed_damage(); Game game(p, 5, start); game.step({ActionKind::fight});
+    near(game.state().hp, .29); CHECK(game.state().room == 43);
+    CHECK(!game.state().effect(EffectKind::poison)); CHECK(game.state().effect(EffectKind::recovery)->remaining == 1);
+    CHECK(game.state().effect(EffectKind::broken_armor)->remaining == 1);
+}
+void resumed_recovery_retains_heal_prices_and_future_budget() {
+    auto p = fixed_damage(); auto start = example("recovery.state");
+    Game game(p, 7, start, {20}); CHECK(game.step_price() == 20);
+    game.step({ActionKind::heal_step}); near(game.state().hp, .3); CHECK(game.state().mushrooms == 20);
+    game.step({ActionKind::reenter}); CHECK(game.state().phase == Phase::encounter); CHECK(game.state().encounter == Encounter::boss);
+    Policy policy; const auto result = run_one(p, policy, 7, {20, 3}, nullptr, &start);
+    CHECK(result.complete); CHECK(result.mushrooms == 20); CHECK(result.deaths == 0); CHECK(result.hours < 3);
+    const auto free = run_one(p, policy, 7, {0, 1}, nullptr, &start);
+    CHECK(!free.complete); CHECK(free.mushrooms == 0); near(free.hours, 1);
+}
+void resumed_recovery_restores_doors_without_repaying_an_encounter() {
+    auto p = profile();
+    auto start = StartState::parse("schema=1\nroom=42\nrun_number=1\nphase=recovery\nresume_phase=doors\n"
+        "hp_percent=20\nkeys=1\ngems=rabbit\ndoors=locked,wall\n");
+    Game doors(p, 1, start); doors.step({ActionKind::reenter});
+    CHECK(doors.state().phase == Phase::doors); CHECK(doors.state().keys == 1);
+    doors.step({ActionKind::choose_door, 0}); CHECK(doors.state().keys == 0);
+    start = StartState::parse("schema=1\nroom=42\nrun_number=1\nphase=recovery\nresume_phase=encounter\n"
+        "hp_percent=20\nkeys=0\ngems=rabbit\nencounter=barrel\n");
+    Game encounter_game(p, 1, start); encounter_game.step({ActionKind::reenter});
+    CHECK(encounter_game.state().phase == Phase::encounter); CHECK(encounter_game.state().keys == 0);
+    encounter_game.step({ActionKind::skip}); CHECK(encounter_game.state().room == 43);
+}
+void observed_shop_offers_and_reroll_history_are_preserved() {
+    auto p = profile(); const auto start = example("shop.state");
+    Game game(p, 99, start); CHECK(game.state().shop_rerolls == 1);
+    CHECK(game.state().offers[0].effect.kind == EffectKind::elixir); CHECK(game.state().offers[0].keys == 3);
+    game.step({ActionKind::buy, 0}); near(game.state().hp, .9); CHECK(game.state().keys == 0); CHECK(game.state().room == 43);
+    auto reroll_start = start;
+    for (auto& offer : reroll_start.state.offers) {
+        offer = {effect_template(EffectKind::raider, false), 99};
+        offer.effect.starts_at = reroll_start.state.turn;
+    }
+    Game cap(p, 8, reroll_start, {10}); Policy policy; policy.reroll_limit = 1;
+    CHECK(policy.choose(cap).kind == ActionKind::skip);
+}
+void progress_gem_offers_override_unknown_future_pool() {
+    auto p = profile(); const auto start = example("gem-choice.state");
+    p.later_run_gem_pool = {Gem::hero, Gem::bull, Gem::blood, Gem::hick, Gem::devil};
+    Game game(p, 2, start); CHECK(game.state().gem_offers == start.state.gem_offers);
+    Policy policy; policy.preferred_gem = Gem::greasy; game.step(policy.choose(game));
+    CHECK(game.state().has(Gem::greasy)); CHECK(game.state().has(Gem::rabbit)); CHECK(game.state().room == 51);
+}
+void run_specific_gem_pools_select_the_configured_choices() {
+    auto p = profile();
+    p.first_run_gem_pool = {Gem::rabbit, Gem::moonstone, Gem::spying, Gem::pendant, Gem::greasy};
+    p.later_run_gem_pool = {Gem::hero, Gem::bull, Gem::blood, Gem::hick, Gem::devil}; p.validate();
+    auto start = StartState::parse("schema=1\nroom=26\nrun_number=1\nphase=gems\nhp_percent=60\nkeys=3\ngem_offers=unknown\n");
+    for (int run : {1, 2, 7}) for (std::uint64_t seed = 0; seed < 10; ++seed) {
+        start.state.run_number = run; Game game(p, seed, start);
+        const auto& pool = p.gems_for_run(run);
+        for (auto gem : game.state().gem_offers) CHECK(std::find(pool.begin(), pool.end(), gem) != pool.end());
+    }
+    Temp file;
+    std::ifstream input(std::string(SFLD_SOURCE_DIR) + "/profiles/synthetic.profile");
+    std::string text((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    { std::ofstream out(file.path); out << text << "\ngems_first_run=rabbit,moonstone,spying,pendant,greasy\n"
+        << "gems_later_runs=hero,bull,blood,hick,devil\n"; }
+    const auto loaded = Profile::load(file.path.string());
+    CHECK(loaded.gems_for_run(1) == p.first_run_gem_pool); CHECK(loaded.gems_for_run(2) == p.later_run_gem_pool);
+}
+void progress_can_continue_an_active_trial() {
+    auto p = fixed_damage(.1); p.trial_legendary_chance = 0;
+    auto start = StartState::parse("schema=1\nroom=42\nrun_number=2\nphase=doors\nhp_percent=100\nkeys=1\n"
+        "gems=moonstone\ntrial_seen=true\ntrial_depth=3\ndoors=trial,exit_trial\n");
+    Game game(p, 11, start); game.step({ActionKind::choose_door, 0}); game.step({ActionKind::fight});
+    near(game.state().hp, .87); CHECK(game.state().trial_depth == 4); CHECK(game.state().room == 43);
+    game.step({ActionKind::choose_door, 1}); game.step({ActionKind::interact});
+    CHECK(game.state().epics == 1); CHECK(game.state().trial_depth == 0); CHECK(game.state().room == 44);
+}
+void progress_rejects_inconsistent_and_misspelled_states() {
+    auto p = profile(); const std::string base = "schema=1\nroom=42\nrun_number=2\nphase=doors\nhp_percent=60\nkeys=1\ngems=rabbit\ndoors=golden,wall\n";
+    StartState::parse(std::string("\xef\xbb\xbf") + base).validate(p);
+    for (const auto* extra : {"keeys=3\n", "keys=2\n", "curses=recovery:weak:2\n", "blessings=elixir:weak:1\n",
+        "blessings=one_hit:weak:2,one_hit:weak:3\n", "resume_phase=encounter\n", "trial_depth=3\n"})
+        rejects([&] { const auto s = StartState::parse(base + extra); s.validate(p); });
+    auto start = example("progress.state"); start.state.hp = 0; rejects([&] { start.validate(p); });
+    start = example("progress.state"); start.state.gems.fill(false); rejects([&] { start.validate(p); });
+    start = example("gem-choice.state"); start.state.gem_offers[2] = Gem::rabbit; rejects([&] { start.validate(p); });
+    start = example("progress.state"); start.state.doors[0].kind = Door::boss; rejects([&] { start.validate(p); });
+    start = example("recovery.state"); start.state.blessings.give(effect_template(EffectKind::recovery, false));
+    rejects([&] { start.validate(p); });
+    start = example("progress.state"); start.state.trial_seen = true; start.state.trial_depth = 5;
+    start.state.doors = {{{Door::trial}, {Door::exit_trial}}}; rejects([&] { start.validate(p); });
+    rejects([&] { StartState::parse("schema=1\nroom=1\nrun_number=1\nphase=doors\nhp_percent=nan\nkeys=0\n"); });
+}
+void progress_round_trips_without_hp_or_effect_rounding() {
+    auto p = profile(); auto start = example("progress.state"); Random random(991);
+    for (int i = 0; i < 1000; ++i) {
+        start.state.hp = .01 + .99 * random.unit(Stream::special);
+        const auto restored = StartState::parse(start.encode()); restored.validate(p);
+        CHECK(state_digest(start.state) == state_digest(restored.state));
+        CHECK(start.fingerprint() == restored.fingerprint());
+    }
+}
+void progress_forecasts_and_traces_are_reproducible() {
+    auto p = profile(); Policy policy; BatchOptions options; options.runs = 64; options.limits.budget = 25;
+    options.start = example("gem-choice.state"); const auto one = run_batch(p, policy, options);
+    options.threads = 4; const auto four = run_batch(p, policy, options);
+    const auto report = report_json(p, policy, options, one);
+    CHECK(report == report_json(p, policy, options, four)); CHECK(report.find("\"rabbit\": 0") != std::string::npos);
+    CHECK(report.find("\"run_number_within_event\": 2") != std::string::npos);
+    CHECK(report.find("additional time and spending") != std::string::npos);
+    Temp trace;
+    { std::ofstream out(trace.path); run_one(p, policy, 12, {}, &out, &*options.start); }
+    CHECK(replay(p, trace.path.string()) > 50);
+    std::ifstream input(trace.path); std::string text((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>()); input.close();
+    const auto at = text.find("keys=5"); CHECK(at != std::string::npos); text.replace(at, 6, "keys=6");
+    { std::ofstream out(trace.path); out << text; }
+    rejects([&] { replay(p, trace.path.string()); });
+}
+void final_boss_forecast_reports_only_remaining_time() {
+    auto p = fixed_damage(); auto start = example("recovery.state");
+    start.state.phase = Phase::encounter; start.state.hp = 1;
+    Policy policy; const auto result = run_one(p, policy, 15, {}, nullptr, &start);
+    CHECK(result.complete); CHECK(result.actions == 1); near(result.hours, 2.0 / 3600);
+    CHECK(result.mushrooms == 0); CHECK(result.deaths == 0);
+}
+void legacy_fresh_run_traces_still_replay() {
+    auto p = profile(); Policy policy; std::ostringstream output;
+    run_one(p, policy, 12, {}, &output);
+    auto text = output.str();
+    text.replace(0, std::string("#sfld-trace-v2\t0.2.0").size(), "#sfld-trace-v1");
+    const auto start = text.find("#start\tfresh\t0\n#actions\n"); CHECK(start != std::string::npos);
+    text.erase(start, std::string("#start\tfresh\t0\n#actions\n").size());
+    Temp file; { std::ofstream out(file.path); out << text; }
+    CHECK(replay(p, file.path.string()) > 100);
+}
 }
 int main() {
     const std::pair<const char*, std::function<void()>> cases[] = {
@@ -312,7 +465,14 @@ int main() {
         TEST(boss_reentry_policy_waits_for_enough_health), TEST(login_grid_is_included_in_wait),
         TEST(threaded_runs_are_reproducible_and_budget_bounded), TEST(censored_runs_are_not_dropped),
         TEST(action_cap_invalidates_deadline_statistics), TEST(trace_replays_and_rejects_tampering),
-        TEST(profile_validation_rejects_guesses_disguised_as_verified)
+        TEST(profile_validation_rejects_guesses_disguised_as_verified),
+        TEST(progress_preserves_observed_doors_and_walls), TEST(progress_effects_apply_with_remaining_counters),
+        TEST(resumed_recovery_retains_heal_prices_and_future_budget), TEST(resumed_recovery_restores_doors_without_repaying_an_encounter),
+        TEST(observed_shop_offers_and_reroll_history_are_preserved), TEST(progress_gem_offers_override_unknown_future_pool),
+        TEST(run_specific_gem_pools_select_the_configured_choices), TEST(progress_can_continue_an_active_trial),
+        TEST(progress_rejects_inconsistent_and_misspelled_states), TEST(progress_round_trips_without_hp_or_effect_rounding),
+        TEST(progress_forecasts_and_traces_are_reproducible), TEST(final_boss_forecast_reports_only_remaining_time),
+        TEST(legacy_fresh_run_traces_still_replay)
 #undef TEST
     };
     int failed = 0;

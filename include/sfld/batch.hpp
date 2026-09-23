@@ -23,8 +23,9 @@ struct BatchOptions {
     unsigned threads = 1;
     std::uint64_t seed = 42;
     Limits limits;
+    std::optional<StartState> start;
 };
-Result run_one(const Profile&, const Policy&, std::uint64_t, Limits, std::ostream* trace = nullptr);
+Result run_one(const Profile&, const Policy&, std::uint64_t, Limits, std::ostream* trace = nullptr, const StartState* start = nullptr);
 std::vector<Result> run_batch(const Profile&, const Policy&, const BatchOptions&);
 std::string report_json(const Profile&, const Policy&, const BatchOptions&, const std::vector<Result>&);
 std::size_t replay(const Profile&, const std::string& trace_path);

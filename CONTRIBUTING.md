@@ -9,6 +9,7 @@ Code correctness and agreement with the game are separate requirements.
 | --- | --- |
 | `include/sfld/model.hpp`, `src/model.cpp` | Visible state, enums, effects, RNG and digests |
 | `src/profile.cpp`, `profiles/` | Strict scenario loading and validation |
+| `src/progress.cpp`, `examples/` | Observed starting positions, validation and canonical snapshots |
 | `src/engine.cpp` | Legal actions and state transitions |
 | `src/policy.cpp` | Baseline decision policy |
 | `src/batch.cpp` | Reproducible batches, statistics and trace replay |
