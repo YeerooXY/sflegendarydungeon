@@ -1,4 +1,4 @@
-# Offline agent challenge rules (engine 0.4.0)
+# Offline agent challenge rules (engine 0.4.1)
 
 Maximize **completed 100-room runs** within 168 simulated hours. Evaluate a
 zero-mushroom budget separately from a 500-mushroom budget. Time and spending are
@@ -127,8 +127,14 @@ Locked/epic doors cost one key; double-locked cost two. Traps usually cost 10%
 HP; cursed traps give a curse. Sacrifice doors cost 12% HP, then their chest
 costs 15% if opened. Cursed doors and chests each give a curse. Resource doors
 cost one abstract resource unit; their chest gives two of a different resource.
-Trials are optional sequences of up to five fights with increasing damage;
-the exit grants a reward, while death or fleeing ends the sequence.
+Room 51 offers a normal monster or the optional five-tier trial arena. A fight
+or either survived escape outcome advances a tier. Between tiers, choose the
+next monster or the chicken/exit door; after the fifth, only the exit remains.
+Exit opens a prize encounter with the survived tier in `pending_trial_reward`.
+Interact to collect it, or skip it. Death before collection loses the pending
+prize and resumes normal rooms after recovery, without forcing remaining tiers.
+Trial legendaries are items, not completed dungeon runs. Increasing trial damage
+and exact reward probabilities remain assumptions; see the chosen profile.
 
 Barrels are assumed 50/50 blessing/curse with uniform identities and 25% strong
 effects. Containers can grant blessings, ordinary items, gold or nothing.

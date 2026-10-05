@@ -104,13 +104,21 @@ they have no invented transition or spawn weight. `Special_Hole` (302) also
 needs an explicit mapping before claiming full coverage of the client catalog.
 See [CLIENT_INSPECTION.md](CLIENT_INSPECTION.md).
 
-The maintainer additionally reports an **arsenal at the start of stage 3,
-room 51** (2026-10-05). Its appearance conditions (first run versus later runs)
-and interaction/reward are still awaiting clarification. This is not represented
-by the current automatic generation rule: `armory` is restricted to rooms
-90-98, following LD Gadget, and has no weight in the default generic golden pool.
-It remains unresolved whether the room-51 report is another encounter or a
-version/condition difference in the armory rule. Do not describe it as covered.
+The maintainer clarified the **arena at the start of stage 3, room 51**
+(2026-10-05): this is the five-tier **trial**, distinct from the late-run
+`armory`. Engine 0.4.1 offers a monster door and trial entrance at room 51.
+Surviving a trial monster by fighting, successful evasion or failed-but-survived
+evasion advances the tier. The chicken/exit door records that tier for the prize
+chest; after tier five only the exit remains. Death before collecting the trial
+prize forfeits it and resumes normal rooms after recovery, without forcing the
+remaining trial tiers. A legendary prize is possible and does not itself count
+as completing room 100.
+
+`trial_entry_room=51` applies the entrance report to each run; any first/later-run
+or event restriction remains unmeasured. Set it to 0 for the former weighted
+entrance-placement scenario. Damage escalation, intermediate reward values,
+legendary probability and precise room-counter timing remain provisional.
+The late-run `armory` still has no weight in the default generic golden pool.
 
 `spider_success` configures legs/head/full success separately; the default is
 80/50/20%. Only the middle equal-odds description is official. Immediate bite

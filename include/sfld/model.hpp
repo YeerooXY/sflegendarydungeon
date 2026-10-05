@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace sfld {
-inline constexpr std::string_view engine_version = "0.4.0";
+inline constexpr std::string_view engine_version = "0.4.1";
 enum class Phase { doors, encounter, shop, curse_shop, gems, recovery, complete };
 enum class Door { monster, mystery, locked, double_locked, unlocked, epic, golden,
     shop, cursed, sacrifice, blessing, destiny, wood, stone, souls, metal, arcane,
@@ -144,6 +144,8 @@ struct Profile {
     double action_seconds = 2;
     double full_heal_cost_per_fraction = 48;
     double trial_legendary_chance = 0;
+    // Player-reported fixed entrance; 0 restores the old weighted entrance model.
+    int trial_entry_room = 51;
     int initial_resources = 10;
     bool free_first_level_shops = true;
     // Unknown shop distributions are independently configurable from barrels.

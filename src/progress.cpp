@@ -226,12 +226,14 @@ void StartState::validate(const Profile& profile) const {
     if (s.trial_depth < 0 || s.trial_depth > 5 || s.pending_trial_reward < 0 || s.pending_trial_reward > 5 ||
         s.donated_resource < -1 || s.donated_resource > 5 ||
         ((s.trial_depth > 0 || s.pending_trial_reward > 0) && (!s.trial_seen || s.room <= 25)) ||
-        (s.phase == Phase::recovery && s.trial_depth > 0))
+        (s.phase == Phase::recovery && (s.trial_depth > 0 || s.pending_trial_reward > 0)))
         throw std::invalid_argument("Invalid trial progress or donated resource");
     if (s.trial_depth > 0 && phase != Phase::doors && !(phase == Phase::encounter && s.encounter == Encounter::trial_monster))
         throw std::invalid_argument("An active trial requires trial doors or a trial monster");
     if (s.pending_trial_reward > 0 && !(phase == Phase::encounter && s.encounter == Encounter::prize))
         throw std::invalid_argument("A pending trial reward requires the prize encounter");
+    if (phase == Phase::encounter && s.encounter == Encounter::prize && s.pending_trial_reward == 0)
+        throw std::invalid_argument("A trial prize requires a survived tier to claim");
     if (s.room % 25 == 0 && phase != Phase::doors && phase != Phase::encounter)
         throw std::invalid_argument("Boss rooms must have boss doors or the boss encounter");
     if (phase == Phase::doors && !generate_current) {

@@ -119,6 +119,12 @@ Profile Profile::load(const std::string& path) {
         {"trial_legendary_chance", &p.trial_legendary_chance}
     };
     for (auto [key, destination] : scalars) *destination = number(take(key));
+    if (fields.contains("trial_entry_room")) {
+        const double room = number(take("trial_entry_room"));
+        if (room < 0 || room > 93 || std::floor(room) != room)
+            throw std::invalid_argument("trial_entry_room must be an integer in [0,93]");
+        p.trial_entry_room = static_cast<int>(room);
+    }
     const double resources = number(take("initial_resources"));
     if (resources < 0 || resources > 1000000 || std::floor(resources) != resources)
         throw std::invalid_argument("initial_resources must be an integer in [0,1000000]");
@@ -153,6 +159,9 @@ Profile Profile::load(const std::string& path) {
     return p;
 }
 void Profile::validate() const {
+    if (trial_entry_room != 0 && (trial_entry_room < 26 || trial_entry_room > 93 ||
+        trial_entry_room % 25 == 0 || trial_entry_room % 25 > 18))
+        throw std::invalid_argument("Trial entrance must leave room for five tiers and the prize before a boss, or be 0 for weighted generation");
     if (damage_distribution != "uniform" && damage_distribution != "triangular" && damage_distribution != "low" &&
         damage_distribution != "high" && damage_distribution != "midpoint")
         throw std::invalid_argument("damage_distribution must be uniform, triangular, low, high or midpoint");

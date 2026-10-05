@@ -88,6 +88,9 @@ the protocol, fairness limits, metrics and sensitivity settings. Give fresh
 participants [the rules](docs/AGENT_RULES.md), without an existing strategy.
 The [recorded pilot](docs/EVENT_PILOT.md) includes frozen AI-authored controllers,
 learned coefficients, separate budget comparisons and damage sensitivity results.
+It uses historical engine 0.4.0. Version 0.4.1 fixes trial evasion and adds the
+reported room-51 entrance; the older results have not been re-evaluated under
+these corrections. See the pilot's pinned commit for reproduction.
 
 ## Free-to-play completion time
 

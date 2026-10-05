@@ -160,6 +160,19 @@ A collaborative study can pool records from players controlling their own
 characters, without sharing credentials. Record server as well as character,
 event/version and run number; do not assume they have identical distributions.
 
+The [current multi-accounting article](https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/263-multi-accounting-1707306057/)
+also has an exception for characters already moved together by a world fusion;
+this does not permit creating another character on an already occupied world.
+No overall numerical server/character cap was found in the reviewed rules.
+Two separate players may each have a character on one server. A second PC does
+not make a second character controlled by the same person a separate player.
+The [shared-IP rules](https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/264-account-sharing/)
+ask players sharing a household connection to notify support. The
+[scripting rules](https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/278-exploiting-bugs-cheating-scripting/)
+prohibit automation that activates live game mechanics, so automated leveling
+or mushroom farming must not be described as a rules-compliant study method.
+The simulator and its learning policies run offline without game-server access.
+
 For estimating one binary probability near 50%, approximate 95% precision
 planning uses `n = ceil(1.96^2 * 0.25 / margin^2)`. This is an independent-trial,
 single-probability calculation, not a guarantee for all mechanics together or

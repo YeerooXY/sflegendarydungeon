@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(sf_legendary_sim VERSION 0.4.0 LANGUAGES CXX)
+project(sf_legendary_sim VERSION 0.4.1 LANGUAGES CXX)
 
 option(SFLD_SANITIZERS "Enable address and undefined-behavior sanitizers" OFF)
 find_package(Threads REQUIRED)

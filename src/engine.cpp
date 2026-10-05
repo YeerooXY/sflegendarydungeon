@@ -63,6 +63,7 @@ bool Game::available(DoorView door) const {
     const int resource = resource_index(door.kind);
     if (resource >= 0 && state_.resources[static_cast<std::size_t>(resource)] < 1) return false;
     if (door.kind == Door::trial && ((state_.trial_seen && state_.trial_depth == 0) || state_.trial_depth >= 5)) return false;
+    if (door.kind == Door::exit_trial && state_.trial_depth == 0) return false;
     return true;
 }
 int Game::step_price() const { return state_.paid_steps == 0 ? 10 : (state_.paid_steps == 1 ? 15 : 20); }
@@ -126,6 +127,7 @@ void Game::step(Action a) {
     case ActionKind::linger: finish_room(); break;
     case ActionKind::skip:
         if (state_.phase == Phase::encounter && state_.encounter == Encounter::barrel) ++state_.barrels_skipped;
+        if (state_.phase == Phase::encounter && state_.encounter == Encounter::prize) state_.pending_trial_reward = 0;
         finish_room(); break;
     case ActionKind::buy: {
         const auto offer = state_.offers[static_cast<std::size_t>(a.index)];
@@ -186,6 +188,10 @@ void Game::generate_doors() {
     if (state_.trial_depth > 0) {
         state_.doors = {{{state_.trial_depth < 5 ? Door::trial : Door::wall}, {Door::exit_trial}}}; return;
     }
+    if (state_.room == profile_.trial_entry_room && !state_.trial_seen) {
+        // This special pair has no inferred random traps or gem-based replacement.
+        state_.doors = {{{Door::monster}, {Door::trial}}}; return;
+    }
     auto weights = profile_.door_weights;
     if (state_.has(Gem::greed)) weights[ix(Door::mystery)] *= 2;
     if (state_.has(Gem::explorer)) weights[ix(Door::mystery)] *= .5;
@@ -200,7 +206,8 @@ void Game::generate_doors() {
     if (state_.has(Gem::hick)) weights[ix(Door::sacrifice)] *= .5;
     if (state_.has(Gem::thirsty)) weights[ix(Door::cursed)] *= 2;
     if (state_.has(Gem::misadventurer)) weights[ix(Door::cursed)] *= .5;
-    if (state_.trial_seen || state_.room <= 25 || state_.room % 25 > 18) weights[ix(Door::trial)] = 0;
+    if (profile_.trial_entry_room != 0 || state_.trial_seen || state_.room <= 25 || state_.room % 25 > 18)
+        weights[ix(Door::trial)] = 0;
     if (std::accumulate(weights.begin(), weights.end(), 0.0) <= 0) weights[ix(Door::monster)] = 1;
     for (auto& door : state_.doors) {
         door = {static_cast<Door>(random_.weighted(Stream::doors, weights.data(), weights.size()))};
@@ -342,6 +349,10 @@ double Game::damage_ceiling(bool boss) const {
     if (state_.encounter == Encounter::shakes) fight = escape = .3;
     if (state_.encounter == Encounter::valaraukar) fight = escape = .6;
     if (state_.encounter == Encounter::pig) fight = escape = .4;
+    if (state_.encounter == Encounter::trial_monster) {
+        const double multiplier = profile_.trial_multipliers.at(static_cast<std::size_t>(state_.trial_depth));
+        fight *= multiplier; escape *= multiplier;
+    }
     return std::max(fight * battle_multiplier(false), escape * battle_multiplier(true));
 }
 void Game::award_keys() {
@@ -359,7 +370,7 @@ void Game::fight(bool fleeing) {
     if (fleeing && random_.chance(Stream::escape, flee_probability())) {
         if (state_.has(Gem::pendant) && random_.chance(Stream::keys, .4)) ++state_.keys;
         if (state_.has(Gem::pearl) && random_.chance(Stream::effects, .2)) give(random_effect(true));
-        if (encounter == Encounter::trial_monster) { state_.trial_depth = 0; }
+        if (encounter == Encounter::trial_monster) ++state_.trial_depth;
         finish_room(); return;
     }
     double damage = sample_damage(boss ? profile_.boss_damage[band(state_.room)] :
@@ -394,10 +405,7 @@ void Game::fight(bool fleeing) {
             }
         }
     }
-    if (encounter == Encounter::trial_monster) {
-        if (fleeing) state_.trial_depth = 0;
-        else ++state_.trial_depth;
-    }
+    if (encounter == Encounter::trial_monster) ++state_.trial_depth;
     finish_room();
 }
 double Game::sample_damage(Range range) {
@@ -420,8 +428,9 @@ void Game::heal(double fraction) {
 void Game::die() {
     state_.hp = 0; ++state_.deaths;
     state_.blessings.clear(); state_.curses.clear();
-    if (state_.trial_depth > 0 || state_.encounter == Encounter::trial_monster) {
-        state_.trial_depth = 0; state_.phase = Phase::doors; generate_doors();
+    if (state_.trial_depth > 0 || state_.pending_trial_reward > 0 || state_.encounter == Encounter::trial_monster) {
+        state_.trial_depth = 0; state_.pending_trial_reward = 0;
+        state_.encounter = Encounter::empty; state_.phase = Phase::doors; generate_doors();
     }
     if (state_.phase == Phase::doors) ensure_open_path();
     resume_phase_ = state_.phase; state_.phase = Phase::recovery;

@@ -215,6 +215,102 @@ void trial_exit_and_death_reset() {
     death.step({ActionKind::wait, 0, 4.8}); death.step({ActionKind::reenter});
     CHECK(death.state().phase == Phase::doors); CHECK(death.state().trial_seen); CHECK(death.state().trial_depth == 0);
 }
+void trial_entrance_is_offered_at_51_and_can_be_declined() {
+    auto p = fixed_damage(.01);
+    // Even a custom table favoring trials must not move the fixed entrance.
+    p.door_weights.fill(0); p.door_weights[ix(Door::trial)] = 1;
+    for (int run : {1, 2}) {
+        auto s = encounter(Encounter::boss, 50); s.run_number = run;
+        Game game(p, 11, s); game.step({ActionKind::fight}); game.step({ActionKind::choose_gem, 0});
+        CHECK(game.state().room == 51);
+        CHECK(game.state().doors[0].kind == Door::monster); CHECK(game.state().doors[1].kind == Door::trial);
+        CHECK(!game.state().doors[0].trap); CHECK(!game.state().doors[1].trap);
+        game.step({ActionKind::choose_door, 0}); game.step({ActionKind::fight});
+        CHECK(game.state().room == 52); CHECK(game.state().trial_depth == 0);
+        for (auto door : game.state().doors) CHECK(door.kind != Door::trial);
+    }
+    for (int room : {26, 49, 52, 76}) {
+        Game game(p, 11, encounter(Encounter::empty, room)); game.step({ActionKind::interact});
+        for (auto door : game.state().doors) CHECK(door.kind != Door::trial);
+    }
+    p.trial_entry_room = 0;
+    Game weighted(p, 11, encounter(Encounter::empty, 26)); weighted.step({ActionKind::interact});
+    CHECK(weighted.state().doors[0].kind == Door::trial);
+    for (int room : {-1, 25, 44, 50, 94}) { p.trial_entry_room = room; rejects([&] { p.validate(); }); }
+}
+void trial_fights_and_both_escape_outcomes_advance_to_five() {
+    for (int route = 0; route < 3; ++route) {
+        auto p = fixed_damage(.01); p.escape_chance = route == 0 ? 1 : 0;
+        p.trial_legendary_chance = 1;
+        auto s = encounter(Encounter::trial_monster, 51); s.trial_seen = true;
+        Game game(p, 7, s);
+        for (int tier = 1; tier <= 5; ++tier) {
+            const double before = game.state().hp;
+            near(game.damage_ceiling(false), .01 * p.trial_multipliers[static_cast<std::size_t>(tier - 1)]);
+            game.step({route == 2 ? ActionKind::fight : ActionKind::flee});
+            CHECK(game.state().trial_depth == tier); CHECK(game.state().room == 51 + tier);
+            near(before - game.state().hp, route == 0 ? 0 : .01 * p.trial_multipliers[static_cast<std::size_t>(tier - 1)]);
+            CHECK(game.state().legendaries == 0); CHECK(game.state().epics == 0);
+            CHECK(game.state().gold_rewards == 0); CHECK(game.state().pending_trial_reward == 0);
+            CHECK(game.state().doors[1].kind == Door::exit_trial);
+            if (tier < 5) game.step({ActionKind::choose_door, 0});
+        }
+        CHECK(!game.legal({ActionKind::choose_door, 0}));
+        game.step({ActionKind::choose_door, 1});
+        CHECK(game.state().encounter == Encounter::prize); CHECK(game.state().pending_trial_reward == 5);
+        game.step({ActionKind::interact});
+        CHECK(game.state().legendaries == 1); CHECK(game.state().completed_runs == 0);
+        CHECK(game.state().trial_depth == 0); CHECK(game.state().pending_trial_reward == 0);
+        CHECK(game.state().room == 57);
+    }
+}
+void trial_exit_reward_uses_survived_tier_and_can_be_skipped() {
+    auto p = fixed_damage(.01); p.escape_chance = 1; p.trial_legendary_chance = 1;
+    for (int tier = 1; tier <= 5; ++tier) {
+        auto s = encounter(Encounter::trial_monster, 51); s.trial_seen = true;
+        Game game(p, 7, s);
+        for (int i = 1; i <= tier; ++i) {
+            game.step({ActionKind::flee});
+            if (i < tier) game.step({ActionKind::choose_door, 0});
+        }
+        game.step({ActionKind::choose_door, 1}); CHECK(game.state().pending_trial_reward == tier);
+        Game skipped = game; skipped.step({ActionKind::skip});
+        CHECK(skipped.state().pending_trial_reward == 0); CHECK(skipped.state().legendaries == 0);
+        CHECK(skipped.state().epics == 0); CHECK(skipped.state().gold_rewards == 0);
+        game.step({ActionKind::interact});
+        CHECK(game.state().gold_rewards == (tier == 1 ? 1 : 0));
+        CHECK(game.state().epics == (tier >= 2 && tier < 4 ? 1 : 0));
+        CHECK(game.state().legendaries == (tier >= 4 ? 1 : 0));
+    }
+}
+void trial_death_forfeits_reward_and_resumes_normal_rooms() {
+    auto p = fixed_damage(.1); p.escape_chance = 0; p.trap_chance = 0;
+    p.door_weights.fill(0); p.door_weights[ix(Door::trial)] = 1;
+    for (int depth : {0, 2, 4}) for (auto action : {ActionKind::fight, ActionKind::flee}) {
+        auto s = encounter(Encounter::trial_monster, 51 + depth); s.trial_seen = true;
+        s.trial_depth = depth; s.hp = .01;
+        Game game(p, 7, s); game.step({action});
+        CHECK(game.state().phase == Phase::recovery); CHECK(game.state().room == 51 + depth);
+        CHECK(game.state().trial_depth == 0); CHECK(game.state().pending_trial_reward == 0);
+        CHECK(game.state().legendaries == 0); CHECK(game.state().epics == 0); CHECK(game.state().gold_rewards == 0);
+        game.step({ActionKind::wait, 0, 4.8}); game.step({ActionKind::reenter});
+        CHECK(game.state().phase == Phase::doors);
+        for (auto door : game.state().doors) CHECK(door.kind == Door::monster);
+        game.step({ActionKind::choose_door, 0}); game.step({ActionKind::fight});
+        CHECK(game.state().room == 52 + depth); CHECK(game.state().trial_depth == 0);
+    }
+    auto s = encounter(Encounter::trial_monster, 51); s.trial_seen = true; s.hp = .05;
+    s.curses.give(effect(EffectKind::poison, .05, 2)); p.escape_chance = 1;
+    Game poison(p, 7, s); poison.step({ActionKind::flee});
+    CHECK(poison.state().phase == Phase::recovery); CHECK(poison.state().room == 52);
+    CHECK(poison.state().trial_depth == 0); CHECK(poison.state().pending_trial_reward == 0);
+    // An observed trapped exit must not preserve an unclaimed reward after death.
+    s = encounter(Encounter::empty, 54); s.phase = Phase::doors; s.trial_seen = true;
+    s.trial_depth = 3; s.hp = .01; s.doors = {{{Door::wall}, {Door::exit_trial, true}}};
+    Game exit_death(p, 7, s); exit_death.step({ActionKind::choose_door, 1});
+    CHECK(exit_death.state().phase == Phase::recovery); CHECK(exit_death.state().pending_trial_reward == 0);
+    CHECK(exit_death.recovery_destination() == Phase::doors); CHECK(exit_death.state().legendaries == 0);
+}
 void flooded_room_enforces_timer() {
     auto p = fixed_damage(); auto s = encounter(Encounter::flooded, 30);
     Game slow(p, 1, s); slow.step({ActionKind::linger, 0, 10}); CHECK(slow.state().phase == Phase::recovery);
@@ -672,6 +768,8 @@ int main() {
         TEST(full_refill_is_separate_from_step_schedule), TEST(locked_trap_does_not_charge_twice_after_death),
         TEST(lockpick_disarm_use_event_counters), TEST(diamond_overrides_gambler_for_barrels), TEST(only_offered_gems_can_be_selected),
         TEST(free_shops_are_first_run_only), TEST(trial_exit_and_death_reset), TEST(flooded_room_enforces_timer),
+        TEST(trial_entrance_is_offered_at_51_and_can_be_declined), TEST(trial_fights_and_both_escape_outcomes_advance_to_five),
+        TEST(trial_exit_reward_uses_survived_tier_and_can_be_skipped), TEST(trial_death_forfeits_reward_and_resumes_normal_rooms),
         TEST(all_encounters_have_a_transition), TEST(final_boss_completes_without_an_extra_epic),
         TEST(boss_reentry_policy_waits_for_enough_health), TEST(login_grid_is_included_in_wait),
         TEST(threaded_runs_are_reproducible_and_budget_bounded), TEST(censored_runs_are_not_dropped),

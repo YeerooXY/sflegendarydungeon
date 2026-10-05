@@ -58,6 +58,7 @@ std::string observation_json(const Game& game) {
         << ",\"heal_step_price\":" << game.step_price() << ",\"heal_full_price\":" << (s.hp < 1 ? game.full_price() : 0)
         << ",\"paid_heals\":" << s.paid_steps << ",\"shop_rerolls\":" << s.shop_rerolls
         << ",\"trial_depth\":" << s.trial_depth << ",\"trial_seen\":" << s.trial_seen
+        << ",\"pending_trial_reward\":" << s.pending_trial_reward
         << ",\"actions\":" << s.actions << ",\"deaths\":" << s.deaths
         << ",\"first_completion_hours\":";
     if (s.first_completion_hours < 0) out << "null"; else out << s.first_completion_hours;

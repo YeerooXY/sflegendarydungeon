@@ -5,6 +5,12 @@ tests the experiment framework and shows that different decision strategies
 produce different outcomes under the same declared assumptions. The model is
 not calibrated, and the comparison does not establish an optimal strategy.
 
+**Historical engine 0.4.0 results:** version 0.4.1 corrects trial evasion so it
+advances a tier, and the default profile now offers the arena at room 51.
+The results and frozen coefficients below predate those corrections and have
+not been re-evaluated under them. Input hashes refer to the archived commit,
+not today's profile or agent rules. Do not present this table as 0.4.1 results.
+
 ## Frozen comparison
 
 Each controller played 200 events per budget, starting fresh at run 1. Every
@@ -78,8 +84,11 @@ Actual play observations are still required to validate them.
 
 ## Reproduce
 
-Build engine 0.4.0, then run from the repository root (use `build/sfld` for a
-single-config build):
+Check out [commit 61ba25e](https://github.com/YeerooXY/sflegendarydungeon/commit/61ba25eabc49f061d5064e64a59832767ca8b730)
+in a separate checkout to recover engine 0.4.0 and its exact profile/rules.
+Build there, then run from that repository root (use `build/sfld` for a
+single-config build). The archived coefficient files intentionally require
+engine 0.4.0; train new policies for current mechanics.
 
 ```sh
 build/Release/sfld.exe event --allow-assumptions --budget 0 --runs 200 --seed 391864

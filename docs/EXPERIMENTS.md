@@ -8,6 +8,12 @@ Run a separate budget-zero experiment for free-to-play results.
 The engine is C++20. No game client or server is required. Python is optional
 for external-controller evaluation; training and bulk simulation stay in C++.
 
+Version 0.4.1 corrects trial progression: evading a monster advances its tier
+if survived, and the default profile offers the trial at room 51. Historical
+0.4.0 pilot coefficients require their original engine and profile; train new
+policies when evaluating current mechanics. `pending_trial_reward` in an agent
+observation identifies the survived tier of an unclaimed prize chest.
+
 ## Commands
 
 Use `build/Release/sfld.exe` on Windows or `build/sfld` with a single-config build.

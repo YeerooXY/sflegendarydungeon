@@ -1,4 +1,4 @@
-# Model v0.4
+# Model v0.4.1
 
 This document describes the implemented engine. It is not a claim that all of
 these transitions match the server. Sources were inspected on 2026-09-23; the
@@ -252,13 +252,32 @@ baseline skips it when the modeled damage ceiling is at least current HP.
 Several costs, reward quantities, theme restrictions and outcome probabilities
 remain simplified. Catalog coverage is not complete game fidelity.
 
-Trials can start once, after floor one and early enough in a floor to avoid a boss.
-The synthetic generator allows them through room 18 of later floors. Victories
-increment depth (up to five) and advance the normal room count; damage multipliers
-are 1.0/1.1/1.2/1.3/1.4. Exit consumes a prize room: depth 1 gives gold, depth 2+
-an epic, depth 4+ has a configured legendary chance. Death or escape clears the
-trial chain and resumes the normal path. Trial counting/reward timing is especially
-provisional. The baseline policy avoids entry and exits at the first opportunity.
+Trials default to a fixed monster/trial door pair in room 51, following the
+maintainer's 2026-10-05 arena description. Both entrance doors are untrapped and
+their order is fixed in the model; paired ordering and interaction with stones
+remain unverified. `trial_entry_room` selects another entrance room, or 0 for
+the former weighted placement through room 18 of floors after the first. A
+nonzero entrance must leave space for five tiers and a prize before a boss.
+This placement applies each run; first/later-run and theme restrictions need data.
+Explicit observed doors and active trial progress remain supported elsewhere.
+
+Each **survived** trial encounter increments depth (up to five) and advances the
+normal room count, whether the action was a fight, successful escape or failed
+escape with survived damage. Assumed damage multipliers are 1.0/1.1/1.2/1.3/1.4.
+The chicken door (`exit_trial`) stores the survived tier for a prize; the fifth
+tier forces that exit. Exit consumes a prize room: depth 1 gives gold, depth 2+
+an epic, depth 4+ has a configured legendary chance. These intermediate rewards
+and the default 1% legendary chance are placeholders; the player confirms that
+the tier-five prize can be legendary, not its rate or exclusivity to that tier.
+
+Death before collecting the prize clears trial depth and the unclaimed reward,
+and resumes normal doors after recovery; it does not replay the remaining tiers
+or skip ahead to their end. Combat death keeps the current room number, while
+lethal exit poison commits the cleared room as usual. Already collected loot
+persists under normal death rules. Skipping the prize discards the pending reward.
+A trial legendary increments item count, not completed dungeon runs. Exact live
+room-counter timing and reward quantities still need recorded validation.
+The baseline policy avoids entry and exits at the first opportunity.
 
 ## Time and spending
 

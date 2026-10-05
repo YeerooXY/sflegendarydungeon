@@ -2,7 +2,7 @@
 # Results from this profile are conditional experiments, not live-game estimates.
 # See docs/MODEL.md for every implemented convention and excluded mechanic.
 schema=1
-id=synthetic-player-pools-v2
+id=synthetic-player-trials-v3
 evidence=synthetic
 doors=monster:25,mystery:25,locked:15,double_locked:0,unlocked:3,epic:3,golden:8,shop:5,cursed:3,sacrifice:3,blessing:2,destiny:2,wood:1,stone:1,souls:1,metal:1,arcane:1,hourglasses:1,trial:1,wall:3
 mystery=monster:40,barrel:15,crate:15,silver:8,bronze:5,skeleton:5,mimic:2,empty:10
@@ -20,6 +20,10 @@ escape_damage=0.1178:0.1440,0.1683:0.2057,0.1457:0.2338,0.1731:0.2571
 boss_damage=0.1608:0.1962,0.2295:0.2805,0.2295:0.2805,0.4303:0.5250
 damage_distribution=uniform
 trial_multipliers=1.0,1.1,1.2,1.3,1.4
+# Player report 2026-10-05: room 51 offers a monster or the five-tier trial arena.
+# Applied each run; event/run restrictions, door ordering and damage scaling need data.
+# 0 restores the former weighted entrance placement (not the old flee behavior).
+trial_entry_room=51
 # Order: raider, one_hit, escape, disarm, lockpick, key_moment, elixir, recovery.
 blessings=1,1,1,1,1,1,1,1
 # Order: broken_armor, poison, clumsy, gold_hangover, hard_lock.
@@ -57,6 +61,7 @@ recovery_hours=24
 action_seconds=2
 # Hypothetical extension of first-use UI quotes; not a verified price schedule.
 full_heal_cost_per_fraction=48
+# Legendary reward is possible, but this chance is an unmeasured placeholder.
 trial_legendary_chance=0.01
 # Abstract donation units per resource, not live-game wood/stone quantities.
 initial_resources=10

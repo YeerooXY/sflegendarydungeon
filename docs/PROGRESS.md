@@ -78,7 +78,7 @@ Death clears blessings/curses. Recovery input must leave those empty, even when
 Greasy will grant Recovery on re-entry. Enter HP regenerated **now**, not before
 death. If an entrance cost was already paid, resume the encounter rather than
 doors to avoid paying again. Trial death resumes normal doors with
-`trial_seen=true` and `trial_depth=0`.
+`trial_seen=true`, `trial_depth=0` and `pending_trial_reward=0`.
 
 Examples: [doors](../examples/progress.state), [recovery](../examples/recovery.state),
 [gem selection](../examples/gem-choice.state), [shop](../examples/shop.state).
@@ -97,8 +97,8 @@ duplicates and inconsistent states are rejected.
 | `paid_heals`, `shop_rerolls` | Earlier purchases in this run/current shop; default `0` |
 | `resources` | Six abstract donation-unit balances: wood, stone, souls, metal, arcane, hourglasses; default all zero |
 | `trial_seen` | Trial entrance already used this run; default `false` |
-| `trial_depth` | Active trial wins, 0..5; default `0` |
-| `pending_trial_reward` | Won trial depth for the current `prize` encounter |
+| `trial_depth` | Survived active trial tiers, including evasion, 0..5; default `0` |
+| `pending_trial_reward` | Survived tier for the current unclaimed `prize`; cleared by death or skipping |
 | `donated_resource` | Resource paid for the current `sated_chest`, index 0..5 |
 | `resume_phase` | Required in recovery: `doors`, `encounter`, `shop` or `curse_shop` |
 | `flooded_seconds` | Time already spent in a `flooded` encounter, 0..<10; default `0` |
