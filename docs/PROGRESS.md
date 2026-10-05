@@ -101,6 +101,7 @@ duplicates and inconsistent states are rejected.
 | `pending_trial_reward` | Won trial depth for the current `prize` encounter |
 | `donated_resource` | Resource paid for the current `sated_chest`, index 0..5 |
 | `resume_phase` | Required in recovery: `doors`, `encounter`, `shop` or `curse_shop` |
+| `flooded_seconds` | Time already spent in a `flooded` encounter, 0..<10; default `0` |
 
 Canonical report/trace snapshots use `hp_fraction` (0..1) to preserve exact
 floating-point HP. Input accepts either form, never both. Historical result
@@ -168,8 +169,9 @@ Stone IDs use shortened English names:
 | `deceit`, `lodestone`, `bull`, `hick` | Pebble of Deceit, Lodestone, Eye of the Bull, Erratic Boulder of the Hick |
 
 Names follow the inspected [community calculator](https://ldgadget.12hp.de/).
-Archived IDs `rusty`, `masochist`, `old_sacrifice`, `kidney` are also accepted,
-but their rules are provisional and they are excluded from the default pool.
+`rusty`, `masochist`, `old_sacrifice`, `kidney` are also accepted with provisional
+rules. Rusty is in the default later-run pool after the maintainer identified it
+in the supplied image; the other three remain excluded.
 
 ## First-run and later-run stone pools
 
@@ -178,9 +180,10 @@ run number selects the relevant pool. Missing overrides fall back to `gems`.
 Each configured pool needs at least five distinct IDs so three unowned choices
 remain at the third selection.
 
-**The shipped scenario has no verified first/later-run pool split.** Both currently
-fall back to the same hypothetical pool. This feature supports a verified split
-when available; it does not invent one. Every report lists its future pool.
+The shipped scenario uses the [maintainer's reported split](GEM_POOLS.md): 11
+first-run and 20 later-run stones. Rusty's later-only restriction is tentative.
+The list may be incomplete and is not a measured server distribution.
+Single-run reports list their future pool.
 Already held gems and observed offers are preserved even if absent from that
 pool: known observations take precedence over a hypothetical generation table.
 

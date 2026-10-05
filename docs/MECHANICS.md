@@ -68,16 +68,16 @@ Their relative appearance rates are unknown.
 | Rocks / `rocks` | Mandatory passage, stone reward | Resource amount represented by an abstract donation unit |
 | Woodpile / `wood` | Mandatory passage, wood reward | Abstract donation unit |
 | Lava / `lava` | Mandatory -10 HP points | Live ordering with ongoing effects |
-| Flooded room / `flooded` | Exit; an action taking at least 10 seconds is lethal | Simplified timer/action model |
+| Flooded room / `flooded` | Exit before 10 cumulative simulated seconds; refills also consume the timer | Agent wall-clock thinking time is excluded |
 | Wishing well / `wishing_well` | Blessing or epic item | 50/50 placeholder; gold payment omitted |
-| Rock-paper-scissors / `rps` | Choice, win/blessing, loss/damage+curse, draw, skip | Uniform opponent assumption; community-reported item reward not yet represented |
+| Rock-paper-scissors / `rps` | Choice, win/blessing+epic, loss/damage+curse, draw, skip | Uniform opponent; epic is a community report, configurable via `rps_epic_reward` |
 | Sewers / `sewers` | Epic reward or skip | Item types and toilet eligibility not tracked |
 | Sarcophagus / `sarcophagus` | Relative gold reward | Exact gold amount |
 | Locked sarcophagus / `locked_sarcophagus` | Key payment and epic | Lockpick/Hard Lock interaction is provisional |
 | Wheel / `wheel` | Blessing, curse, gold, key gain/loss, or skip | Five equal outcome weights are placeholders, not wheel-sector measurements |
-| Spider legs / `spider_legs` | 1 key or poison, or skip | 80% success placeholder |
+| Spider legs / `spider_legs` | 1 key or poison, or skip | Configurable 80% success placeholder; immediate bite damage unknown |
 | Spider head / `spider_head` | 2 keys or poison, or skip | Official equal odds; poison timing still provisional |
-| Whole spider / `spider_full` | 5 keys or poison, or skip | 20% success placeholder |
+| Whole spider / `spider_full` | 5 keys or poison, or skip | Configurable 20% success placeholder; immediate bite damage unknown |
 | Soul bath / `souls` | Soul reward or skip | Abstract donation unit |
 | Arcane cave / `arcane` | Arcane reward or skip | Abstract donation unit |
 | Curse merchant / `curse_shop` | Curse in exchange for keys, reroll or leave | Distinct offers and strength model extrapolated from blessing shop |
@@ -96,6 +96,19 @@ be selected in a profile's `golden` table or entered directly in a progress file
 There is no automatic event/theme detector. Listing a room above does not imply
 that every event can generate it.
 
+This covers all variants on the publisher's current golden-room guide plus the
+community-reported armory, **not every room identifier in every client theme**.
+The installed client additionally names `Special_Empire` (327) and
+`Special_MariachiBand` (328). Their gameplay and active themes remain unresolved;
+they have no invented transition or spawn weight. `Special_Hole` (302) also
+needs an explicit mapping before claiming full coverage of the client catalog.
+See [CLIENT_INSPECTION.md](CLIENT_INSPECTION.md).
+
+`spider_success` configures legs/head/full success separately; the default is
+80/50/20%. Only the middle equal-odds description is official. Immediate bite
+damage can be set with `spider_bite_damage` (default zero, unknown); poison still
+applies. These values are hypotheses, not pooled community measurements.
+
 ## Shops and interaction tests
 
 See [SHOPS.md](SHOPS.md) for targeted rerolls, key affordability, separate recovery
@@ -112,9 +125,13 @@ pig death/skip behavior and duration gems.
 
 The highest-impact unresolved issues are joint door offers, room frequencies,
 barrel/effect probabilities, escape modifier semantics, exact effect tick order,
-and theme/floor-specific combat curses. Combat curses currently use a shared
-random table; the live floor-specific choice shown in the dungeon overview has
-not been mapped. Shop identity frequencies and correlations also remain unknown.
+and theme/floor-specific combat curses. Version 0.4 provisionally adopts the
+overview mapping found by the [client inspection](CLIENT_INSPECTION.md):
+stage 2 Gold Rush Hangover, stage 3 Poison, stage 4 Broken Armor. The same mapping
+appears in the [Czech community guide](https://shakes-fidget7404.proweb.cz/legendarni-podzemi).
+`floor_specific_curses=false` restores the earlier random-identity scenario.
+Its live trigger behavior, duration/strength and probabilities still need validation.
+Shop identity frequencies and correlations also remain unknown.
 
 Several resource, inventory, trial and special-room rewards are simplified as
 listed above and in MODEL.md. Normal versus Ultimate economy is not modeled.

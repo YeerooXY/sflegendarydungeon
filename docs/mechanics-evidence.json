@@ -1,11 +1,20 @@
 {
   "schema_version": 1,
   "researched_on": "2026-09-23",
+  "last_updated_on": "2026-10-05",
   "game_mode": "Shakes & Fidget Legendary Dungeon",
   "purpose": "Evidence inventory, separate from runnable synthetic scenarios; insufficient for calibrated complete runs",
   "calibrated_to_live_game": false,
   "hp_unit": "fraction_of_maximum_dungeon_hp",
   "sources": {
+    "local_client_2026_10_05": {
+      "kind": "static_inspection_of_installed_client",
+      "report": "CLIENT_INSPECTION.md",
+      "evidence": "client-inspection-2026-10-05.json",
+      "game_version": "31.001.260916.1",
+      "steam_build_id": "25345890",
+      "live_outcomes_observed": false
+    },
     "official_overview": {
       "url": "https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/57-legendary-dungeon/",
       "kind": "publisher_documentation"
@@ -63,6 +72,18 @@
     }
   },
   "adopted_player_observations": {
+    "run_dependent_gem_pools_2026_10_05": {
+      "source": "maintainer_conversation_and_supplied_tier_list_image",
+      "documentation": "GEM_POOLS.md",
+      "later_only_reported": ["pendant", "thirsty", "pearl", "explorer", "misadventurer", "time_traveler", "devil", "lodestone"],
+      "later_only_tentative": ["rusty"],
+      "equal_offer_weights": "simulation_assumption",
+      "other_restrictions_possible": true
+    },
+    "new_run_starts_at_full_hp_2026_10_05": {
+      "value": true,
+      "source": "maintainer_direct_player_report"
+    },
     "key_moment_two_key_probability": {
       "value": 0.70,
       "sources": ["maintainer_2026_09_23", "ld_gadget"],
@@ -77,6 +98,17 @@
       "status": "rough_player_estimate_no_sample_count",
       "caution": "Independent strength rolls and equal identity weights remain simulator assumptions; does not establish barrel odds"
     }
+  },
+  "client_observations_with_provisional_model_use": {
+    "source": "local_client_2026_10_05",
+    "stage_monster_curse_overview": {
+      "2": "gold_hangover",
+      "3": "poison",
+      "4": "broken_armor"
+    },
+    "full_heal_ui_quote": "clamp(48 - floor(48 * recovery_fraction), 0, 48)",
+    "recovery_seconds_divisor": 86400,
+    "caution": "Client overview and quote verified by static inspection; v0.4 adopts the floor curse identities provisionally. Server triggers, probabilities, charges and purchase-counter interactions remain unvalidated."
   },
   "community_recovery_model": {
     "sources": ["ld_gadget", "api_research"],
@@ -122,7 +154,10 @@
     "gem_offer_distribution_and_current_pool": null,
     "special_room_distributions_by_theme": null,
     "exact_effect_tick_and_death_order": null,
-    "floor_and_theme_specific_combat_curse_mapping": null,
+    "theme_specific_combat_curse_mapping_and_trigger_rates": null,
+    "first_run_and_later_run_restricted_gem_ids": null,
+    "post_completion_starting_hp": null,
+    "empire_mariachi_and_hole_room_mapping": null,
     "full_refill_price_schedule": null,
     "ultimate_fee_scope_and_current_amount": null,
     "target_event_deadline": null,

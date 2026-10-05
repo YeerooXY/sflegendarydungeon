@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "inspected_on": "2026-10-05",
+  "kind": "local_static_client_inspection",
+  "calibrated_to_live_game": false,
+  "game_executed_by_inspection": false,
+  "game_server_requests_sent": false,
+  "build": {
+    "steam_app_id": 438040,
+    "steam_build_id": "25345890",
+    "game_version": "31.001.260916.1",
+    "unity_version": "6000.3.11f1",
+    "architecture": "windows_x64_il2cpp",
+    "metadata_version": 39,
+    "game_version_read_caveat": "PlayerSettings parsed with end-of-object validation disabled after a four-byte size mismatch; no other PlayerSettings values adopted"
+  },
+  "files": {
+    "GameAssembly.dll": {
+      "bytes": 47861248,
+      "sha256": "c638f3f7a4ded1cbd202d34a62e4412109e6e6833f02d335477fb75383cf494e"
+    },
+    "shakesandfidget_Data/il2cpp_data/Metadata/global-metadata.dat": {
+      "bytes": 12505916,
+      "sha256": "b1be1efab04e143a8c9c7c36e710894a058317af1a019ff57e3bea9de46ddeb0"
+    },
+    "shakesandfidget_Data/globalgamemanagers": {
+      "sha256": "22c7457dfe579e74476c0b722e8b1dc977aed151f3ffc631362cf4f57b575d14"
+    }
+  },
+  "tools": {
+    "cpp2il_commit": "f92ff8bcc8a05e2d9d263b875a25c4ae476a4a24",
+    "cpp2il_executable_sha256": "7afc9a908014483bbfb847e2a06c90231ea0318899c6215b9db3a2c105e9c38d",
+    "cpp2il_outputs": [
+      "diffable-cs",
+      "isil"
+    ],
+    "cpp2il_processor": "attributeinjector",
+    "capstone": "5.0.9",
+    "unitypy": "1.25.4"
+  },
+  "method_rvas": {
+    "DotLocaHelper.GetFloorDebuffInfo": "0x1247A50",
+    "DotLocaHelper.GetDescription": "0x12478D0",
+    "DotOverviewCard.AddDebuffIcon": "0x1557D90",
+    "Dungeons.get_DotFullLifeMushroomCost": "0x170C510",
+    "Dungeons.get_DotLifePercent": "0x170C7B0",
+    "Dungeons.get_HealthDiff": "0x170CA90",
+    "DungeonBuff.constructor": "0x170ADD0",
+    "DungeonMerchantItem.constructor": "0x170AEC0",
+    "DungeonResponseHandler.Dungeon20Cost": "0x16D53C0",
+    "DungeonResponseHandler.DungeonChances": "0x16D5450",
+    "DungeonResponseHandler.DungeonGemsOfFate": "0x16D5630",
+    "DungeonResponseHandler.MerchantItems": "0x16D6820",
+    "DungeonMerchantDialog.OnMerchantRerollClicked": "0x132B910",
+    "MonsterRoom.OnIgnore": "0x156F120",
+    "MonsterRoom.OnInteract": "0x156F310",
+    "MonsterRoom.Flee.MoveNext": "0x1575220"
+  },
+  "client_observations": {
+    "floor_monster_curse_description": {
+      "status": "verified_client_overview_mapping_not_live_drop_behavior",
+      "one_based_stage_to_curse_id": {
+        "1": null,
+        "2": 104,
+        "3": 102,
+        "4": 101
+      },
+      "curse_names": {
+        "104": "Gold Rush Hangover",
+        "102": "Poison",
+        "101": "Broken Armor"
+      },
+      "probability": null,
+      "strength_distribution": null,
+      "theme_parameter_in_description_helper": false
+    },
+    "full_heal_ui_quote": {
+      "status": "native_client_calculation_not_purchase_validation",
+      "recovery_seconds": 86400,
+      "fraction_input": "clamp((estimated server time - IADungeonLastTry) / 86400, 0, 1), with client float arithmetic",
+      "formula": "clamp(48 - floor(48 * recovery_fraction), 0, 48)",
+      "rounding_helper_rva": "0x279530",
+      "rounding_sse_path_rva": "0x290750",
+      "rounding_sse_instruction": "roundsd xmm0, xmm0, 9",
+      "multiplier_rva": "0x221EE8C",
+      "recovery_divisor_rva": "0x221EED8",
+      "actual_deduction_validated": false,
+      "partial_purchase_counter_interaction": null
+    },
+    "partial_heal_quote": {
+      "response": "iadungeon20cost",
+      "source": "server response value"
+    },
+    "effects": {
+      "blessing_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "curse_ids": [
+        101,
+        102,
+        103,
+        104,
+        105
+      ],
+      "stone_id_range": [
+        1,
+        23
+      ],
+      "packed_nonnegative_duration": "packed // 10000",
+      "packed_nonnegative_power": "packed % 10000",
+      "separate_original_duration": true
+    },
+    "merchant_response": {
+      "response": "iamerchant",
+      "record_width": 3,
+      "fields": [
+        "effect_id",
+        "packed_duration_and_power",
+        "key_price"
+      ],
+      "leading_count_field": false,
+      "reroll_interaction_code": 80,
+      "strong_probability": null
+    },
+    "escape": {
+      "interaction_code": 21,
+      "presentation_uses_returned_hp_difference": true,
+      "local_random_half_check_purpose": "monster attack animation mirror argument",
+      "baseline_probability": null,
+      "modifier_semantics": null
+    },
+    "iadungeonchances": {
+      "purpose": "equipment drop chances and weapon bad-luck counters",
+      "escape_or_barrel_probability_table": false
+    }
+  },
+  "theme_boss_asset_catalog": {
+    "birthday": [
+      5141,
+      5142,
+      5143,
+      5144,
+      5145,
+      5146,
+      5147,
+      5148
+    ],
+    "cthulhu": [
+      5297,
+      5298,
+      5299,
+      5300
+    ],
+    "dragontemple": [
+      5340,
+      5341,
+      5342,
+      5343
+    ],
+    "gloria": [
+      5197,
+      5198,
+      5199,
+      5200,
+      5226,
+      5227,
+      5228,
+      5229
+    ],
+    "holiday": [
+      5387,
+      5388,
+      5389,
+      5390
+    ],
+    "mmo": [
+      5293,
+      5294,
+      5295,
+      5296
+    ],
+    "treat": [
+      5159,
+      5160,
+      5172,
+      5168,
+      5214,
+      5215,
+      5216,
+      5217
+    ],
+    "wizard": [
+      5045,
+      5072,
+      5044,
+      5073,
+      5236,
+      5237,
+      5238,
+      5239
+    ]
+  },
+  "catalog_caveat": "Asset and enum membership does not establish availability, frequencies, first/later run selection or damage.",
+  "room_identifiers_needing_semantic_mapping": {
+    "327": "Special_Empire",
+    "328": "Special_MariachiBand"
+  },
+  "unresolved": [
+    "escape base probability and modifier arithmetic",
+    "barrel outcomes and strengths",
+    "monster curse chance and trigger timing",
+    "combat damage distributions",
+    "joint door and hidden room distributions",
+    "shop offer weights, strength probabilities and correlations",
+    "first and later run stone pools",
+    "server validation of full-heal transactions and counter effects"
+  ],
+  "theme_bundle_files": {
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_birthday": {
+      "bytes": 13376,
+      "sha256": "b0d8428f6f87f4d5fc9b26143ec97baf8684f0e6539a1b594f9bc3e3ae154ce7"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_cthulhu": {
+      "bytes": 12281,
+      "sha256": "e8fcec1ac93872c5e0bb43946644e578ff32202e2d74ee1b5877b9f401286a42"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_dragontemple": {
+      "bytes": 12681,
+      "sha256": "05d9e2dcc4444a2c2116a5ab868646429640dd8e4d0f75641ed800663dd0302d"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_gloria": {
+      "bytes": 11900,
+      "sha256": "2a8edb3cec6cecb6b058bd0c1556d17016cdb426b031c1161162114fe6bcc3d7"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_holiday": {
+      "bytes": 12948,
+      "sha256": "c9faa1876de29cdf9fec835a3cbcb86951eaae3a8a2d50b6f28a6a51ba25e765"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_mmo": {
+      "bytes": 13843,
+      "sha256": "cc3f4a2aa0c64a03eec7cecf537509149329a951eb3aa128d24c4c66c33fa273"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_treat": {
+      "bytes": 12575,
+      "sha256": "0b455f7b789b6e0e226c0e53e05bcd6847959d25b5d5966fc373393671419b26"
+    },
+    "shakesandfidget_Data/StreamingAssets/dot/dot_data_wizard": {
+      "bytes": 12563,
+      "sha256": "7e51c494aa950664c19b8f4c1e5cbaa76d185d938ebfbbe35a490780e25af0d2"
+    }
+  }
+}

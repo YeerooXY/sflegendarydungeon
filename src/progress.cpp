@@ -155,6 +155,7 @@ StartState StartState::parse(std::string_view text) {
     } else if (phase == Phase::encounter) {
         start.generate_current = false;
         s.encounter = encounter_from(take("encounter"));
+        if (s.encounter == Encounter::flooded) s.flooded_seconds = number(take("flooded_seconds", "0"));
     } else if (phase == Phase::shop || phase == Phase::curse_shop) {
         const auto offers = take("offers", "unknown");
         start.generate_current = offers == "unknown";
@@ -184,6 +185,9 @@ StartState StartState::parse(std::string_view text) {
 void StartState::validate(const Profile& profile) const {
     const auto& s = state;
     const auto phase = decision_phase();
+    if (!std::isfinite(s.flooded_seconds) || s.flooded_seconds < 0 || s.flooded_seconds >= 10 ||
+        (s.flooded_seconds != 0 && (phase != Phase::encounter || s.encounter != Encounter::flooded)))
+        throw std::invalid_argument("flooded_seconds must be in [0,10) in a flooded encounter");
     if (s.room < 1 || s.room > 100 || s.turn != s.room - 1 || s.run_number < 1 || s.run_number > 1000000 ||
         !std::isfinite(s.hp) || s.hp < 0 || s.hp > 1 || (s.hp == 0 && s.phase != Phase::recovery) ||
         s.keys < 0 || s.keys > 1000000 || s.paid_steps < 0 || s.paid_steps > 1000000 ||
@@ -194,7 +198,7 @@ void StartState::validate(const Profile& profile) const {
     if (s.elapsed_hours != 0 || s.active_hours != 0 || s.actions != 0 || s.mushrooms != 0 || s.recovery_mushrooms != 0 ||
         s.reroll_mushrooms != 0 || s.deaths != 0 || s.barrels_opened != 0 || s.barrels_skipped != 0 ||
         s.epics != 0 || s.legendaries != 0 || s.gold_rewards != 0 || s.gold_units != 0 || s.lucky_coins != 0 ||
-        s.shop_purchases != 0 || s.strong_one_hit_purchases != 0)
+        s.shop_purchases != 0 || s.strong_one_hit_purchases != 0 || s.completed_runs != 0 || s.first_completion_hours != -1)
         throw std::invalid_argument("Progress result counters must start at zero; budgets and time are measured from now");
     for (int resource : s.resources) if (resource < 0 || resource > 1000000) throw std::invalid_argument("Invalid resource balance");
     const auto count = std::count(s.gems.begin(), s.gems.end(), true);
@@ -299,7 +303,10 @@ std::string StartState::encode() const {
             if (s.doors[i].trap) out << (s.doors[i].cursed_trap ? ":cursed_trap" : ":trap");
         }
         break;
-    case Phase::encounter: out << "encounter=" << name(s.encounter); break;
+    case Phase::encounter:
+        out << "encounter=" << name(s.encounter);
+        if (s.encounter == Encounter::flooded) out << "\nflooded_seconds=" << s.flooded_seconds;
+        break;
     case Phase::shop: case Phase::curse_shop:
         out << "offers=";
         if (generate_current) out << "unknown";

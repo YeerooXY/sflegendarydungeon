@@ -1,0 +1,6157 @@
+{
+  "schema": 1,
+  "date": "2026-10-05",
+  "engine": "0.4.0",
+  "evidence": "synthetic",
+  "calibrated_to_live_game": false,
+  "artifacts_sha256": {
+    "profiles/synthetic.profile": "e5df9fe03a810cd19247831a9c6bd3327216ec80b94bba197a3a47240b073a5a",
+    "examples/agents/player_a.py": "d04999c06a3fd1724869d2959e2e7620d99664458aeb42e94c90a754e1807611",
+    "examples/agents/player_b.py": "581c019137ed7d0fc25ff569b8755d51962ac7b3309dbf71ae10280a45bc9174",
+    "examples/learned/budget-0.policy": "6b31fd2891f92436a40b05d3509ba1cc758cadd0b003c847b79f4647884141b1",
+    "examples/learned/budget-500.policy": "222ef5f57e632420af752124707be3462d679df28951eada70b402469d29f91c"
+  },
+  "main_comparison": {
+    "baseline": {
+      "0": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "c673bf127fe06a54",
+        "policy": "baseline:barrels=adaptive,shop=adaptive,rerolls=0,revive=0.200000",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "uniform",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 3,
+        "mean_completions_mc_se": 0.0637993084508,
+        "mean_mushrooms": 0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 0,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 30.8929811111,
+        "restricted_first_completion_hours": 30.8929811111,
+        "actions": 162317,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "500": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "c673bf127fe06a54",
+        "policy": "baseline:barrels=adaptive,shop=adaptive,rerolls=0,revive=0.200000",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "uniform",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 5.18,
+        "mean_completions_mc_se": 0.0810608060123,
+        "mean_mushrooms": 495.31,
+        "mean_recovery_mushrooms": 495.31,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 95.6196911197,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 0.121708333333,
+        "restricted_first_completion_hours": 0.121708333333,
+        "actions": 263989,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      }
+    },
+    "learned": {
+      "0": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "c673bf127fe06a54",
+        "policy": "examples/learned/budget-0.policy",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "uniform",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 2.44,
+        "mean_completions_mc_se": 0.0620584908083,
+        "mean_mushrooms": 0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 0,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 41.7545805556,
+        "restricted_first_completion_hours": 41.7545805556,
+        "actions": 127826,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "500": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "c673bf127fe06a54",
+        "policy": "examples/learned/budget-500.policy",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "uniform",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 6.915,
+        "mean_completions_mc_se": 0.0986790900549,
+        "mean_mushrooms": 495.375,
+        "mean_recovery_mushrooms": 495.375,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 71.6377440347,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 0.115108333333,
+        "restricted_first_completion_hours": 0.115108333333,
+        "actions": 322898,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      }
+    },
+    "a": {
+      "0": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "valid": true,
+        "controller": "examples\\agents\\player_a.py",
+        "controller_sha256": "d04999c06a3fd1724869d2959e2e7620d99664458aeb42e94c90a754e1807611",
+        "profile_sha256": "e5df9fe03a810cd19247831a9c6bd3327216ec80b94bba197a3a47240b073a5a",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "mean_completions": 3.88,
+        "mean_completions_mc_se": 0.0920345139542442,
+        "mean_mushrooms": 0.0,
+        "mushrooms_per_completion": 0.0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "probability_at_least_one_completion": 1.0,
+        "conditional_first_completion_hours": 23.972402777777763,
+        "restricted_first_completion_hours": 23.97240277777776,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included",
+        "outcomes": [
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 89,
+            "actions": 1265
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 785
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 687
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 1377
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 691
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 805
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 58,
+            "actions": 1017
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 887
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 607
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 884
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 776
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 77,
+            "actions": 638
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1040
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 1215
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 88,
+            "actions": 863
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1095
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1850
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 95,
+            "actions": 876
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 1081
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 884
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 1434
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 1224
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 686
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1251
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 993
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 1194
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 668
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 65,
+            "actions": 1025
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1040
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1035
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 790
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1098
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 875
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 21,
+            "actions": 1335
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 67,
+            "actions": 1632
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 887
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1499
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 74,
+            "actions": 1047
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 882
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 992
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 87,
+            "actions": 666
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 815
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 70,
+            "actions": 833
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 893
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 779
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 649
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 886
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 689
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 98,
+            "actions": 685
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 853
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 89,
+            "actions": 1066
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 999
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1095
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 996
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 738
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 637
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 81,
+            "actions": 1061
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1291
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 1021
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 95,
+            "actions": 1287
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 979
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 735
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 701
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 791
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 885
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 24,
+            "actions": 726
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 64,
+            "actions": 611
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 946
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 873
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 1222
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 20,
+            "actions": 1338
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 1183
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1085
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 976
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 897
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 89,
+            "actions": 1264
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 894
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 814
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 892
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 21,
+            "actions": 928
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1442
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 1224
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 790
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 569
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 834
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 889
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 893
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 635
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 47,
+            "actions": 1389
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 15,
+            "actions": 1126
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 839
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1401
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 839
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 31,
+            "actions": 959
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 815
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1186
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 788
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 678
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 686
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1047
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1045
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 1180
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 56,
+            "actions": 1411
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1181
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 784
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 985
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1690
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 995
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 1425
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 993
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 28,
+            "actions": 952
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1049
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 687
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1190
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 835
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1238
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 820
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1039
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 776
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 20,
+            "actions": 922
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 982
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 991
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 685
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 1025
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1704
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 886
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1199
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 1005
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 818
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 1173
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 1000
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 986
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 47,
+            "actions": 785
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 1388
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 73,
+            "actions": 1444
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 89,
+            "actions": 873
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 793
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 832
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 878
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 87,
+            "actions": 1264
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1199
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 642
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 1465
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 1212
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 973
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 82,
+            "actions": 1463
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 640
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1193
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 1088
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1295
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1089
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1292
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 643
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 70,
+            "actions": 1035
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1041
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1441
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 891
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 1012
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1046
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 58,
+            "actions": 1206
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 64,
+            "actions": 1222
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 1350
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 77,
+            "actions": 854
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 634
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 745
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 1296
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 798
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1902
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 31,
+            "actions": 762
+          },
+          {
+            "completed_runs": 1,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 486
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 777
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 797
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 888
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 90,
+            "actions": 1076
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 792
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 76,
+            "actions": 1048
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 687
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 842
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 98,
+            "actions": 1089
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 47,
+            "actions": 982
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 894
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1182
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 81,
+            "actions": 852
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 971
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 58,
+            "actions": 805
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1090
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1193
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1304
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 67,
+            "actions": 1620
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 889
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1503
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 1242
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 886
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 61,
+            "actions": 1208
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1083
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 91,
+            "actions": 1473
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 970
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 61,
+            "actions": 1004
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 976
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1095
+          }
+        ]
+      },
+      "500": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "valid": true,
+        "controller": "examples\\agents\\player_a.py",
+        "controller_sha256": "d04999c06a3fd1724869d2959e2e7620d99664458aeb42e94c90a754e1807611",
+        "profile_sha256": "e5df9fe03a810cd19247831a9c6bd3327216ec80b94bba197a3a47240b073a5a",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "mean_completions": 8.475,
+        "mean_completions_mc_se": 0.11944963825982065,
+        "mean_mushrooms": 497.695,
+        "mushrooms_per_completion": 58.72507374631268,
+        "mean_recovery_mushrooms": 488.43,
+        "mean_reroll_mushrooms": 9.265,
+        "probability_at_least_one_completion": 1.0,
+        "conditional_first_completion_hours": 3.7874138888888877,
+        "restricted_first_completion_hours": 3.7874138888888877,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included",
+        "outcomes": [
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 2246
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 2737
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 69,
+            "actions": 1676
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 2261
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 24,
+            "actions": 1565
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 81,
+            "actions": 1694
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2088
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 2335
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2103
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 1900
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1722
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 2054
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2148
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2139
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1935
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 2419
+          },
+          {
+            "completed_runs": 13,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 2849
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2038
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 1864
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 2229
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 76,
+            "actions": 1705
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1887
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 1705
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 88,
+            "actions": 1727
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2646
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1834
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1126
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1935
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2086
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 24,
+            "actions": 2178
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2037
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2233
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2140
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 42,
+            "actions": 2024
+          },
+          {
+            "completed_runs": 13,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 2865
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 38,
+            "actions": 2415
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 12,
+            "actions": 2565
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 1855
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 1806
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 2047
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 99,
+            "actions": 1730
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 73,
+            "actions": 1483
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 30,
+            "actions": 2013
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 1684
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1330
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1620
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 87,
+            "actions": 2112
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1603
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 2205
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1900
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 1927
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 491,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1849
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 2036
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 2234
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 491,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1880
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 2136
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 85,
+            "actions": 1908
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 2052
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 491,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2099
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2561
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 1650
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2328
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 74,
+            "actions": 1484
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1521
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1942
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 1687
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 2429
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1730
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 64,
+            "actions": 1856
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 90,
+            "actions": 1732
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 88,
+            "actions": 2326
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1746
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1684
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1774
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1957
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 2059
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1740
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1845
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1934
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1830
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 2622
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1936
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 1853
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 69,
+            "actions": 1881
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 96,
+            "actions": 1740
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 52,
+            "actions": 2260
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 91,
+            "actions": 1934
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 1801
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 80,
+            "actions": 2524
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2453
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 1602
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2302
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 1522
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 81,
+            "actions": 1903
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1741
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 10,
+            "actions": 1953
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1540
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 1589
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 64,
+            "actions": 1456
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1938
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 2327
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 1652
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 99,
+            "actions": 2750
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 70,
+            "actions": 2071
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 38,
+            "actions": 1813
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 1994
+          },
+          {
+            "completed_runs": 14,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 3081
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1892
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 2069
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 2024
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 67,
+            "actions": 2285
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1542
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1681
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 2454
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1833
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 2628
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 1594
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1941
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 1810
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 1715
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1833
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1743
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 61,
+            "actions": 1648
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 64,
+            "actions": 1659
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2506
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2041
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2131
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 77,
+            "actions": 2092
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1828
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 77,
+            "actions": 1893
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 66,
+            "actions": 2064
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 1497
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 86,
+            "actions": 1911
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 2211
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 2523
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 86,
+            "actions": 1508
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 2013
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1932
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 1923
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 28,
+            "actions": 2204
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 2064
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1684
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2138
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2079
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1565
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1943
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 89,
+            "actions": 1501
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 58,
+            "actions": 1646
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1848
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1883
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 1930
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2087
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1228
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2048
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1874
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 52,
+            "actions": 2262
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 88,
+            "actions": 1907
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1887
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 2735
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 2229
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1938
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 2224
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 66,
+            "actions": 1887
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 2250
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1541
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 80,
+            "actions": 2118
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1929
+          },
+          {
+            "completed_runs": 14,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 3042
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 493,
+            "elapsed_hours": 168,
+            "room": 22,
+            "actions": 1770
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 1217
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1517
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 42,
+            "actions": 1615
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2129
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2094
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 52,
+            "actions": 1842
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1948
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1922
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1622
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 494,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2035
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 1934
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1341
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1878
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 2194
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2243
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 492,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 2000
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2149
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1732
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2093
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2703
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 2053
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 2002
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1692
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1890
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1927
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 2029
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2352
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 37,
+            "actions": 1607
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1934
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 76,
+            "actions": 1701
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2462
+          }
+        ]
+      }
+    },
+    "b": {
+      "0": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "valid": true,
+        "controller": "examples\\agents\\player_b.py",
+        "controller_sha256": "581c019137ed7d0fc25ff569b8755d51962ac7b3309dbf71ae10280a45bc9174",
+        "profile_sha256": "e5df9fe03a810cd19247831a9c6bd3327216ec80b94bba197a3a47240b073a5a",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "mean_completions": 3.935,
+        "mean_completions_mc_se": 0.09135427201327465,
+        "mean_mushrooms": 0.0,
+        "mushrooms_per_completion": 0.0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "probability_at_least_one_completion": 1.0,
+        "conditional_first_completion_hours": 25.482533333333308,
+        "restricted_first_completion_hours": 25.482533333333308,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included",
+        "outcomes": [
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 1142
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 31,
+            "actions": 705
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 832
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 1320
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 765
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 717
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 923
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 648
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 76,
+            "actions": 1204
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 837
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 955
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 626
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 1348
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 1173
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 827
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 1349
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1806
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 792
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 1010
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 893
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1199
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 38,
+            "actions": 924
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 66,
+            "actions": 1185
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 98,
+            "actions": 1060
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 1173
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 1449
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 712
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 26,
+            "actions": 1318
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 843
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1055
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 26,
+            "actions": 701
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 916
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 99,
+            "actions": 1041
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 30,
+            "actions": 1322
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 66,
+            "actions": 1600
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 38,
+            "actions": 919
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 1242
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 61,
+            "actions": 969
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 856
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 1149
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 640
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 66,
+            "actions": 777
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1149
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 77,
+            "actions": 591
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 746
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 846
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 843
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 606
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 950
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 850
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 1043
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 28,
+            "actions": 905
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 1540
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 28,
+            "actions": 1106
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 797
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 590
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 96,
+            "actions": 836
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 1126
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 848
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 1022
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 894
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 770
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 894
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 90,
+            "actions": 621
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 74,
+            "actions": 803
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 836
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 535
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 38,
+            "actions": 917
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 76,
+            "actions": 1007
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 842
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 1127
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 80,
+            "actions": 1211
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 845
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 1010
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 720
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 1150
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 795
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 783
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 82,
+            "actions": 808
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 87,
+            "actions": 825
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 31,
+            "actions": 1320
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1132
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 710
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 711
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 936
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 745
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 971
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 517
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 26,
+            "actions": 1101
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1060
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 846
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 96,
+            "actions": 1042
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 637
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 542
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 756
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1250
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 842
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 44,
+            "actions": 928
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 636
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 905
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 33,
+            "actions": 1119
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 33,
+            "actions": 1120
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1150
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 935
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 770
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 80,
+            "actions": 1012
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 1729
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 739
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1101
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 988
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 85,
+            "actions": 810
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1004
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 805
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1201
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 81,
+            "actions": 605
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 1222
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 483
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 1048
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 751
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 939
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 760
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 714
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 533
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 91,
+            "actions": 827
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1556
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 1018
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1051
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 1247
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 822
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 1101
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 939
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 40,
+            "actions": 1137
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 1146
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 86,
+            "actions": 1227
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1841
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 737
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 937
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 841
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 840
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 848
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 837
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 85,
+            "actions": 815
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1309
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 23,
+            "actions": 895
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 914
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 1159
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 44,
+            "actions": 727
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 62,
+            "actions": 1177
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 44,
+            "actions": 1149
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 1377
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1152
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1002
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 85,
+            "actions": 608
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 47,
+            "actions": 949
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1047
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 1342
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 1132
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 996
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1211
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 1032
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 846
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 949
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 42,
+            "actions": 735
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 909
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 866
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 58,
+            "actions": 1169
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 944
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1726
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 633
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 573
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 33,
+            "actions": 709
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 605
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 90,
+            "actions": 841
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 19,
+            "actions": 1091
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1195
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 1032
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 583
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 70,
+            "actions": 783
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 1033
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1264
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 80,
+            "actions": 607
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 948
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 96,
+            "actions": 831
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 37,
+            "actions": 922
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 735
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1050
+          },
+          {
+            "completed_runs": 2,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 631
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 85,
+            "actions": 1226
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 1621
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 848
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 1174
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 1190
+          },
+          {
+            "completed_runs": 3,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 840
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1211
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1046
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 1195
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 997
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 47,
+            "actions": 1140
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 926
+          },
+          {
+            "completed_runs": 4,
+            "mushrooms_spent": 0,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1054
+          }
+        ]
+      },
+      "500": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "valid": true,
+        "controller": "examples\\agents\\player_b.py",
+        "controller_sha256": "581c019137ed7d0fc25ff569b8755d51962ac7b3309dbf71ae10280a45bc9174",
+        "profile_sha256": "e5df9fe03a810cd19247831a9c6bd3327216ec80b94bba197a3a47240b073a5a",
+        "events": 200,
+        "master_seed": 391864,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "mean_completions": 8.605,
+        "mean_completions_mc_se": 0.11580990749226439,
+        "mean_mushrooms": 498.865,
+        "mushrooms_per_completion": 57.97385241138873,
+        "mean_recovery_mushrooms": 496.14,
+        "mean_reroll_mushrooms": 2.725,
+        "probability_at_least_one_completion": 1.0,
+        "conditional_first_completion_hours": 0.9543722222222215,
+        "restricted_first_completion_hours": 0.9543722222222215,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included",
+        "outcomes": [
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 22,
+            "actions": 2138
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2293
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1879
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2078
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1669
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1473
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 2043
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 1833
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2454
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 1985
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 60,
+            "actions": 1807
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 2044
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 2032
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1979
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 2287
+          },
+          {
+            "completed_runs": 13,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2910
+          },
+          {
+            "completed_runs": 13,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2808
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1980
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 2175
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 44,
+            "actions": 2593
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 1643
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1878
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 65,
+            "actions": 2015
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1679
+          },
+          {
+            "completed_runs": 13,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 2772
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 1942
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1767
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 2587
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2447
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 2023
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 1975
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2291
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1928
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 46,
+            "actions": 1971
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2602
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 2146
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 2254
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 66,
+            "actions": 1621
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 18,
+            "actions": 1721
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 19,
+            "actions": 2126
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1737
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 49,
+            "actions": 1364
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1875
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 65,
+            "actions": 1810
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 1601
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 1626
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 2610
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 61,
+            "actions": 1393
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 2145
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 69,
+            "actions": 1841
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 94,
+            "actions": 1868
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 67,
+            "actions": 1627
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2096
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1978
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1730
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1781
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1576
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 69,
+            "actions": 2022
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 2020
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 56,
+            "actions": 1808
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 1729
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 1952
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1668
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 1798
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1690
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1684
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1680
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1878
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 1956
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1568
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 52,
+            "actions": 1781
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 85,
+            "actions": 1859
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 54,
+            "actions": 1587
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 57,
+            "actions": 2208
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1773
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1837
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 95,
+            "actions": 1677
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 25,
+            "actions": 1732
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2082
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 97,
+            "actions": 1874
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 73,
+            "actions": 2040
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 92,
+            "actions": 2069
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 1770
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2033
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1675
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 56,
+            "actions": 2208
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 2440
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 44,
+            "actions": 1561
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 2416
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 2022
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 47,
+            "actions": 1570
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2292
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 88,
+            "actions": 1446
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 42,
+            "actions": 1765
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 1655
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 38,
+            "actions": 2364
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 1557
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1828
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 35,
+            "actions": 1539
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 68,
+            "actions": 1623
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2095
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 39,
+            "actions": 1959
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 91,
+            "actions": 1655
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1564
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 61,
+            "actions": 1801
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1980
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 26,
+            "actions": 2339
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1875
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2093
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1980
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 98,
+            "actions": 1876
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 41,
+            "actions": 1552
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 78,
+            "actions": 1424
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2503
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1773
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 98,
+            "actions": 2288
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 1335
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2196
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 88,
+            "actions": 1863
+          },
+          {
+            "completed_runs": 13,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 34,
+            "actions": 2772
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 1754
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 1778
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1472
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 82,
+            "actions": 1843
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 2437
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 1593
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 51,
+            "actions": 1977
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2497
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1838
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 77,
+            "actions": 1830
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2086
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 81,
+            "actions": 1656
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 2171
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2087
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 29,
+            "actions": 2568
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1271
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1991
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 70,
+            "actions": 2026
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 2152
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1986
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 495,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1790
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 1957
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 79,
+            "actions": 2046
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 48,
+            "actions": 1570
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 497,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 1452
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 31,
+            "actions": 1943
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 14,
+            "actions": 1498
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 33,
+            "actions": 1941
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 90,
+            "actions": 1658
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 2050
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 65,
+            "actions": 1822
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 2084
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1259
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1768
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 1790
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2243
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 27,
+            "actions": 1934
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 89,
+            "actions": 1855
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 2388
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 70,
+            "actions": 2224
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1821
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2235
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 59,
+            "actions": 1623
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 55,
+            "actions": 2199
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1470
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 72,
+            "actions": 2246
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1889
+          },
+          {
+            "completed_runs": 14,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 2998
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 52,
+            "actions": 1584
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1775
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 28,
+            "actions": 1525
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1475
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 31,
+            "actions": 1747
+          },
+          {
+            "completed_runs": 11,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 43,
+            "actions": 2390
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 90,
+            "actions": 2073
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 13,
+            "actions": 2118
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 45,
+            "actions": 1976
+          },
+          {
+            "completed_runs": 6,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1479
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1789
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1787
+          },
+          {
+            "completed_runs": 5,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 1229
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 2044
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 65,
+            "actions": 2213
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 93,
+            "actions": 1886
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 84,
+            "actions": 1643
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 100,
+            "actions": 1888
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 23,
+            "actions": 1519
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 36,
+            "actions": 2159
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2654
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 83,
+            "actions": 2256
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 52,
+            "actions": 1790
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 53,
+            "actions": 1796
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2033
+          },
+          {
+            "completed_runs": 8,
+            "mushrooms_spent": 499,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 1842
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 50,
+            "actions": 1985
+          },
+          {
+            "completed_runs": 12,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 63,
+            "actions": 2628
+          },
+          {
+            "completed_runs": 7,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 71,
+            "actions": 1617
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 498,
+            "elapsed_hours": 168,
+            "room": 32,
+            "actions": 1950
+          },
+          {
+            "completed_runs": 9,
+            "mushrooms_spent": 496,
+            "elapsed_hours": 168,
+            "room": 73,
+            "actions": 2041
+          },
+          {
+            "completed_runs": 10,
+            "mushrooms_spent": 500,
+            "elapsed_hours": 168,
+            "room": 75,
+            "actions": 2248
+          }
+        ]
+      }
+    }
+  },
+  "damage_sensitivity_learned_policies": {
+    "0": {
+      "low": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "9260ef37d13a8f5a",
+        "policy": "examples/learned/budget-0.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "low",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 3.149,
+        "mean_completions_mc_se": 0.0323395244994,
+        "mean_mushrooms": 0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 0,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 32.1541333333,
+        "restricted_first_completion_hours": 32.1541333333,
+        "actions": 783430,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "uniform": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "c673bf127fe06a54",
+        "policy": "examples/learned/budget-0.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "uniform",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 2.528,
+        "mean_completions_mc_se": 0.0276401877703,
+        "mean_mushrooms": 0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 0,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 39.9304961111,
+        "restricted_first_completion_hours": 39.9304961111,
+        "actions": 659308,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "triangular": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "eac2cc89ff877f8b",
+        "policy": "examples/learned/budget-0.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "triangular",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 2.534,
+        "mean_completions_mc_se": 0.0276334508813,
+        "mean_mushrooms": 0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 0,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 39.8344927778,
+        "restricted_first_completion_hours": 39.8344927778,
+        "actions": 660733,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "high": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "5b360501842cfd06",
+        "policy": "examples/learned/budget-0.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 0,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "high",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 2.072,
+        "mean_completions_mc_se": 0.0247675075337,
+        "mean_mushrooms": 0,
+        "mean_recovery_mushrooms": 0,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 0,
+        "probability_at_least_one_completion": 0.999,
+        "conditional_first_completion_hours": 49.0037965744,
+        "restricted_first_completion_hours": 49.1227927778,
+        "actions": 567126,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      }
+    },
+    "500": {
+      "low": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "9260ef37d13a8f5a",
+        "policy": "examples/learned/budget-500.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "low",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 8.491,
+        "mean_completions_mc_se": 0.0501041857476,
+        "mean_mushrooms": 495.715,
+        "mean_recovery_mushrooms": 495.715,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 58.3812271817,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 0.11449,
+        "restricted_first_completion_hours": 0.11449,
+        "actions": 1938593,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "uniform": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "c673bf127fe06a54",
+        "policy": "examples/learned/budget-500.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "uniform",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 6.929,
+        "mean_completions_mc_se": 0.0429162067383,
+        "mean_mushrooms": 495.776,
+        "mean_recovery_mushrooms": 495.776,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 71.5508731419,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 0.115003333333,
+        "restricted_first_completion_hours": 0.115003333333,
+        "actions": 1617833,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "triangular": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "eac2cc89ff877f8b",
+        "policy": "examples/learned/budget-500.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "triangular",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 6.918,
+        "mean_completions_mc_se": 0.0418691894957,
+        "mean_mushrooms": 495.554,
+        "mean_recovery_mushrooms": 495.554,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 71.6325527609,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 0.115017222222,
+        "restricted_first_completion_hours": 0.115017222222,
+        "actions": 1617505,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      },
+      "high": {
+        "schema": 1,
+        "engine": "0.4.0",
+        "evidence": "synthetic",
+        "profile": "synthetic-player-pools-v2",
+        "profile_fingerprint": "5b360501842cfd06",
+        "policy": "examples/learned/budget-500.policy",
+        "events": 1000,
+        "master_seed": 728192,
+        "budget_per_event": 500,
+        "deadline_hours": 168,
+        "restart_health": "full",
+        "initial_run_number": 1,
+        "start_fingerprint": null,
+        "damage_distribution": "high",
+        "valid": true,
+        "action_limit_events": 0,
+        "mean_completions": 5.604,
+        "mean_completions_mc_se": 0.0374778413011,
+        "mean_mushrooms": 495.101,
+        "mean_recovery_mushrooms": 495.101,
+        "mean_reroll_mushrooms": 0,
+        "mushrooms_per_completion": 88.3477872948,
+        "probability_at_least_one_completion": 1,
+        "conditional_first_completion_hours": 0.115562777778,
+        "restricted_first_completion_hours": 0.115562777778,
+        "actions": 1352831,
+        "uncertainty": "Monte Carlo error only; model uncertainty is not included"
+      }
+    }
+  },
+  "training": {
+    "0": {
+      "schema": 1,
+      "engine": "0.4.0",
+      "evidence": "synthetic",
+      "profile": "synthetic-player-pools-v2",
+      "profile_fingerprint": "c673bf127fe06a54",
+      "policy": "learned-held-out",
+      "events": 1000,
+      "master_seed": 7058884932458297444,
+      "budget_per_event": 0,
+      "deadline_hours": 168,
+      "restart_health": "full",
+      "initial_run_number": 1,
+      "start_fingerprint": null,
+      "damage_distribution": "uniform",
+      "valid": true,
+      "action_limit_events": 0,
+      "mean_completions": 2.525,
+      "mean_completions_mc_se": 0.0282519587493,
+      "mean_mushrooms": 0,
+      "mean_recovery_mushrooms": 0,
+      "mean_reroll_mushrooms": 0,
+      "mushrooms_per_completion": 0,
+      "probability_at_least_one_completion": 1,
+      "conditional_first_completion_hours": 39.9305083333,
+      "restricted_first_completion_hours": 39.9305083333,
+      "actions": 654772,
+      "uncertainty": "Monte Carlo error only; model uncertainty is not included",
+      "training_seed": 76543,
+      "training_generations": 64,
+      "training_population": 64,
+      "training_events_per_candidate": 64
+    },
+    "500": {
+      "schema": 1,
+      "engine": "0.4.0",
+      "evidence": "synthetic",
+      "profile": "synthetic-player-pools-v2",
+      "profile_fingerprint": "c673bf127fe06a54",
+      "policy": "learned-held-out",
+      "events": 1000,
+      "master_seed": 7058884932458297444,
+      "budget_per_event": 500,
+      "deadline_hours": 168,
+      "restart_health": "full",
+      "initial_run_number": 1,
+      "start_fingerprint": null,
+      "damage_distribution": "uniform",
+      "valid": true,
+      "action_limit_events": 0,
+      "mean_completions": 6.8,
+      "mean_completions_mc_se": 0.0409594638353,
+      "mean_mushrooms": 495.683,
+      "mean_recovery_mushrooms": 495.683,
+      "mean_reroll_mushrooms": 0,
+      "mushrooms_per_completion": 72.8945588235,
+      "probability_at_least_one_completion": 1,
+      "conditional_first_completion_hours": 0.114954444444,
+      "restricted_first_completion_hours": 0.114954444444,
+      "actions": 1594352,
+      "uncertainty": "Monte Carlo error only; model uncertainty is not included",
+      "training_seed": 76543,
+      "training_generations": 64,
+      "training_population": 64,
+      "training_events_per_candidate": 64
+    }
+  },
+  "agent_provenance": {
+    "context": "Fresh agent contexts; only rules, profile and legal-action protocol; no engine/policy/RNG inspection authorized.",
+    "controller_kind": "AI-authored Python controllers, not an LLM call per move.",
+    "practice": "A completed two practices; B completed one paid practice. Zero-action failed harness launches excluded. Practices predated corrected pools. Only Rusty handling was added after the pool correction, without more practice.",
+    "freeze": "No policy adjustment after final evaluation. Agent B source normalized to LF before final recorded evaluation.",
+    "isolation": "Honor-system filesystem boundary, not a technical sandbox."
+  }
+}

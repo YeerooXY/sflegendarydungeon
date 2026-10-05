@@ -4,7 +4,7 @@ An independent C++20 research simulator for Shakes & Fidget's Legendary Dungeon.
 Compare gem preferences, barrel decisions, shop rerolls, recovery thresholds and
 mushroom budgets using reproducible Monte Carlo experiments.
 
-**Version 0.3 is an experimental model, not a validated reconstruction of the live
+**Version 0.4 is an experimental model, not a validated reconstruction of the live
 game.** Public documentation describes many rules, but does not supply the joint
 door distribution, complete outcome probabilities or raw validation runs. The
 included scenario fills those gaps with explicit assumptions. Its results must
@@ -29,6 +29,8 @@ Shakes & Fidget belongs to its respective owners; this project is unaffiliated.
   and shop strategies, including hunting for eight-room One Hit Wonder.
 - Forecasts from entered progress, including observed doors, walls, shop/gem
   offers, recovery, active effects and previous healing purchases.
+- Repeated-run events with a shared deadline and budget, active-play refills,
+  a visible-state agent protocol, and policies trained by population search.
 
 Many numerical rules and some special-room transitions remain approximations.
 Read [the model and limitations](docs/MODEL.md) before interpreting output.
@@ -66,8 +68,26 @@ With `--state`, the deadline and mushroom budget apply **from that position
 onward**. Previous healing purchases affect the next price. Known choices stay
 fixed; unknown future rooms are sampled. The [progress guide](docs/PROGRESS.md)
 includes examples for recovery, shops and the three stones currently offered.
-First/later-run stone pools are configurable, but their actual split is not yet
-verified in the shipped scenario.
+First/later-run stone pools use [the maintainer's observations](docs/GEM_POOLS.md)
+and remain configurable; Rusty's later-only restriction is tentative.
+
+## Seven-day agent experiments
+
+```sh
+build/sfld event --allow-assumptions --budget 0 --deadline-hours 168 --runs 1000
+build/sfld event --allow-assumptions --budget 500 --deadline-hours 168 --runs 1000
+build/sfld train --allow-assumptions --budget 500 --save-policy out/paid.policy
+build/sfld agent --allow-assumptions --budget 500
+```
+
+`event` maximizes repeated completions within one event budget. `train` learns
+action scores from scratch and evaluates separate seeds. `agent` lets external
+controllers choose doors, fights, stones, refills and shop actions through stdin
+and JSON observations. [Experiment instructions](docs/EXPERIMENTS.md) describe
+the protocol, fairness limits, metrics and sensitivity settings. Give fresh
+participants [the rules](docs/AGENT_RULES.md), without an existing strategy.
+The [recorded pilot](docs/EVENT_PILOT.md) includes frozen AI-authored controllers,
+learned coefficients, separate budget comparisons and damage sensitivity results.
 
 ## Free-to-play completion time
 

@@ -1,4 +1,4 @@
-# Model v0.3
+# Model v0.4
 
 This document describes the implemented engine. It is not a claim that all of
 these transitions match the server. Sources were inspected on 2026-09-23; the
@@ -57,10 +57,11 @@ instead of silently applying this generation safeguard.
 All door trap indicators are treated as visible. The engine does not expose the
 unrevealed encounter or future random draws to policies. Gem offers are sampled
 uniformly without replacement from the configured pool, excluding already held
-gems. The default pool follows the inspected calculator, not a verified current
-server pool. Optional `gems_first_run`/`gems_later_runs` overrides select different
-future pools by run number; the shipped profile has no verified split and uses
-the common fallback. Explicitly observed offers and held gems are preserved.
+gems. The default pool follows the inspected calculator plus the maintainer's
+2026-10-05 image and observations, including Rusty. `gems_first_run` and
+`gems_later_runs` select different future pools by run number: 11 and 20 stones
+in the shipped profile. [GEM_POOLS.md](GEM_POOLS.md) records the reported
+restrictions and confidence. Explicitly observed offers and held gems are preserved.
 Theme-specific pools must be selected in profiles; there is no event
 calendar or automatic theme/version detection.
 
@@ -74,7 +75,9 @@ Cross-compiler bit-identical floating-point results are not promised.
 
 ## Combat
 
-Each damage draw is **uniform over the configured interval**, in max-HP units.
+The default damage draw is **uniform over the configured interval**, in max-HP units.
+`damage_distribution` also accepts `triangular` (symmetric, centered), `midpoint`,
+`low` and `high`. The latter three are deterministic sensitivity scenarios.
 The endpoints below follow the inspected [LD Gadget implementation](https://ldgadget.12hp.de/res/scripts/main.js).
 The distribution itself is unknown. Bounds from a community calculator are not
 guaranteed bounds on the live game.
@@ -102,7 +105,11 @@ ticks are skipped in boss rooms, while room durations still decrement.
 Ordinary key drops use the profile rate plus Lodestone +0.30 and Spying -0.15.
 Key Moment replaces that with two keys at probability 0.70. A survived normal
 fight after floor one can add a curse at the profile rate, plus 0.10 with
-Misadventurer. Special enemies use simplified damage/reward rules (see below).
+Misadventurer. `floor_specific_curses=true` uses Gold Hangover, Poison and Broken
+Armor on stages 2/3/4, provisionally following the client overview and community
+guide. False restores random identities from the general curse table. Trigger
+rate, strength and special-enemy applicability remain assumptions.
+Special enemies use simplified damage/reward rules (see below).
 The 70% tooltip was also reported by the project maintainer on 2026-09-23;
 the 50% value in another project's comments is not used.
 
@@ -172,8 +179,9 @@ Combat effects are listed above. Additional implemented changes are:
 | `rusty` | Re-entry poison 0.05 for 5 rooms; room healing multiplied by 1.20 |
 
 The table describes conventions, including arbitrary rates for qualitative spawn
-changes. It is not a measured gem specification. The last four archived gems are
-excluded from the default pool. Diamond/Time Traveler takes precedence over
+changes. It is not a measured gem specification. Masochist, Old Sacrifice and
+Kidney are excluded from the default pool; Rusty is provisionally included on
+later runs following the maintainer's image. Diamond/Time Traveler takes precedence over
 Gambler for barrels; that combination needs an observed test. Greasy suppression
 applies to epic chests, not the mandatory boss rewards or all special rewards.
 
@@ -214,9 +222,9 @@ Special encounters use explicit placeholders where exact rules are missing:
 | Rocks, wood, souls, arcane | Add one abstract resource unit |
 | Lava | Lose 0.10 HP |
 | Narrator | Heal 0.25 and gain a random blessing |
-| Flooded | A single action taking at least 10 seconds kills; faster action exits |
+| Flooded | Ten cumulative simulated seconds inside the room kills; refills count; exits resolve the room |
 | Wishing well | Equal chance blessing or epic, with no modeled gold payment |
-| Rock/paper/scissors | Uniform opponent; win blessing, loss 0.10 HP plus curse, draw exits |
+| Rock/paper/scissors | Uniform opponent; win blessing plus configurable community-reported epic, loss 0.10 HP plus curse, draw exits |
 | Sewers, locker | Epic reward, no inventory economy |
 | Auction | Item, with configurable epic chance (0.50 is a placeholder); ordinary items are not valued |
 | Armory | Generates only in rooms 90-98; epic or eligible legendary, see below |
@@ -267,8 +275,14 @@ full-refill action costs `ceil((1 - hp) * full_heal_cost_per_fraction)`, at leas
 with an example coefficient of 48. This extrapolates two community first-use UI
 quotes and is **not a verified recurring price schedule**. A full refill also
 advances the paid-purchase counter by one in this implementation. Ordinary waits
-and purchases are available only in the recovery phase. Any conclusions involving
+and purchases are available during active play as well as recovery. They do not
+advance the room or tick effects, but consume action time. Any conclusions involving
 repeat full refills must be revisited when their actual progression is known.
+
+The [2026-10-05 client inspection](CLIENT_INSPECTION.md) subsequently found the
+UI quote `clamp(48 - floor(48 * recovery_fraction), 0, 48)` and a 24-hour recovery
+divisor in the native client. This supports the coefficient 48 for the displayed
+quote; it does not verify server deductions or the purchase-counter convention.
 
 The budget caps all mushroom deductions. The baseline recovery policy aims for
 the selected re-entry HP (at least the modeled boss upper bound +0.001 near a
@@ -314,13 +328,22 @@ completion-probability and restricted-mean statistics and exits the CLI with cod
 Profile fingerprints are FNV-1a over raw bytes (including comments and line endings),
 for reproducibility rather than cryptographic security. Traces verify recorded
 actions against the same simulator; they are not an observation importer. Version
-2 traces include the starting snapshot and engine version. The 0.3 mechanics
+2 traces include the starting snapshot and engine version. The 0.4 mechanics
 and state-digest changes require replaying older traces with their original
 engine (0.2.0 also reads version-1 traces). Reports identify the measurement origin and starting
 snapshot. Gem-pick counts include new picks only, excluding initially held gems.
 Reports also include shop purchases, eight-room One Hit purchases, separate
 recovery/reroll spend, relative gold units, lucky coins, epics and legendaries.
 Reward totals are provisional; they are not a live-game loot forecast.
+
+## Repeated-run events and external agents
+
+`event`, `train` and `agent` add a shared time/spending horizon across repeated
+runs. Full-health restarts follow the maintainer's observation; keys, effects,
+stones and refill-price history reset, while event totals and external resources
+persist. Legal actions enforce budget, deadline and action cap inside the engine.
+[EXPERIMENTS.md](EXPERIMENTS.md) specifies training, agent observations, metrics
+and sensitivity scenarios. The event JSONL audit trail is separate from TSV replay.
 
 There is no current calibrated damage distribution, empirical spawn model,
 whole-event multi-run model, Ultimate mode, reward-value optimizer, graphical

@@ -28,7 +28,7 @@ NAMES(Gem, "rabbit", "moonstone", "spying", "pendant", "greasy", "gambler", "gre
 NAMES(EffectKind, "raider", "one_hit", "escape", "disarm", "lockpick", "key_moment", "elixir",
     "recovery", "broken_armor", "poison", "clumsy", "gold_hangover", "hard_lock")
 NAMES(ActionKind, "choose_door", "fight", "flee", "interact", "skip", "buy", "reroll", "choose_gem",
-    "wait", "heal_step", "heal_full", "reenter", "rps", "linger")
+    "wait", "heal_step", "heal_full", "reenter", "rps", "linger", "restart")
 #undef NAMES
 template<class T> T parse_enum(std::string_view value, std::size_t count) {
     for (std::size_t i = 0; i < count; ++i) {
@@ -42,7 +42,7 @@ Phase phase_from(std::string_view s) { return parse_enum<Phase>(s, 7); }
 EffectKind effect_from(std::string_view s) { return parse_enum<EffectKind>(s, ix(EffectKind::count)); }
 Encounter encounter_from(std::string_view s) { return parse_enum<Encounter>(s, ix(Encounter::count)); }
 Gem gem_from(std::string_view s) { return parse_enum<Gem>(s, ix(Gem::count)); }
-ActionKind action_from(std::string_view s) { return parse_enum<ActionKind>(s, 14); }
+ActionKind action_from(std::string_view s) { return parse_enum<ActionKind>(s, 15); }
 bool is_curse(EffectKind k) { return k >= EffectKind::broken_armor; }
 bool is_enemy(Encounter e) {
     switch (e) {
@@ -159,6 +159,7 @@ std::string state_digest(const State& s) {
     real(s.gold_units); add(static_cast<std::uint64_t>(s.lucky_coins));
     add(static_cast<std::uint64_t>(s.shop_purchases)); add(static_cast<std::uint64_t>(s.strong_one_hit_purchases));
     add(s.actions); real(s.elapsed_hours); real(s.active_hours);
+    real(s.flooded_seconds); add(static_cast<std::uint64_t>(s.completed_runs)); real(s.first_completion_hours);
     std::ostringstream out; out << std::hex << h; return out.str();
 }
 std::string json_string(std::string_view text) {

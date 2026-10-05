@@ -13,19 +13,20 @@ int resource_index(Door door) {
 bool trap_eligible(Door door) { return door == Door::monster || door == Door::mystery || door == Door::golden; }
 void check_limits(Limits limits) {
     if (limits.budget < 0 || limits.budget > 1000000 || !std::isfinite(limits.deadline_hours) ||
-        limits.deadline_hours <= 0 || limits.deadline_hours > 1000000 || limits.max_actions == 0 || limits.run_number < 1)
+        limits.deadline_hours <= 0 || limits.deadline_hours > 1000000 || limits.max_actions == 0 || limits.run_number < 1 || limits.run_number > 1000000 ||
+        (limits.restart_health != "full" && limits.restart_health != "carry" && limits.restart_health != "empty"))
         throw std::invalid_argument("Invalid run limits");
 }
 }
 Game::Game(const Profile& profile, std::uint64_t seed, Limits limits)
-    : profile_(profile), random_(seed), limits_(limits) {
+    : profile_(profile), seed_(seed), random_(seed), limits_(limits) {
     check_limits(limits);
     state_.run_number = limits.run_number;
     state_.resources.fill(profile.initial_resources);
     generate_doors();
 }
 Game::Game(const Profile& profile, std::uint64_t seed, State state, Limits limits)
-    : profile_(profile), random_(seed), state_(std::move(state)), limits_(limits) {
+    : profile_(profile), seed_(seed), random_(seed), state_(std::move(state)), limits_(limits) {
     check_limits(limits);
     if (state_.room < 1 || state_.room > 101 || !std::isfinite(state_.hp) || state_.hp < 0 || state_.hp > 1 ||
         state_.keys < 0 || state_.mushrooms < 0 || state_.mushrooms > limits.budget ||
@@ -70,6 +71,8 @@ int Game::full_price() const {
 }
 bool Game::legal(Action a) const {
     if (!std::isfinite(a.value)) return false;
+    if (state_.actions >= limits_.max_actions || state_.elapsed_hours >= limits_.deadline_hours ||
+        action_hours(a) > limits_.deadline_hours - state_.elapsed_hours + 1e-12) return false;
     const auto phase = state_.phase;
     switch (a.kind) {
     case ActionKind::choose_door: return phase == Phase::doors && a.index >= 0 && a.index < 2 && available(state_.doors[static_cast<std::size_t>(a.index)]);
@@ -84,23 +87,34 @@ bool Game::legal(Action a) const {
     case ActionKind::reroll: return (phase == Phase::shop || phase == Phase::curse_shop) && state_.mushrooms < limits_.budget;
     case ActionKind::choose_gem: return phase == Phase::gems && a.index >= 0 && a.index < 3;
     case ActionKind::wait: return phase == Phase::recovery && a.value > 0 && a.value <= 1000000;
-    case ActionKind::heal_step: return phase == Phase::recovery && state_.hp < 1 && step_price() <= limits_.budget - state_.mushrooms;
-    case ActionKind::heal_full: return phase == Phase::recovery && state_.hp < 1 && full_price() <= limits_.budget - state_.mushrooms;
+    case ActionKind::heal_step: return phase != Phase::complete && state_.hp < 1 && step_price() <= limits_.budget - state_.mushrooms;
+    case ActionKind::heal_full: return phase != Phase::complete && state_.hp < 1 && full_price() <= limits_.budget - state_.mushrooms;
     case ActionKind::reenter: return phase == Phase::recovery && state_.hp >= .2 - 1e-12;
     case ActionKind::rps: return phase == Phase::encounter && state_.encounter == Encounter::rps && a.index >= 0 && a.index < 3;
     case ActionKind::linger: return phase == Phase::encounter && state_.encounter == Encounter::flooded && a.value >= 0 && a.value <= 3600;
+    case ActionKind::restart: return phase == Phase::complete && limits_.repeat_runs;
     }
     return false;
+}
+double Game::action_hours(Action a) const {
+    if (a.kind == ActionKind::wait) return a.value;
+    return (a.kind == ActionKind::linger ? a.value : profile_.action_seconds) / 3600;
+}
+bool Game::finished() const {
+    if (state_.actions >= limits_.max_actions || state_.elapsed_hours >= limits_.deadline_hours) return true;
+    if (state_.phase == Phase::complete && !limits_.repeat_runs) return true;
+    return state_.phase != Phase::recovery && profile_.action_seconds / 3600 > limits_.deadline_hours - state_.elapsed_hours + 1e-12;
 }
 void Game::step(Action a) {
     if (!legal(a)) throw std::invalid_argument("Illegal " + std::string(name(a.kind)) + " in " + std::string(name(state_.phase)));
     ++state_.actions;
     if (a.kind != ActionKind::wait) {
-        const double hours = (a.kind == ActionKind::linger ? a.value : profile_.action_seconds) / 3600;
+        const double hours = action_hours(a);
         state_.elapsed_hours += hours;
         state_.active_hours += hours;
-        if (state_.phase == Phase::encounter && state_.encounter == Encounter::flooded && hours * 3600 >= 10) {
-            hurt(1); return;
+        if (state_.phase == Phase::encounter && state_.encounter == Encounter::flooded) {
+            state_.flooded_seconds += hours * 3600;
+            if (state_.flooded_seconds >= 10 - 1e-12) { hurt(1); return; }
         }
     }
     switch (a.kind) {
@@ -143,10 +157,28 @@ void Game::step(Action a) {
     }
     case ActionKind::reenter:
         state_.phase = resume_phase_;
+        state_.flooded_seconds = 0;
         if (state_.has(Gem::greasy)) give({EffectKind::recovery, .1, 3, Clock::room}, true);
         if (state_.has(Gem::rusty)) give({EffectKind::poison, .05, 5, Clock::room}, true);
         break;
+    case ActionKind::restart: restart(); break;
     }
+}
+void Game::restart() {
+    // Event counters, time, spending and external resources survive; dungeon
+    // keys, stones, effects and per-run refill pricing start a fresh run.
+    ++state_.run_number;
+    if (limits_.restart_health == "full") state_.hp = 1;
+    else if (limits_.restart_health == "empty") state_.hp = 0;
+    state_.room = 1; state_.turn = 0; state_.keys = 0;
+    state_.gems.fill(false); state_.blessings.clear(); state_.curses.clear();
+    state_.paid_steps = 0; state_.shop_rerolls = 0;
+    state_.trial_depth = 0; state_.trial_seen = false; state_.pending_trial_reward = 0;
+    state_.donated_resource = -1; state_.encounter = Encounter::empty;
+    state_.flooded_seconds = 0; state_.phase = Phase::doors;
+    random_ = Random(Random::mix(seed_ ^ static_cast<std::uint64_t>(state_.run_number)));
+    generate_doors();
+    if (state_.hp < .2) { resume_phase_ = Phase::doors; state_.phase = Phase::recovery; }
 }
 void Game::generate_doors() {
     if (state_.room % 25 == 0) { state_.doors = {{{Door::boss}, {Door::wall}}}; return; }
@@ -222,6 +254,7 @@ void Game::generate_gems() {
     }
 }
 void Game::enter(DoorView door) {
+    state_.flooded_seconds = 0;
     state_.keys -= door_cost(door.kind);
     if (door.kind == Door::locked || door.kind == Door::double_locked || door.kind == Door::epic)
         state_.blessings.consume(Clock::door, state_.turn);
@@ -329,7 +362,7 @@ void Game::fight(bool fleeing) {
         if (encounter == Encounter::trial_monster) { state_.trial_depth = 0; }
         finish_room(); return;
     }
-    double damage = random_.uniform(Stream::damage, boss ? profile_.boss_damage[band(state_.room)] :
+    double damage = sample_damage(boss ? profile_.boss_damage[band(state_.room)] :
         (fleeing ? profile_.escape_damage[band(state_.room)] : profile_.monster_damage[band(state_.room)]));
     if (!boss) {
         if (encounter == Encounter::undead || encounter == Encounter::tube || encounter == Encounter::beta) damage *= .5;
@@ -352,7 +385,13 @@ void Game::fight(bool fleeing) {
             if (encounter == Encounter::valaraukar) give({EffectKind::recovery, .1, 3, Clock::room});
             if (state_.has(Gem::kidney) && random_.chance(Stream::effects, .1)) give(random_effect(false));
             const double curse = profile_.combat_curse_chance + (state_.has(Gem::misadventurer) ? .1 : 0);
-            if (state_.room > 25 && random_.chance(Stream::effects, curse)) give(random_effect(true));
+            if (state_.room > 25 && random_.chance(Stream::effects, curse)) {
+                if (profile_.floor_specific_curses) {
+                    constexpr EffectKind floor_curses[]{EffectKind::gold_hangover, EffectKind::poison, EffectKind::broken_armor};
+                    const double strong = profile_.strong_effect + (state_.has(Gem::explorer) ? .2 : 0);
+                    give(effect_template(floor_curses[band(state_.room) - 1], random_.chance(Stream::effects, strong)));
+                } else give(random_effect(true));
+            }
         }
     }
     if (encounter == Encounter::trial_monster) {
@@ -360,6 +399,15 @@ void Game::fight(bool fleeing) {
         else ++state_.trial_depth;
     }
     finish_room();
+}
+double Game::sample_damage(Range range) {
+    double u = random_.unit(Stream::damage);
+    if (profile_.damage_distribution == "low") u = 0;
+    else if (profile_.damage_distribution == "high") u = 1;
+    else if (profile_.damage_distribution == "midpoint") u = .5;
+    else if (profile_.damage_distribution == "triangular")
+        u = u < .5 ? std::sqrt(u / 2) : 1 - std::sqrt((1 - u) / 2);
+    return range.low + (range.high - range.low) * u;
 }
 bool Game::hurt(double damage) {
     state_.hp = std::max(0.0, state_.hp - damage);
@@ -389,9 +437,13 @@ void Game::finish_room() {
     }
     state_.blessings.consume(Clock::room, state_.turn);
     state_.curses.consume(Clock::room, state_.turn);
+    state_.flooded_seconds = 0;
     const int finished = state_.room++;
     ++state_.turn; random_.room(state_.room); state_.encounter = Encounter::empty;
-    if (finished == 100) { state_.phase = Phase::complete; ++state_.legendaries; }
+    if (finished == 100) {
+        state_.phase = Phase::complete; ++state_.legendaries; ++state_.completed_runs;
+        if (state_.first_completion_hours < 0) state_.first_completion_hours = state_.elapsed_hours;
+    }
     else if (boss) { state_.phase = Phase::gems; generate_gems(); }
     else { state_.phase = Phase::doors; generate_doors(); }
     // The completed room is committed before a lethal exit tick: no duplicate rewards.
@@ -487,7 +539,7 @@ void Game::interact(int choice) {
     case Encounter::rps: {
         const int opponent = static_cast<int>(random_.unit(Stream::special) * 3);
         const int outcome = (choice - opponent + 3) % 3;
-        if (outcome == 1) give(random_effect(false));
+        if (outcome == 1) { give(random_effect(false)); if (profile_.rps_epic_reward) ++state_.epics; }
         if (outcome == 2) { if (hurt(.1)) return; give(random_effect(true)); }
         break;
     }
@@ -508,9 +560,9 @@ void Game::interact(int choice) {
         break;
     }
     case Encounter::spider_legs: case Encounter::spider_head: case Encounter::spider_full: {
-        const double success = encounter == Encounter::spider_legs ? .8 : (encounter == Encounter::spider_head ? .5 : .2);
+        const double success = profile_.spider_success[ix(encounter) - ix(Encounter::spider_legs)];
         if (random_.chance(Stream::special, success)) state_.keys += encounter == Encounter::spider_legs ? 1 : (encounter == Encounter::spider_head ? 2 : 5);
-        else give({EffectKind::poison, .05, 5, Clock::room});
+        else { if (hurt(profile_.spider_bite_damage)) return; give({EffectKind::poison, .05, 5, Clock::room}); }
         break;
     }
     case Encounter::rainbow: if (hurt(.2)) return; give(random_effect(false)); break;

@@ -18,8 +18,12 @@ public:
     int step_price() const;
     int full_price() const;
     double damage_ceiling(bool boss) const;
+    double action_hours(Action) const;
+    bool finished() const;
+    Phase recovery_destination() const { return resume_phase_; }
 private:
     const Profile& profile_;
+    std::uint64_t seed_;
     Random random_;
     State state_;
     Limits limits_;
@@ -42,5 +46,7 @@ private:
     void award_gold(bool chest);
     double battle_multiplier(bool fleeing) const;
     double flee_probability() const;
+    double sample_damage(Range);
+    void restart();
 };
 }

@@ -2,6 +2,10 @@
 
 Researched 2026-09-23. Scope: Shakes & Fidget's seasonal Legendary Dungeon, including separate free-to-play and mushroom-efficiency comparisons. This dossier records the public-source investigation that informed the experimental simulator. It is not a measured strategy ranking. For what the current version actually implements, see [MODEL.md](MODEL.md); the design and acceptance criteria below also include future work.
 
+Follow-up: [installed-client inspection, 2026-10-05](CLIENT_INSPECTION.md) recovered
+the client overview's stage-curse mapping, full-heal UI quote and protocol fields.
+It did not establish the missing random outcome probabilities or change the engine.
+
 There is enough public information to begin an offline reconstruction. A trustworthy estimate of average completion time also needs probability distributions and validation data that I did not find published in the sources checked.
 
 ## What already exists

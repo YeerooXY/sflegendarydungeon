@@ -133,6 +133,16 @@ Profile Profile::load(const std::string& path) {
     if (fields.contains("shop_strong_effect")) p.shop_strong_effect = number(take("shop_strong_effect"));
     if (fields.contains("armory_legendary_chance")) p.armory_legendary_chance = number(take("armory_legendary_chance"));
     if (fields.contains("auction_epic_chance")) p.auction_epic_chance = number(take("auction_epic_chance"));
+    if (fields.contains("damage_distribution")) p.damage_distribution = take("damage_distribution");
+    if (fields.contains("spider_success")) numbers(p.spider_success, take("spider_success"));
+    if (fields.contains("spider_bite_damage")) p.spider_bite_damage = number(take("spider_bite_damage"));
+    for (auto [key, destination] : {std::pair{"rps_epic_reward", &p.rps_epic_reward},
+                                   std::pair{"floor_specific_curses", &p.floor_specific_curses}}) {
+        if (!fields.contains(key)) continue;
+        const auto value = take(key);
+        if (value != "true" && value != "false") throw std::invalid_argument("Expected true/false for " + std::string(key));
+        *destination = value == "true";
+    }
     if (fields.contains("armory_bonus_eligible")) {
         const auto value = take("armory_bonus_eligible");
         if (value != "true" && value != "false") throw std::invalid_argument("Expected true/false for armory_bonus_eligible");
@@ -143,6 +153,13 @@ Profile Profile::load(const std::string& path) {
     return p;
 }
 void Profile::validate() const {
+    if (damage_distribution != "uniform" && damage_distribution != "triangular" && damage_distribution != "low" &&
+        damage_distribution != "high" && damage_distribution != "midpoint")
+        throw std::invalid_argument("damage_distribution must be uniform, triangular, low, high or midpoint");
+    for (double p : spider_success) if (!std::isfinite(p) || p < 0 || p > 1)
+        throw std::invalid_argument("Invalid spider success probability");
+    if (!std::isfinite(spider_bite_damage) || spider_bite_damage < 0 || spider_bite_damage > 1)
+        throw std::invalid_argument("spider_bite_damage must be in [0,1]");
     if (id.empty()) throw std::invalid_argument("Profile id is required");
     if (evidence != "synthetic")
         throw std::invalid_argument("Only synthetic evidence is supported; live calibration is not implemented");

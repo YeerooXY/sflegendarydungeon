@@ -43,6 +43,10 @@ jobs:
         run: ${{ matrix.executable }} compare --allow-assumptions --state examples/reroll-shop.state --sweep shops --rerolls 10 --budget 30 --recovery-budget 0 --runs 1000 --threads 2 --output results/shop-strategies.json
       - name: Record a trace
         run: ${{ matrix.executable }} simulate --allow-assumptions --runs 1 --trace results/run.tsv --output results/run.json
+      - name: Exercise repeated-run events
+        run: ${{ matrix.executable }} event --allow-assumptions --runs 1000 --threads 2 --budget 500 --deadline-hours 168 --output results/event.json
+      - name: Train a small policy and evaluate separate seeds
+        run: ${{ matrix.executable }} train --allow-assumptions --generations 2 --population 8 --training-events 4 --runs 100 --threads 2 --budget 0 --save-policy results/f2p.policy --output results/learning.json
       - name: Verify trace
         run: ${{ matrix.executable }} replay --allow-assumptions --trace results/run.tsv
       - name: Upload executable and sample reports
@@ -73,3 +77,5 @@ jobs:
         run: build/sfld compare --allow-assumptions --state examples/progress.state --sweep budgets --runs 1000 --threads 2 --rerolls 3 --output results/budgets.json
       - name: Exercise targeted shop rerolls
         run: build/sfld compare --allow-assumptions --state examples/reroll-shop.state --sweep shops --rerolls 10 --budget 30 --recovery-budget 0 --runs 1000 --threads 2 --output results/shops.json
+      - name: Exercise event learning
+        run: build/sfld train --allow-assumptions --generations 2 --population 8 --training-events 4 --runs 100 --threads 2 --budget 500 --save-policy results/paid.policy --output results/learning.json

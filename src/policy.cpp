@@ -168,6 +168,9 @@ Action Policy::choose(const Game& game) const {
         return {ActionKind::choose_gem, best};
     }
     case Phase::recovery: {
+        const double time_left = game.limits().deadline_hours - s.elapsed_hours;
+        if (time_left > 0 && time_left < game.profile().action_seconds / 3600)
+            return {ActionKind::wait, 0, time_left};
         double target = revive_hp;
         if (safe_boss_reentry && s.room % 25 == 0) target = std::max(target, std::min(1.0, game.damage_ceiling(true) + .001));
         if (s.hp >= target - 1e-12) return {ActionKind::reenter};
@@ -184,7 +187,9 @@ Action Policy::choose(const Game& game) const {
             wait = std::ceil((s.elapsed_hours + wait) / login_interval_hours) * login_interval_hours - s.elapsed_hours;
         return {ActionKind::wait, 0, std::max(wait, 1e-9)};
     }
-    case Phase::complete: throw std::logic_error("Complete run has no next action");
+    case Phase::complete:
+        if (game.legal({ActionKind::restart})) return {ActionKind::restart};
+        throw std::logic_error("Complete run has no next action");
     }
     throw std::logic_error("Unhandled phase");
 }

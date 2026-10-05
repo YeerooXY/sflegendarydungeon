@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace sfld {
-inline constexpr std::string_view engine_version = "0.3.0";
+inline constexpr std::string_view engine_version = "0.4.0";
 enum class Phase { doors, encounter, shop, curse_shop, gems, recovery, complete };
 enum class Door { monster, mystery, locked, double_locked, unlocked, epic, golden,
     shop, cursed, sacrifice, blessing, destiny, wood, stone, souls, metal, arcane,
@@ -25,7 +25,7 @@ enum class EffectKind { raider, one_hit, escape, disarm, lockpick, key_moment,
     elixir, recovery, broken_armor, poison, clumsy, gold_hangover, hard_lock, count };
 enum class Clock { room, trap, door, fight };
 enum class ActionKind { choose_door, fight, flee, interact, skip, buy, reroll,
-    choose_gem, wait, heal_step, heal_full, reenter, rps, linger };
+    choose_gem, wait, heal_step, heal_full, reenter, rps, linger, restart };
 enum class Stream { doors, contents, damage, escape, keys, effects, shop, gems, special, count };
 
 template<class E> constexpr std::size_t ix(E e) { return static_cast<std::size_t>(e); }
@@ -103,6 +103,9 @@ struct State {
     std::uint64_t actions = 0;
     double elapsed_hours = 0;
     double active_hours = 0;
+    double flooded_seconds = 0;
+    int completed_runs = 0;
+    double first_completion_hours = -1;
     bool has(Gem g) const { return gems[ix(g)]; }
     const Effect* effect(EffectKind k) const;
 };
@@ -150,11 +153,25 @@ struct Profile {
     bool armory_bonus_eligible = false;
     double armory_legendary_chance = .10;
     double auction_epic_chance = .50;
+    // Sensitivity scenarios, not a fitted damage distribution.
+    std::string damage_distribution = "uniform";
+    std::array<double, 3> spider_success{.8, .5, .2};
+    double spider_bite_damage = 0;
+    bool rps_epic_reward = true; // Community report; official guide only lists blessing.
+    bool floor_specific_curses = true;
     static Profile load(const std::string&);
     void validate() const;
 };
 
-struct Limits { int budget = 0; double deadline_hours = 240; std::uint64_t max_actions = 100000; int run_number = 1; };
+struct Limits {
+    int budget = 0;
+    double deadline_hours = 240;
+    std::uint64_t max_actions = 100000;
+    int run_number = 1;
+    bool repeat_runs = false;
+    // Full HP is player-reported; alternatives support sensitivity experiments.
+    std::string restart_health = "full"; // full, carry, empty
+};
 // Counter-based, specified integer arithmetic, independent streams, reset per room.
 class Random {
 public:

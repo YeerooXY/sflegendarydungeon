@@ -377,6 +377,13 @@ void run_specific_gem_pools_select_the_configured_choices() {
     Temp file;
     std::ifstream input(std::string(SFLD_SOURCE_DIR) + "/profiles/synthetic.profile");
     std::string text((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    for (const auto* key : {"gems_first_run=", "gems_later_runs="}) {
+        const auto position = text.find(key);
+        if (position != std::string::npos) {
+            const auto end = text.find('\n', position);
+            text.erase(position, end == std::string::npos ? end : end - position + 1);
+        }
+    }
     { std::ofstream out(file.path); out << text << "\ngems_first_run=rabbit,moonstone,spying,pendant,greasy\n"
         << "gems_later_runs=hero,bull,blood,hick,devil\n"; }
     const auto loaded = Profile::load(file.path.string());
@@ -444,12 +451,12 @@ void old_engine_traces_require_their_original_version() {
     run_one(p, policy, 12, {}, &output);
     auto text = output.str();
     const auto current = text;
-    text.replace(0, std::string("#sfld-trace-v2\t0.3.0").size(), "#sfld-trace-v1");
+    text.replace(0, std::string("#sfld-trace-v2\t").size() + engine_version.size(), "#sfld-trace-v1");
     const auto start = text.find("#start\tfresh\t0\n#actions\n"); CHECK(start != std::string::npos);
     text.erase(start, std::string("#start\tfresh\t0\n#actions\n").size());
     Temp file; { std::ofstream out(file.path); out << text; }
     rejects([&] { replay(p, file.path.string()); });
-    text = current; text.replace(text.find("0.3.0"), 5, "0.2.0");
+    text = current; text.replace(text.find(engine_version), engine_version.size(), "0.2.0");
     { std::ofstream out(file.path); out << text; }
     rejects([&] { replay(p, file.path.string()); });
 }

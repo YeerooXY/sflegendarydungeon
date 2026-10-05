@@ -1,0 +1,47 @@
+file(MAKE_DIRECTORY "${WORK_DIR}")
+set(profile "${SOURCE_DIR}/profiles/synthetic.profile")
+execute_process(COMMAND "${SFLD}" event --profile "${profile}" --allow-assumptions --budget 0 --runs 4 --threads 2
+  RESULT_VARIABLE status OUTPUT_VARIABLE report ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Event failed: ${details}")
+endif()
+string(JSON valid GET "${report}" valid)
+string(JSON budget GET "${report}" budget_per_event)
+string(JSON hours GET "${report}" deadline_hours)
+if(NOT valid OR NOT budget EQUAL 0 OR NOT hours EQUAL 168)
+  message(FATAL_ERROR "Bad event metadata")
+endif()
+file(WRITE "${WORK_DIR}/agent.state" "schema=1\nroom=1\nrun_number=1\nphase=doors\nhp_percent=50\nkeys=0\ndoors=monster,wall\n")
+file(WRITE "${WORK_DIR}/commands.txt" "choose_door 1 0\nchoose_door 0 0\nheal_step 0 0\n")
+execute_process(COMMAND "${SFLD}" agent --profile "${profile}" --state "${WORK_DIR}/agent.state" --allow-assumptions
+  --budget 10 --max-actions 2 --trace "${WORK_DIR}/agent.jsonl"
+  INPUT_FILE "${WORK_DIR}/commands.txt" RESULT_VARIABLE status OUTPUT_VARIABLE observations ERROR_VARIABLE details)
+if(NOT status EQUAL 2 OR NOT observations MATCHES "\"error\":" OR NOT observations MATCHES "\"terminal\":true" OR
+   NOT observations MATCHES "\"mushrooms_spent\":10")
+  message(FATAL_ERROR "Agent command/limit protocol failed: ${details}\n${observations}")
+endif()
+foreach(cmd IN ITEMS event train agent)
+  execute_process(COMMAND "${SFLD}" ${cmd} --profile "${profile}" RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+  if(NOT status EQUAL 1)
+    message(FATAL_ERROR "Assumption acknowledgment missing for ${cmd}")
+  endif()
+endforeach()
+file(REMOVE "${WORK_DIR}/learned.policy")
+execute_process(COMMAND "${SFLD}" train --profile "${profile}" --allow-assumptions --budget 0 --runs 2 --threads 2
+  --generations 1 --population 4 --training-events 2 --save-policy "${WORK_DIR}/learned.policy" --output "${WORK_DIR}/trained.json"
+  RESULT_VARIABLE status ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Training failed: ${details}")
+endif()
+execute_process(COMMAND "${SFLD}" event --profile "${profile}" --allow-assumptions --budget 0 --runs 2
+  --policy "${WORK_DIR}/learned.policy" RESULT_VARIABLE status OUTPUT_QUIET ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Learned evaluation failed: ${details}")
+endif()
+foreach(cmd IN ITEMS event train agent)
+  execute_process(COMMAND "${SFLD}" ${cmd} --profile "${profile}" --allow-assumptions --output "${profile}"
+    RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+  if(NOT status EQUAL 1)
+    message(FATAL_ERROR "Input overwrite allowed by ${cmd}")
+  endif()
+endforeach()

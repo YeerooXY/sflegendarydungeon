@@ -1,4 +1,5 @@
 #include "sfld/batch.hpp"
+#include "sfld/experiment.hpp"
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -16,9 +17,10 @@
 using namespace sfld;
 namespace {
 void help() {
-    std::cout << R"(sfld 0.3.0 - offline Legendary Dungeon simulation research
+    std::cout << R"(sfld 0.4.0 - offline Legendary Dungeon simulation research
 
-Commands: audit, simulate, compare, replay, state-template
+Commands: audit, simulate, compare, replay, state-template, event, train, agent
+  event/train/agent --help: repeated-run events, learned policies and agent protocol
   --profile PATH          Explicit scenario (default profiles/synthetic.profile)
   --state PATH            Forecast from existing progress; see docs/PROGRESS.md
   --allow-assumptions     Required for synthetic simulations and replays
@@ -111,6 +113,7 @@ int main(int argc, char** argv) {
     try {
         if (argc < 2 || std::string_view(argv[1]) == "--help" || std::string_view(argv[1]) == "help") { help(); return 0; }
         const std::string command = argv[1];
+        if (command == "event" || command == "train" || command == "agent") return experiment_cli(argc, argv);
         if (command == "--version") { std::cout << "sfld " << engine_version << '\n'; return 0; }
         if (command != "audit" && command != "simulate" && command != "compare" && command != "replay" && command != "state-template")
             throw std::invalid_argument("Unknown command: " + command);
