@@ -104,6 +104,14 @@ they have no invented transition or spawn weight. `Special_Hole` (302) also
 needs an explicit mapping before claiming full coverage of the client catalog.
 See [CLIENT_INSPECTION.md](CLIENT_INSPECTION.md).
 
+The maintainer additionally reports an **arsenal at the start of stage 3,
+room 51** (2026-10-05). Its appearance conditions (first run versus later runs)
+and interaction/reward are still awaiting clarification. This is not represented
+by the current automatic generation rule: `armory` is restricted to rooms
+90-98, following LD Gadget, and has no weight in the default generic golden pool.
+It remains unresolved whether the room-51 report is another encounter or a
+version/condition difference in the armory rule. Do not describe it as covered.
+
 `spider_success` configures legs/head/full success separately; the default is
 80/50/20%. Only the middle equal-odds description is official. Immediate bite
 damage can be set with `spider_bite_damage` (default zero, unknown); poison still

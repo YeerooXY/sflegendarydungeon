@@ -13,7 +13,7 @@ their implementation, evidence and remaining gaps.
 | Officially documented structure | 100 rooms, bosses every 25, gem choices, key costs, death persistence, three slots per effect category | Implemented; exact ordering still needs observed traces |
 | Community model | Damage intervals, 24-hour recovery, combat modifiers, some effect strengths | Adopted provisionally, with source conflicts retained |
 | Explicit assumption | Door weights, barrel odds, uniform damage, offer distribution, several special rooms | Synthetic scenario only |
-| Not implemented | Ultimate economy, successive runs sharing one event, inventory and item values, observed-game replay, calibrated probabilities | No claims about these outputs |
+| Not implemented | Ultimate economy, inventory and item values, observed-game replay, calibrated probabilities | No claims about these outputs |
 
 All shipped scenarios are synthetic. The loader rejects other evidence labels.
 Tests establish the engine's declared behavior, including assumptions; they do
@@ -263,7 +263,9 @@ provisional. The baseline policy avoids entry and exits at the first opportunity
 ## Time and spending
 
 Only explicit recovery waits regenerate HP. Full natural recovery takes 24 hours
-in the example, with 20% HP required for re-entry. Each other action costs the
+in the example, with 20% HP required for re-entry. The maintainer confirmed the
+entry threshold on 2026-10-05. This is a recovery-entry threshold: ongoing room
+actions remain available below 20% HP while alive. Each other action costs the
 profile's action seconds, added to elapsed and active time. This ignores passive
 regeneration while playing, menus, network latency, player breaks during runs and
 the exact behavior of real recovery timers. `--login-hours H` rounds free recovery

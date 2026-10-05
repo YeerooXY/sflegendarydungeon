@@ -149,3 +149,65 @@ A log only reveals the chosen door's contents. Do not treat the unchosen door as
 Validate deterministic transitions by replaying observations. Then reserve entire runs for validation of room frequencies, HP loss, deaths, recovery and completion outcomes. Only after that should simulator output be described as an estimate of live-game averages. Before calibration, it can still answer conditional questions such as which choice wins across a plausible range of barrel odds.
 
 Recommended implementation order: observation/replay format, deterministic mechanics, calibrated random transitions, then strategy search and charts. The immediate missing input is evidence for transition probabilities, not graphical assets.
+
+## Live study planning, 2026-10-05
+
+The [official overview](https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/57-legendary-dungeon/)
+requires character level 50 or higher. The
+[account rules](https://playa-games.helpshift.com/hc/en/4-shakes-fidget-1653988985/faq/144-can-i-play-multiple-accounts/)
+allow one character per player per server and characters on different servers.
+A collaborative study can pool records from players controlling their own
+characters, without sharing credentials. Record server as well as character,
+event/version and run number; do not assume they have identical distributions.
+
+For estimating one binary probability near 50%, approximate 95% precision
+planning uses `n = ceil(1.96^2 * 0.25 / margin^2)`. This is an independent-trial,
+single-probability calculation, not a guarantee for all mechanics together or
+the sample size for comparing two strategies. The underlying binomial standard
+error and alternatives for reporting intervals are described by
+[NIST](https://itl.nist.gov/div898/software/dataplot/refman2/auxillar/exacbici.htm).
+
+| Desired half-width | Comparable observations per condition |
+| --- | ---: |
+| 10 percentage points | 97 |
+| 5 percentage points | 385 |
+| 3 percentage points | 1,068 |
+| 2 percentage points | 2,401 |
+| 1 percentage point | 9,604 |
+
+These are encounters, not accounts or total rooms. For example, clean escape
+attempts estimate the base escape rate; attempts with an escape stone/blessing
+or curse form different conditions. Barrel blessing chance and each shop
+strength distribution need their own eligible records. Report Wilson or exact
+intervals, especially for rare outcomes, and account for clustering within runs
+or characters. Multiple comparisons and mixed conditions can require more data.
+
+A practical first phase is 3-5 characters or contributors to verify mechanics
+and measure eligible observations per run. This is a pilot recommendation, not
+a statistical adequacy claim. Expand participation or repeat runs according to
+the observed yield. If a character supplied 10 runs with 20 comparable escape
+attempts each, two such characters would supply 400 observations; roughly 13
+would supply 2,600. Both run count and observation yield in that example are
+illustrative, not forecasts from the synthetic simulator. More characters are
+particularly useful for first-run-only behavior, which repeated later runs
+cannot sample.
+
+Prioritize base escapes, key drops, floor-specific combat curses, clean damage
+samples, barrel outcomes, and shop strength/identity pairs before splitting the
+data across many stone combinations. Record HP before/after, exact active
+effects and durations, offered choices, chosen action and resulting state.
+Lethal damage clipped at zero HP is censored. Record every eligible trial under
+a predeclared sampling rule; memorable successes and failures are not a sample.
+Randomize eligible decisions when comparing actions, keeping first and later
+runs, floors, themes and versions identifiable. Reserve complete runs/characters
+for validation rather than fitting and validating on the same observations.
+
+Paid refills can accelerate mechanics collection. Validation of free-to-play
+completion counts still needs actual zero-spend events and consistent login
+schedules. For mean completions over seven days, the sampling unit is the whole
+character-event, not each room. A pilot must estimate the standard deviation:
+for illustration, SD 1.5 completions requires about 139 independent
+character-events per policy for an approximate 95% half-width of 0.25, using
+`n = ceil((1.96 * SD / margin)^2)`. That SD is hypothetical, not measured in game;
+clustering and testing a difference between policies require separate planning.
+See [NIST's mean-precision calculation and limitations](https://www.itl.nist.gov/div898/handbook/prc/section2/prc222.htm).

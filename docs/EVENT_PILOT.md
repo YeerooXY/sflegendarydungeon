@@ -34,6 +34,11 @@ agent outcomes, input hashes and training metadata are in the
 
 ## How the controllers were obtained
 
+The 2.440 free-to-play result belongs to the **trained linear policy**. Its
+coefficients started randomly, then training selected them for completion count.
+It does not choose actions randomly during evaluation. This pilot contains no
+uniform-random-action benchmark; none of its rows estimates random play.
+
 The existing baseline is hand-written. Two separate linear policies were trained
 from random coefficients, one for each budget, using 64 generations × 64 candidates
 × 64 training events (262,144 candidate-event evaluations per budget). Training
