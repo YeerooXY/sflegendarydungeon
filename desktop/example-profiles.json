@@ -1,0 +1,6 @@
+{
+  "accounts": [
+    {"label": "Personal login", "world": "sfgame.net"},
+    {"label": "Research login", "world": "sfgame.net"}
+  ]
+}

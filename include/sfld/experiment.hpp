@@ -14,6 +14,8 @@ struct EventResult {
     double first_completion_hours = -1, elapsed_hours = 0;
     std::uint64_t actions = 0;
     bool action_limit = false;
+    int mushrooms_found = 0;
+    int reroll_shop_visits = 0, shop_purchases = 0, strong_one_hit_purchases = 0;
 };
 EventResult run_event(const Profile&, const Controller&, std::uint64_t, Limits, const StartState* = nullptr);
 std::vector<EventResult> event_batch(const Profile&, const Controller&, const BatchOptions&);
@@ -28,6 +30,8 @@ struct LearnedPolicy {
     void save(const std::string&) const;
     static LearnedPolicy load(const std::string&);
 };
+// Optional UI-only advice; never added to the independent-agent observation by default.
+std::string ui_observation_json(const Game&, const LearnedPolicy* = nullptr, const Policy* = nullptr);
 struct TrainingOptions { unsigned generations = 12, population = 32; std::size_t episodes = 24; };
 LearnedPolicy train_policy(const Profile&, const BatchOptions&, TrainingOptions, std::ostream& progress);
 int experiment_cli(int argc, char** argv);

@@ -17,7 +17,7 @@
 using namespace sfld;
 namespace {
 void help() {
-    std::cout << R"(sfld 0.4.0 - offline Legendary Dungeon simulation research
+    std::cout << "sfld " << engine_version << R"( - offline Legendary Dungeon simulation research
 
 Commands: audit, simulate, compare, replay, state-template, event, train, agent
   event/train/agent --help: repeated-run events, learned policies and agent protocol
@@ -31,11 +31,20 @@ Commands: audit, simulate, compare, replay, state-template, event, train, agent
   --deadline-hours H      Hours available from the start state (default 240)
   --run-number N          1 enables first-run rules, 2+ later-run rules
   --barrels POLICY        skip, always, low-hp, adaptive
+  --strategy POLICY       baseline, strategic, key-stockpile (default baseline)
   --barrel-hp FRACTION    Threshold for low-hp/adaptive (default 0.35)
   --revive-hp FRACTION    Recovery target, 0.2..1; bosses use a higher threshold
   --login-hours H         Return on H-hour grid during free recovery (default 0)
   --rerolls N             Maximum rerolls at each shop (default 0)
   --shop-policy POLICY    adaptive, one-hit, one-hit-8 (default adaptive)
+  --survival-aware BOOL  true/false: integrate combat survival probability
+  --practical-tactics B  Candidate key, trial and curse-trade rules (default false)
+  --patient-boss-hp P    Natural final-boss target after two step refills; 0 disables
+  --adaptive-gems BOOL   true/false: score offered stones against the current set
+  --early-key-target N   Higher key value while building an early reserve
+  --shop-allowance N     Rolling reroll allowance per eligible shop (default 0)
+  --shop-key-reserve N   Minimum keys before rolling; also encourages saving
+  --shop-mushroom-reserve N  Protect this shared-budget amount from recovery
   --recovery-budget N     Cap paid recovery within --budget; 0 spends only on rerolls
   --prefer-gem ID         Prioritize this gem when actually offered
   --sweep KIND           compare: barrels, gems, budgets, revive, rerolls, shops
@@ -95,12 +104,14 @@ gems=rabbit
 blessings=recovery:weak:2
 curses=none
 # Both positions, left then right. A blocked position is wall.
-# Optional trap suffix: monster:trap or golden:cursed_trap.
+# Optional trap suffix: monster:trap or mystery:cursed_trap. Golden rooms are untrapped.
 # Use unknown only if the current pair has not been observed.
 doors=golden,wall
 # Previous paid healing purchases IN THIS RUN; affects the next price.
 paid_heals=1
 shop_rerolls=0
+# Stages whose compulsory shop you have already seen; include 2 if passed here.
+shops_seen=1
 trial_seen=false
 trial_depth=0
 # Abstract donation units: wood,stone,souls,metal,arcane,hourglasses.
@@ -119,7 +130,8 @@ int main(int argc, char** argv) {
             throw std::invalid_argument("Unknown command: " + command);
         const std::set<std::string> accepted{"--profile", "--runs", "--threads", "--seed", "--budget", "--deadline-hours",
             "--barrels", "--barrel-hp", "--revive-hp", "--login-hours", "--rerolls", "--prefer-gem", "--sweep", "--budgets",
-            "--max-actions", "--output", "--trace", "--run-number", "--state", "--shop-policy", "--recovery-budget"};
+            "--max-actions", "--output", "--trace", "--run-number", "--state", "--shop-policy", "--recovery-budget", "--strategy",
+            "--survival-aware", "--adaptive-gems", "--early-key-target", "--shop-allowance", "--shop-key-reserve", "--shop-mushroom-reserve", "--practical-tactics", "--patient-boss-hp"};
         std::map<std::string, std::string> args;
         bool allowed = false;
         for (int i = 2; i < argc; ++i) {
@@ -187,12 +199,26 @@ int main(int argc, char** argv) {
         options.limits.max_actions = numeric<std::uint64_t>(get("--max-actions", "100000"));
         options.limits.run_number = start_state ? start_state->state.run_number : numeric<int>(get("--run-number", "1"));
         Policy policy;
+        policy.strategy = strategy_from(get("--strategy", "baseline"));
         policy.barrels = barrel_policy_from(get("--barrels", "adaptive"));
         policy.barrel_hp = numeric<double>(get("--barrel-hp", ".35"));
         policy.revive_hp = numeric<double>(get("--revive-hp", ".2"));
         policy.login_interval_hours = numeric<double>(get("--login-hours", "0"));
         policy.reroll_limit = numeric<int>(get("--rerolls", "0"));
         policy.shop = shop_policy_from(get("--shop-policy", "adaptive"));
+        const auto boolean_option = [&](const char* key) {
+            const auto value = get(key, "false");
+            if (value != "true" && value != "false") throw std::invalid_argument(std::string(key) + " needs true or false");
+            return value == "true";
+        };
+        policy.survival_aware = boolean_option("--survival-aware");
+        policy.adaptive_gems = boolean_option("--adaptive-gems");
+        policy.practical_tactics = boolean_option("--practical-tactics");
+        policy.patient_boss_hp = numeric<double>(get("--patient-boss-hp", "0"));
+        policy.early_key_target = numeric<int>(get("--early-key-target", "0"));
+        policy.shop_allowance = numeric<int>(get("--shop-allowance", "0"));
+        policy.shop_key_reserve = numeric<int>(get("--shop-key-reserve", "0"));
+        policy.shop_mushroom_reserve = numeric<int>(get("--shop-mushroom-reserve", "0"));
         if (args.contains("--recovery-budget")) {
             policy.recovery_budget = numeric<int>(args.at("--recovery-budget"));
             if (policy.recovery_budget < 0) throw std::invalid_argument("--recovery-budget must be nonnegative");

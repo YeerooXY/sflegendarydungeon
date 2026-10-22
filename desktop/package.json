@@ -1,0 +1,17 @@
+{
+  "name": "sfld-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local desktop host for the original S&F client and dungeon practice",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "watch:four": "electron watch.cjs",
+    "test": "node --test test/*.test.cjs",
+    "test:window": "electron . --smoke",
+    "test:watch": "electron watch.cjs --smoke --pace=450 --seed=822810"
+  },
+  "devDependencies": {
+    "electron": "44.7.2"
+  }
+}

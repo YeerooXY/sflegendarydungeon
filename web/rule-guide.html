@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Stone guide · Legendary Dungeon</title>
+  <link rel="stylesheet" href="/rule-guide.css">
+  <script defer src="/rule-guide.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/">Legendary Dungeon <span>STRATEGY LAB</span></a><a class="back-link" href="/">Back to the simulator</a></header>
+  <main>
+    <div class="heading"><p class="eyebrow">A RULE CHART YOU CAN FOLLOW</p><h1>Which stone should I take?</h1><p class="intro">Enter the stones you own and the three you were offered. The guide shows how the selected strategy makes its choice.</p></div>
+    <p id="guide-status" class="notice" role="status">Loading the rule charts…</p>
+    <div id="guide-error" class="error" role="alert" hidden></div>
+    <div id="guide-content" hidden>
+      <section class="panel profile-panel" aria-labelledby="profile-heading">
+        <div><h2 id="profile-heading">Choose a strategy</h2><label for="guide-profile">Rule chart</label><select id="guide-profile"></select><p id="profile-description" class="muted"></p></div>
+        <div id="profile-results" class="result-metrics" aria-label="Simulation results"></div>
+      </section>
+      <div class="guide-columns">
+        <section class="panel choice-panel" aria-labelledby="choice-heading">
+          <h2 id="choice-heading">Your stone choice</h2>
+          <label for="guide-room">Where are you choosing?</label>
+          <select id="guide-room"><option value="26">After room 25 · first stone</option><option value="51">After room 50 · second stone</option><option value="76">After room 75 · third stone</option></select>
+          <fieldset><legend>Stones already owned <span>Choose up to two</span></legend><div class="owned-grid"><label for="owned-0">Owned stone 1<select id="owned-0"></select></label><label for="owned-1">Owned stone 2<select id="owned-1"></select></label></div></fieldset>
+          <fieldset><legend>The three offers <span>Keep their displayed order</span></legend><div class="offer-inputs"><label for="offer-0">Left<select id="offer-0"></select></label><label for="offer-1">Middle<select id="offer-1"></select></label><label for="offer-2">Right<select id="offer-2"></select></label></div></fieldset>
+          <p id="choice-error" class="error" role="alert" hidden></p>
+          <div id="recommendation" class="recommendation" aria-live="polite"></div>
+          <div id="offer-breakdowns" class="offer-breakdowns"></div>
+          <p class="fine-print">Points express this chart’s preferences, not odds. Ties go to the leftmost offered stone. The chart uses 40% base escape; temporary blessings and curses do not change its point rules.</p>
+        </section>
+        <section class="panel action-panel" aria-labelledby="actions-heading"><p class="eyebrow">THE REST OF THE STRATEGY</p><h2 id="actions-heading">Rules during a run</h2><ol id="guide-actions"></ol></section>
+      </div>
+      <section class="panel ranking-panel" aria-labelledby="ranking-heading">
+        <div class="section-heading"><div><h2 id="ranking-heading">Stone ranking for this position</h2><p class="muted">Base points plus the adjustments for your current selection. Owned stones cannot be chosen again.</p></div><span class="count-label">20 current stones</span></div>
+        <div class="table-wrap"><table><thead><tr><th scope="col">Rank</th><th scope="col">Stone</th><th scope="col">Base</th><th scope="col">Adjustment</th><th scope="col">Total</th></tr></thead><tbody id="rank-rows"></tbody></table></div>
+        <details class="conditions"><summary>How the conditional points work</summary><ul id="condition-list"></ul><p class="fine-print">These point adjustments belong to the selected strategy. They are not measurements of a stone’s effect.</p></details>
+      </section>
+    </div>
+    <footer>Choose from the stones actually offered in your game. This guide compares simulation rules; it does not establish an optimal live-game strategy.</footer>
+  </main>
+</body>
+</html>

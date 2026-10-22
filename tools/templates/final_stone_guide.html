@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose your third stone · Legendary Dungeon research</title>
+<style>
+:root{color-scheme:dark;font:16px/1.55 system-ui,sans-serif;background:#101722;color:#e8edf4}*{box-sizing:border-box}
+body{max-width:1100px;margin:0 auto;padding:32px 22px 70px}h1{font-size:2rem;margin:0 0 12px}h2{font-size:1.15rem;margin:24px 0 12px}p{max-width:85ch}.muted,small{color:#b3c0cf}a{color:#8fc8ff}a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #ffe093;outline-offset:3px}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}label{display:block}select,button{font:inherit;color:inherit;background:#202c3d;border:1px solid #56667c;border-radius:6px;padding:9px}select{width:100%;display:block;margin-top:4px}button{cursor:pointer}button:hover{background:#31445e}.scope{padding:15px 18px;background:#1c2b3d;border-left:4px solid #89b5ed;border-radius:5px}.offers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.offers label{padding:9px;background:#1b2637;border-radius:5px;cursor:pointer}.offers input{margin-right:8px;accent-color:#d9ae57}#recommendation{border:1px solid #d1b277;border-radius:8px;padding:16px 20px;margin:24px 0}#recommendation strong{font-size:1.2rem;color:#ffe093}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:12px;border-bottom:1px solid #354156}th{color:#b9c9de;font-weight:500}tr:first-child{background:#1c302d}.best{color:#a4edb5}.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0}#message{color:#ffe093;min-height:1.6em}.note{font-size:.9rem}footer{border-top:1px solid #465467;margin-top:35px;padding-top:16px}@media(max-width:650px){.settings,.offers{grid-template-columns:1fr}body{padding:20px 14px}th,td{padding:9px}h1{font-size:1.65rem}}
+</style></head><body>
+<p class="muted">Legendary Dungeon · final-stage comparisons</p>
+<h1>Choose your third stone</h1>
+<p>Keep your two held stones fixed. Rank every remaining stone, or select the three offers on your screen. The lowest estimated remaining time comes first.</p>
+<div class="scope"><b>Measured situation:</b> alive after room 75, at <b>1% health</b>, no temporary blessings or curses, and <b>at most 5 mushrooms</b> left to spend. Continuous play, 168 hours remaining, no earlier paid refills. These tables average controlled offer-history panels. Use fresh simulations for a different current state.</div>
+<div class="settings">
+<label>Event run<select id="run"><option value="2">Second or later run · 20-stone pool</option><option value="1">First run · 10-stone pool</option></select></label>
+<label>Keys remaining<select id="keys"><option>0</option><option>1</option><option selected>3</option><option>5</option><option>10</option></select></label>
+<label>First held stone<select id="held-a"></select></label><label>Second held stone<select id="held-b"></select></label>
+</div>
+<h2>Your offers (optional)</h2>
+<p class="muted">Select up to three. With none selected, the table ranks all possible additions across histories. An unchosen stone from an earlier menu is unavailable; do not select it here.</p>
+<div id="offers" class="offers"></div>
+<div class="actions"><button id="clear" type="button">Rank all remaining stones</button><button id="example" type="button">Moonstone + Thirsty example</button><span id="selection-count"></span></div>
+<div id="message" role="status"></div>
+<div id="recommendation" aria-live="polite"></div>
+<div class="table-wrap"><table><thead><tr><th>Estimated rank</th><th>Third stone</th><th>Remaining hours ↓</th><th>Mushrooms spent</th><th>Best-choice confidence</th></tr></thead><tbody id="ranking"></tbody></table></div>
+<p id="sample-note" class="muted note"></p>
+<p class="note">Confidence accounts for all 151,650 comparisons in the original study. “Still a contender” means no selected alternative is convincingly faster; it does not prove equality. Ordering by sample mean does not establish that every adjacent rank differs. These are simulation confidence statements, not guarantees about the real game.</p>
+<footer><p><a href="../final-stones-five-2026-10-15/report.md">Study method</a> · <a href="../final-stones-five-2026-10-15/rankings.csv">All 18,900 rankings as CSV</a> · <a href="guide.md">Using the fresh-simulation adviser</a></p>
+<p class="muted note">Frozen learned continuation policy. Minimizes time to complete this run, with unfinished trials counted as 168 hours. No claim of a globally optimal strategy.</p></footer>
+<script id="study" type="application/json">__STUDY_JSON__</script>
+<script>
+'use strict';
+const study=JSON.parse(document.querySelector('#study').textContent);
+const $=id=>document.getElementById(id);let selected=new Set();
+function selectedRanking(row,chosen){
+  const ranks=row.ranks.filter(r=>!chosen.size||chosen.has(r.stone));
+  const allowed=new Set(ranks.map(r=>r.stone));
+  const beaten=new Set(row.beats.filter(([a,b])=>allowed.has(a)&&allowed.has(b)).map(([a,b])=>b));
+  return ranks.map(r=>({...r,contender:!beaten.has(r.stone)}));
+}
+function textNode(tag,value){const node=document.createElement(tag);node.textContent=value;return node;}
+function populate(){
+  const pool=study.pools[$('run').value];
+  for(const id of ['held-a','held-b']){
+    const old=$(id).value;$(id).replaceChildren(...pool.map(g=>{const o=textNode('option',study.full[g]);o.value=g;return o;}));
+    $(id).value=pool.includes(old)?old:pool[0];
+  }
+  if($('held-a').value===$('held-b').value)$('held-b').value=pool.find(g=>g!==$('held-a').value);
+}
+function currentRow(){const held=[$('held-a').value,$('held-b').value];return study.rows.find(r=>r.run===Number($('run').value)&&r.keys===Number($('keys').value)&&held.every(g=>r.held.includes(g)));}
+function showOffers(){
+  const row=currentRow();selected=new Set([...selected].filter(g=>row.ranks.some(r=>r.stone===g)));
+  $('offers').replaceChildren(...[...row.ranks].sort((a,b)=>study.full[a.stone].localeCompare(study.full[b.stone])).map(r=>{
+    const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=r.stone;input.checked=selected.has(r.stone);
+    input.addEventListener('change',()=>{
+      if(input.checked&&selected.size===3){input.checked=false;$('message').textContent='Choose at most three offers.';return;}
+      if(input.checked)selected.add(r.stone);else selected.delete(r.stone);$('message').textContent='';render();
+    });label.append(input,document.createTextNode(study.full[r.stone]));return label;
+  }));render();
+}
+function render(){
+  const row=currentRow(),ranks=selectedRanking(row,selected),contenders=ranks.filter(r=>r.contender),best=ranks[0];
+  $('selection-count').textContent=selected.size?`${selected.size} selected offer${selected.size===1?'':'s'}`:`All ${ranks.length} potential additions`;
+  const title=textNode('strong',`${study.full[best.stone]} · ${best.hours.toFixed(2)} hours`);
+  const explanation=ranks.length===1?'Only one candidate selected.':contenders.length===1?'Supported best among the displayed choices in this study.':`Lowest time estimate; ${contenders.map(r=>study.short[r.stone]).join(', ')} remain plausible best choices.`;
+  $('recommendation').replaceChildren(title,textNode('p',explanation));
+  $('ranking').replaceChildren(...ranks.map((r,i)=>{
+    const tr=document.createElement('tr');
+    [i+1,study.full[r.stone],r.hours.toFixed(2),r.mushrooms.toFixed(2),ranks.length===1?'No comparison':r.contender?(contenders.length===1?'Supported best':'Still a contender'):'A displayed alternative is faster'].forEach(v=>tr.append(textNode('td',v)));
+    if(r.contender)tr.lastChild.className='best';return tr;
+  }));
+  $('sample-note').textContent=`${row.samples.toLocaleString()} continuations per candidate in this state; ${study.trajectories.toLocaleString()} distinct simulations across the complete study. Current temporary effects and exact prior rejections are not varied by this page.`;
+  const params=new URLSearchParams({run:$('run').value,keys:$('keys').value,a:$('held-a').value,b:$('held-b').value});
+  if(selected.size)params.set('offers',[...selected].join(','));history.replaceState(null,'','#'+params);
+}
+$('run').addEventListener('change',()=>{selected.clear();populate();showOffers();});
+$('keys').addEventListener('change',render);
+for(const id of ['held-a','held-b'])$(id).addEventListener('change',()=>{const other=id==='held-a'?'held-b':'held-a';if($(id).value===$(other).value)$(other).value=study.pools[$('run').value].find(g=>g!==$(id).value);selected.clear();showOffers();});
+$('clear').addEventListener('click',()=>{selected.clear();$('message').textContent='';showOffers();});
+$('example').addEventListener('click',()=>{$('run').value='2';populate();$('held-a').value='moonstone';$('held-b').value='thirsty';selected=new Set(['deceit','rusty','pendant']);$('message').textContent='';showOffers();});
+const params=new URLSearchParams(location.hash.slice(1));if(study.pools[params.get('run')])$('run').value=params.get('run');populate();
+const pool=study.pools[$('run').value];
+$('held-a').value=pool.includes(params.get('a'))?params.get('a'):(pool.includes('moonstone')?'moonstone':pool[0]);
+$('held-b').value=pool.includes(params.get('b'))?params.get('b'):(pool.includes('thirsty')?'thirsty':pool.find(g=>g!==$('held-a').value));
+if($('held-a').value===$('held-b').value)$('held-b').value=pool.find(g=>g!==$('held-a').value);
+if(study.keys.includes(Number(params.get('keys')))&&params.has('keys'))$('keys').value=params.get('keys');
+selected=new Set((params.has('run')?(params.get('offers')||''):'deceit,rusty,pendant').split(',').filter(Boolean).slice(0,3));showOffers();
+</script></body></html>

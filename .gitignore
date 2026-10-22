@@ -6,3 +6,9 @@
 CMakeUserPresets.json
 __pycache__/
 *.pyc
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.private.json
+/study/
+/web/local-assets/

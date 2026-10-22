@@ -15,6 +15,8 @@ Code correctness and agreement with the game are separate requirements.
 | `src/batch.cpp` | Reproducible batches, statistics and trace replay |
 | `src/main.cpp` | CLI and experiment sweeps |
 | `tests/tests.cpp` | Mechanics, invariants and reproducibility checks |
+| `tools/sfld_study/`, `tools/study.py` | Private observation journal, bounded pilot, typed visible state and public exports |
+| `tests/test_study.py` | Offline budget, crash, protocol and privacy checks |
 | `docs/` | Evidence, assumptions and data collection |
 
 Keep policy code separate from transitions. Policies may inspect visible state
@@ -55,6 +57,12 @@ ctest --test-dir build-sanitize --output-on-failure
 GitHub Actions builds on Linux and Windows, including a sanitizer job. A failing
 batch prints its zero-based run index and derived seed. The library's `run_one`
 takes that derived seed directly; the CLI's `--seed` takes a master seed instead.
+
+For study-tool changes, run `python -m unittest discover -s tests -p test_study.py -v`
+and an offline `python tools/study.py demo --directory out/new-study-fixture`.
+Never point tests at a live login. New protocol mappings need their inspected
+client version and independent live UI validation before unattended use. Keep
+raw observations, account bindings, private databases and credentials out of Git.
 
 Please submit your own code and data. Link to external research with attribution;
 do not assume another project's code or datasets share this repository's license.

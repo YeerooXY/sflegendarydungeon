@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace sfld {
-inline constexpr std::string_view engine_version = "0.4.1";
+inline constexpr std::string_view engine_version = "0.6.12";
 enum class Phase { doors, encounter, shop, curse_shop, gems, recovery, complete };
 enum class Door { monster, mystery, locked, double_locked, unlocked, epic, golden,
     shop, cursed, sacrifice, blessing, destiny, wood, stone, souls, metal, arcane,
@@ -26,7 +26,7 @@ enum class EffectKind { raider, one_hit, escape, disarm, lockpick, key_moment,
 enum class Clock { room, trap, door, fight };
 enum class ActionKind { choose_door, fight, flee, interact, skip, buy, reroll,
     choose_gem, wait, heal_step, heal_full, reenter, rps, linger, restart };
-enum class Stream { doors, contents, damage, escape, keys, effects, shop, gems, special, count };
+enum class Stream { doors, contents, damage, escape, keys, effects, shop, gems, special, schedule, count };
 
 template<class E> constexpr std::size_t ix(E e) { return static_cast<std::size_t>(e); }
 std::string_view name(Phase);
@@ -65,6 +65,7 @@ public:
 struct Offer { Effect effect; int keys = 0; };
 struct DoorView { Door kind = Door::wall; bool trap = false; bool cursed_trap = false; };
 struct Action { ActionKind kind; int index = 0; double value = 0; };
+struct Outcome { std::string_view kind, detail; double amount = 0; int duration = 0; };
 
 // This is the player-visible state. It contains no future random draws or hidden rooms.
 struct State {
@@ -76,6 +77,8 @@ struct State {
     int keys = 0;
     std::array<int, 6> resources{};
     std::array<bool, ix(Gem::count)> gems{};
+    // Revealed menus this run, including rejected stones; distinct from effects.
+    std::array<bool, ix(Gem::count)> offered_gems{};
     Effects blessings, curses;
     std::array<DoorView, 2> doors{};
     Encounter encounter = Encounter::empty;
@@ -88,9 +91,13 @@ struct State {
     int deaths = 0;
     int paid_steps = 0;
     int mushrooms = 0;
+    int mushrooms_found = 0; // Rewards, separate from gross spending and its hard cap.
     int recovery_mushrooms = 0;
     int reroll_mushrooms = 0;
     int shop_rerolls = 0;
+    int reroll_shop_visits = 0; // Rerollable shops entered since the bank's origin.
+    int reroll_bank_used = 0; // Includes imported past spending; result counters remain from now.
+    std::array<bool, 4> shops_seen{}; // Compulsory shop offered/entered in each stage of this run.
     int shop_purchases = 0;
     int strong_one_hit_purchases = 0;
     int epics = 0;
@@ -103,6 +110,8 @@ struct State {
     std::uint64_t actions = 0;
     double elapsed_hours = 0;
     double active_hours = 0;
+    double run_start_hours = 0;
+    int run_start_mushrooms = 0;
     double flooded_seconds = 0;
     int completed_runs = 0;
     double first_completion_hours = -1;
@@ -110,18 +119,39 @@ struct State {
     const Effect* effect(EffectKind k) const;
 };
 
-struct Range { double low = 0; double high = 0; };
+struct Range { double low = 0; double high = 0; double mean = -1; }; // Optional reported mean.
 struct Profile {
     std::string id;
     std::string evidence;
     std::string fingerprint;
     std::array<double, ix(Door::count)> door_weights{};
+    // Opposite a visible monster in rooms 1-5. Absent retains the historical
+    // mystery-only scenario. Room five of the first run is still the free shop.
+    std::optional<std::array<double, ix(Door::count)>> opening_door_weights;
+    // Optional joint families: door/mystery, door/monster, mystery/mystery,
+    // door/golden, monster/mystery, golden/mystery, golden/monster, golden/golden.
+    // Physical styles are subsequently drawn from the modified door weights.
+    std::optional<std::array<double, 8>> door_pair_weights;
     std::array<double, ix(Encounter::count)> mystery_weights{};
+    // Optional independent contents when the OTHER choice is not a visible monster.
+    // Missing overrides retain the shared mystery/unlocked pool in older profiles.
+    std::optional<std::array<double, ix(Encounter::count)>> mystery_without_monster_weights;
+    std::optional<std::array<double, ix(Encounter::count)>> mystery_beside_mystery_weights;
+    std::optional<std::array<double, ix(Encounter::count)>> mystery_beside_wall_weights;
+    const std::array<double, ix(Encounter::count)>& mystery_for_pair(bool beside_monster) const;
+    const std::array<double, ix(Encounter::count)>& mystery_for_alternative(Door) const;
+    std::array<double, ix(Encounter::count)> destiny_weights{};
+    // Mandatory opening spin: blessing, gold, lucky coins, hourglasses, mushrooms, curse.
+    std::array<double, 6> destiny_reward_weights{1, 1, 1, 1, 1, 1};
+    // Gold reward units, lucky coins, hourglass donation units, mushrooms.
+    std::array<double, 4> destiny_reward_amounts{1, 10, 1, 1};
     std::array<double, ix(Encounter::count)> locked_weights{};
     std::array<double, ix(Encounter::count)> golden_weights{};
     std::vector<Gem> gem_pool;
     // Optional overrides; empty means use gem_pool. Pool contents still need evidence.
     std::vector<Gem> first_run_gem_pool, later_run_gem_pool;
+    // Image-backed working rule; false reproduces the former held-only pool.
+    bool exclude_offered_gems = true;
     const std::vector<Gem>& gems_for_run(int run_number) const;
     std::array<Range, 4> monster_damage{};
     std::array<Range, 4> escape_damage{};
@@ -131,27 +161,61 @@ struct Profile {
     std::array<double, 5> curse_weights{};
     // Container outcomes: blessing, normal item, gold, empty.
     std::array<double, 4> container_weights{};
+    // Ordinary crates/bronze/silver only. Joint outcome index is a bit mask:
+    // blessing=1, item=2, gold=4; index zero means nothing. Explicit joint
+    // tables supersede the legacy blessing gate; corpses retain legacy loot.
+    std::optional<std::array<double, 8>> container_joint_weights;
+    // Missing Greed override uses the baseline joint table: no inferred bonus.
+    std::optional<std::array<double, 8>> container_joint_greed_weights;
+    // Player report: ordinary loot and non-waking corpses need Greed for blessings.
+    // False enables a baseline-blessing sensitivity scenario; no additive bonus.
+    bool container_blessing_requires_greed = true;
+    // Player observation, 2026-10-08: Diamond makes instant elixirs fill HP.
+    // Explicit opt-in keeps older scenario files reproducible.
+    bool time_traveler_elixir_full_heal = false;
     double trap_chance = 0;
-    double cursed_trap_chance = 0;
     double barrel_blessing = 0;
+    // Zero reproduces the historical additive -50pp assumption. Positive
+    // values multiply the base curse probability; current 1.5 is provisional.
+    double time_traveler_barrel_curse_multiplier = 0;
     double strong_effect = 0;
     double escape_chance = 0;
     double key_chance = 0;
+    // Optional calibration experiments retain legacy behavior unless enabled.
+    double spying_key_penalty = .15;
+    bool fight_only_damage_stones = false;
     double combat_curse_chance = 0;
     double skeleton_wakes = 0;
     double hidden_monster_chance = 0;
+    // Fraction of ordinary locked-style weight converted to unlocked by Spying.
+    // Old profiles retain the former 50% assumption.
+    double spying_unlock_fraction = .5;
     double recovery_hours = 24;
     double action_seconds = 2;
     double full_heal_cost_per_fraction = 48;
-    double trial_legendary_chance = 0;
+    // Collected prize tiers 1-5; only the tier-five 10% is a player estimate.
+    std::array<double, 5> trial_legendary_chances{0, 0, 0, .01, .10};
+    // Optional tier-five categories: gold, arcane splinters, epic, legendary.
+    // Quantities remain abstract reward units; tiers one through four retain
+    // the legacy model rather than borrowing the tier-five observations.
+    std::optional<std::array<double, 4>> trial_reward_weights_5;
     // Player-reported fixed entrance; 0 restores the old weighted entrance model.
     int trial_entry_room = 51;
     int initial_resources = 10;
     bool free_first_level_shops = true;
+    // Legacy profiles retain weighted generation.
+    std::string shop_schedule = "weighted"; // weighted, one_per_stage
+    bool later_stage_one_shop = true; // Current evidence opts out; first run has room-five shop.
+    // Optional inclusive absolute room windows for one_per_stage sensitivity
+    // scenarios. Placement within each window is a uniform assumption. A late
+    // imported state with an unseen shop receives it at the next eligible room.
+    std::optional<std::array<Range, 4>> shop_windows;
     // Unknown shop distributions are independently configurable from barrels.
     std::array<double, 8> shop_blessing_weights{};
     std::array<double, 5> shop_curse_weights{};
     double shop_strong_effect = .50;
+    // Player-confirmed: fixed opening offers, no rerolls. Other modes are sensitivity scenarios.
+    std::string opening_shop_rerolls = "disabled"; // disabled, normal, fixed
     bool armory_bonus_eligible = false;
     double armory_legendary_chance = .10;
     double auction_epic_chance = .50;
@@ -164,6 +228,7 @@ struct Profile {
     static Profile load(const std::string&);
     void validate() const;
 };
+double barrel_blessing_chance(const Profile&, const State&);
 
 struct Limits {
     int budget = 0;
@@ -173,6 +238,9 @@ struct Limits {
     bool repeat_runs = false;
     // Full HP is player-reported; alternatives support sensitivity experiments.
     std::string restart_health = "full"; // full, carry, empty
+    // Fixed 24-hour local clock. Zero disables the midnight-to-wake sleep window.
+    double sleep_until_hour = 0;
+    double event_start_hour = 0;
 };
 // Counter-based, specified integer arithmetic, independent streams, reset per room.
 class Random {

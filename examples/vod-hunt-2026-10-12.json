@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "id": "2878439002",
+      "url": "https://www.twitch.tv/videos/2878439002",
+      "windows": [
+        [
+          2100,
+          4800
+        ],
+        [
+          9480,
+          11700
+        ]
+      ],
+      "note": "New channel in corpus; multiple LD runs, stones, barrels and special doors visible in storyboard. Selected early and late sustained blocks."
+    },
+    {
+      "id": "2877531246",
+      "url": "https://www.twitch.tv/videos/2877531246",
+      "windows": [
+        [
+          1020,
+          2940
+        ]
+      ],
+      "note": "New Slovak-language channel; first-day LD with stone choice and multiple stages visible. Separate layout calibration required."
+    },
+    {
+      "id": "2877355041",
+      "url": "https://www.twitch.tv/videos/2877355041",
+      "windows": [
+        [
+          900,
+          3900
+        ],
+        [
+          63600,
+          65400
+        ]
+      ],
+      "note": "New 2026 source from DORZER (previous DORZER source was 2024). Charity stream lasts over 25 hours; select opening block and late block containing a spinner offer. Targeted sampling, not a complete census."
+    },
+    {
+      "id": "2883910762",
+      "url": "https://www.twitch.tv/videos/2883910762",
+      "windows": [
+        [
+          1200,
+          2820
+        ]
+      ],
+      "note": "Official channel with waves, different presenter/layout from existing tunyghost sources. Previewed sustained dungeon block; giveaway spinner elsewhere is unrelated and excluded."
+    },
+    {
+      "id": "2885348704",
+      "url": "https://www.twitch.tv/videos/2885348704",
+      "windows": [
+        [
+          12240,
+          15180
+        ]
+      ],
+      "note": "Final event-day late block with sustained LD. Earlier unrelated game menus omitted."
+    },
+    {
+      "id": "2877408140",
+      "url": "https://www.twitch.tv/videos/2877408140",
+      "windows": [
+        [
+          2100,
+          3180
+        ],
+        [
+          5880,
+          6900
+        ]
+      ],
+      "note": "Opening event day; two sustained LD blocks with clear dungeon HUD."
+    },
+    {
+      "id": "2878297081",
+      "url": "https://www.twitch.tv/videos/2878297081",
+      "windows": [
+        [
+          7200,
+          8640
+        ]
+      ],
+      "note": "Second event day; late sustained run with blessing door and room choices."
+    }
+  ]
+}

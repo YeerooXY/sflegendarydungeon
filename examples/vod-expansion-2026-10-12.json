@@ -1,0 +1,538 @@
+{
+  "schema": 1,
+  "selection": "All still-unacquired preview-positive candidates in the October 12 catalog; one bounded block each.",
+  "sources": [
+    {
+      "id": "2876542901",
+      "url": "https://www.twitch.tv/videos/2876542901",
+      "windows": [
+        [
+          10260,
+          12060
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection. F9 sources must stay separate.",
+      "preview_example": {
+        "tile": 27,
+        "source_seconds_approximate": 11166,
+        "url": "https://www.twitch.tv/videos/2876542901?t=3h6m6s"
+      },
+      "channel": "sfgameofficial",
+      "upload_date": "20260917",
+      "cohort": "F9_early_event"
+    },
+    {
+      "id": "2876672007",
+      "url": "https://www.twitch.tv/videos/2876672007",
+      "windows": [
+        [
+          8940,
+          10740
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection. F9 sources must stay separate.",
+      "preview_example": {
+        "tile": 33,
+        "source_seconds_approximate": 9845,
+        "url": "https://www.twitch.tv/videos/2876672007?t=2h44m5s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260917",
+      "cohort": "F9_early_event"
+    },
+    {
+      "id": "2877350009",
+      "url": "https://www.twitch.tv/videos/2877350009",
+      "windows": [
+        [
+          12120,
+          13920
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 14,
+        "source_seconds_approximate": 13073,
+        "url": "https://www.twitch.tv/videos/2877350009?t=3h37m53s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260918",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2877357594",
+      "url": "https://www.twitch.tv/videos/2877357594",
+      "windows": [
+        [
+          2520,
+          4320
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 7,
+        "source_seconds_approximate": 3477,
+        "url": "https://www.twitch.tv/videos/2877357594?t=0h57m57s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260918",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2877419504",
+      "url": "https://www.twitch.tv/videos/2877419504",
+      "windows": [
+        [
+          2880,
+          4680
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 8,
+        "source_seconds_approximate": 3800,
+        "url": "https://www.twitch.tv/videos/2877419504?t=1h3m20s"
+      },
+      "channel": "sfgameofficial",
+      "upload_date": "20260918",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2877771092",
+      "url": "https://www.twitch.tv/videos/2877771092",
+      "windows": [
+        [
+          1968,
+          3768
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 30,
+        "source_seconds_approximate": 2884,
+        "url": "https://www.twitch.tv/videos/2877771092?t=0h48m4s"
+      },
+      "channel": "Gorgoss",
+      "upload_date": "20260918",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2878460304",
+      "url": "https://www.twitch.tv/videos/2878460304",
+      "windows": [
+        [
+          8040,
+          9840
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 23,
+        "source_seconds_approximate": 8980,
+        "url": "https://www.twitch.tv/videos/2878460304?t=2h29m40s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260919",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2879135287",
+      "url": "https://www.twitch.tv/videos/2879135287",
+      "windows": [
+        [
+          8228,
+          10028
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 37,
+        "source_seconds_approximate": 9428,
+        "url": "https://www.twitch.tv/videos/2879135287?t=2h37m8s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260920",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2879175331",
+      "url": "https://www.twitch.tv/videos/2879175331",
+      "windows": [
+        [
+          11820,
+          13620
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 28,
+        "source_seconds_approximate": 12764,
+        "url": "https://www.twitch.tv/videos/2879175331?t=3h32m44s"
+      },
+      "channel": "Lootenant",
+      "upload_date": "20260920",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2879510384",
+      "url": "https://www.twitch.tv/videos/2879510384",
+      "windows": [
+        [
+          0,
+          1800
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 7,
+        "source_seconds_approximate": 488,
+        "url": "https://www.twitch.tv/videos/2879510384?t=0h8m8s"
+      },
+      "channel": "SenseiMZee",
+      "upload_date": "20260920",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2880085656",
+      "url": "https://www.twitch.tv/videos/2880085656",
+      "windows": [
+        [
+          3960,
+          5760
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 15,
+        "source_seconds_approximate": 4880,
+        "url": "https://www.twitch.tv/videos/2880085656?t=1h21m20s"
+      },
+      "channel": "Maexel",
+      "upload_date": "20260921",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2880182419",
+      "url": "https://www.twitch.tv/videos/2880182419",
+      "windows": [
+        [
+          8280,
+          10080
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 27,
+        "source_seconds_approximate": 9200,
+        "url": "https://www.twitch.tv/videos/2880182419?t=2h33m20s"
+      },
+      "channel": "Lootenant",
+      "upload_date": "20260921",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2880184828",
+      "url": "https://www.twitch.tv/videos/2880184828",
+      "windows": [
+        [
+          8940,
+          10740
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 24,
+        "source_seconds_approximate": 9876,
+        "url": "https://www.twitch.tv/videos/2880184828?t=2h44m36s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260921",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2880307016",
+      "url": "https://www.twitch.tv/videos/2880307016",
+      "windows": [
+        [
+          3720,
+          5520
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 14,
+        "source_seconds_approximate": 4653,
+        "url": "https://www.twitch.tv/videos/2880307016?t=1h17m33s"
+      },
+      "channel": "DORZER",
+      "upload_date": "20260921",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2880311940",
+      "url": "https://www.twitch.tv/videos/2880311940",
+      "windows": [
+        [
+          9960,
+          11760
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 30,
+        "source_seconds_approximate": 10909,
+        "url": "https://www.twitch.tv/videos/2880311940?t=3h1m49s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260921",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2880968138",
+      "url": "https://www.twitch.tv/videos/2880968138",
+      "windows": [
+        [
+          12600,
+          14400
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 35,
+        "source_seconds_approximate": 13559,
+        "url": "https://www.twitch.tv/videos/2880968138?t=3h45m59s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260922",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2881023333",
+      "url": "https://www.twitch.tv/videos/2881023333",
+      "windows": [
+        [
+          10380,
+          12180
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 34,
+        "source_seconds_approximate": 11306,
+        "url": "https://www.twitch.tv/videos/2881023333?t=3h8m26s"
+      },
+      "channel": "sfgameofficial",
+      "upload_date": "20260922",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2881289951",
+      "url": "https://www.twitch.tv/videos/2881289951",
+      "windows": [
+        [
+          13560,
+          15360
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 32,
+        "source_seconds_approximate": 14502,
+        "url": "https://www.twitch.tv/videos/2881289951?t=4h1m42s"
+      },
+      "channel": "Maexel",
+      "upload_date": "20260922",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2881864875",
+      "url": "https://www.twitch.tv/videos/2881864875",
+      "windows": [
+        [
+          5040,
+          6840
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 32,
+        "source_seconds_approximate": 5979,
+        "url": "https://www.twitch.tv/videos/2881864875?t=1h39m39s"
+      },
+      "channel": "Lootenant",
+      "upload_date": "20260923",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2881884794",
+      "url": "https://www.twitch.tv/videos/2881884794",
+      "windows": [
+        [
+          6000,
+          7800
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 33,
+        "source_seconds_approximate": 6930,
+        "url": "https://www.twitch.tv/videos/2881884794?t=1h55m30s"
+      },
+      "channel": "sfgameofficial",
+      "upload_date": "20260923",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2881960605",
+      "url": "https://www.twitch.tv/videos/2881960605",
+      "windows": [
+        [
+          5280,
+          7080
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 16,
+        "source_seconds_approximate": 6180,
+        "url": "https://www.twitch.tv/videos/2881960605?t=1h43m0s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260923",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2882669649",
+      "url": "https://www.twitch.tv/videos/2882669649",
+      "windows": [
+        [
+          11520,
+          13320
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 32,
+        "source_seconds_approximate": 12440,
+        "url": "https://www.twitch.tv/videos/2882669649?t=3h27m20s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260924",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2882868478",
+      "url": "https://www.twitch.tv/videos/2882868478",
+      "windows": [
+        [
+          8700,
+          10500
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 28,
+        "source_seconds_approximate": 9649,
+        "url": "https://www.twitch.tv/videos/2882868478?t=2h40m49s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260924",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2883483527",
+      "url": "https://www.twitch.tv/videos/2883483527",
+      "windows": [
+        [
+          18840,
+          20640
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 31,
+        "source_seconds_approximate": 19786,
+        "url": "https://www.twitch.tv/videos/2883483527?t=5h29m46s"
+      },
+      "channel": "Zsombey",
+      "upload_date": "20260925",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2883589492",
+      "url": "https://www.twitch.tv/videos/2883589492",
+      "windows": [
+        [
+          7200,
+          9000
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 27,
+        "source_seconds_approximate": 8110,
+        "url": "https://www.twitch.tv/videos/2883589492?t=2h15m10s"
+      },
+      "channel": "sfgameofficial",
+      "upload_date": "20260925",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2883711077",
+      "url": "https://www.twitch.tv/videos/2883711077",
+      "windows": [
+        [
+          11100,
+          12900
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 31,
+        "source_seconds_approximate": 12039,
+        "url": "https://www.twitch.tv/videos/2883711077?t=3h20m39s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260925",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2884397465",
+      "url": "https://www.twitch.tv/videos/2884397465",
+      "windows": [
+        [
+          3360,
+          5160
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 2,
+        "source_seconds_approximate": 4302,
+        "url": "https://www.twitch.tv/videos/2884397465?t=1h11m42s"
+      },
+      "channel": "N3utr4LSF",
+      "upload_date": "20260926",
+      "cohort": "September_2026_worldwide"
+    },
+    {
+      "id": "2885500891",
+      "url": "https://www.twitch.tv/videos/2885500891",
+      "windows": [
+        [
+          7440,
+          9240
+        ]
+      ],
+      "note": "Latest September 2026 event, 30-minute block around a previously reviewed LD preview. Block selected before native reward inspection.",
+      "preview_example": {
+        "tile": 22,
+        "source_seconds_approximate": 8385,
+        "url": "https://www.twitch.tv/videos/2885500891?t=2h19m45s"
+      },
+      "channel": "DORZER",
+      "upload_date": "20260927",
+      "cohort": "September_2026_worldwide"
+    }
+  ]
+}

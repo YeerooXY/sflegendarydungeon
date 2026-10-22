@@ -7,6 +7,15 @@
 #include <stdexcept>
 
 namespace sfld {
+double barrel_blessing_chance(const Profile& p, const State& s) {
+    // Combined Traveler/Gambler precedence is still an unmeasured assumption.
+    if (s.has(Gem::time_traveler)) {
+        if (p.time_traveler_barrel_curse_multiplier > 0)
+            return std::clamp(1 - (1 - p.barrel_blessing) * p.time_traveler_barrel_curse_multiplier, 0.0, 1.0);
+        return std::clamp(p.barrel_blessing - .5, 0.0, 1.0);
+    }
+    return std::clamp(p.barrel_blessing + (s.has(Gem::gambler) ? .5 : 0), 0.0, 1.0);
+}
 #define NAMES(TYPE, ...) \
 std::string_view name(TYPE value) { \
     static constexpr std::string_view names[] = {__VA_ARGS__}; \
@@ -140,6 +149,7 @@ std::string state_digest(const State& s) {
     add(static_cast<std::uint64_t>(s.run_number)); real(s.hp); add(static_cast<std::uint64_t>(s.keys));
     for (auto n : s.resources) add(static_cast<std::uint64_t>(n));
     for (bool g : s.gems) add(g);
+    for (bool g : s.offered_gems) add(g);
     const auto effect = [&add, &real](const Effect& e) {
         add(ix(e.kind)); real(e.magnitude); add(static_cast<std::uint64_t>(e.remaining));
         add(ix(e.clock)); add(static_cast<std::uint64_t>(e.starts_at));
@@ -152,13 +162,15 @@ std::string state_digest(const State& s) {
     add(ix(s.encounter));
     for (auto o : s.offers) { effect(o.effect); add(static_cast<std::uint64_t>(o.keys)); }
     for (auto g : s.gem_offers) add(ix(g));
+    for (bool seen : s.shops_seen) add(seen);
     for (int n : {s.trial_depth, int(s.trial_seen), s.donated_resource, s.pending_trial_reward,
-        s.deaths, s.paid_steps, s.mushrooms, s.recovery_mushrooms, s.reroll_mushrooms,
-        s.shop_rerolls, s.epics, s.legendaries, s.gold_rewards, s.barrels_opened, s.barrels_skipped})
+        s.deaths, s.paid_steps, s.mushrooms, s.mushrooms_found, s.recovery_mushrooms, s.reroll_mushrooms,
+        s.shop_rerolls, s.reroll_shop_visits, s.reroll_bank_used, s.epics, s.legendaries, s.gold_rewards, s.barrels_opened, s.barrels_skipped})
         add(static_cast<std::uint64_t>(n));
     real(s.gold_units); add(static_cast<std::uint64_t>(s.lucky_coins));
     add(static_cast<std::uint64_t>(s.shop_purchases)); add(static_cast<std::uint64_t>(s.strong_one_hit_purchases));
     add(s.actions); real(s.elapsed_hours); real(s.active_hours);
+    real(s.run_start_hours); add(static_cast<std::uint64_t>(s.run_start_mushrooms));
     real(s.flooded_seconds); add(static_cast<std::uint64_t>(s.completed_runs)); real(s.first_completion_hours);
     std::ostringstream out; out << std::hex << h; return out.str();
 }

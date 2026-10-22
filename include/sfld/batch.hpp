@@ -3,15 +3,25 @@
 #include <iosfwd>
 
 namespace sfld {
+struct StageActivity {
+    int nonboss_fights = 0, flee_actions = 0;
+    int keys_spent_on_doors = 0, keys_spent_in_shops = 0;
+    int free_shop_purchases = 0, keys_at_exit = 0;
+    bool completed = false;
+};
 struct Result {
     bool complete = false;
     bool action_limit = false;
     double hours = 0;
     double active_hours = 0;
     int mushrooms = 0;
+    int mushrooms_found = 0;
     int recovery_mushrooms = 0;
     int reroll_mushrooms = 0;
     int deaths = 0;
+    int reentries = 0;
+    double recovery_wait_hours = 0;
+    std::array<StageActivity, 4> stages{};
     int room = 0;
     int barrels_opened = 0;
     int barrels_skipped = 0;

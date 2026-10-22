@@ -1,0 +1,14 @@
+# Demonstration, not a reconstructed player account. The four earlier
+# rejections below are an explicitly chosen example history.
+schema=1
+room=76
+run_number=2
+phase=gems
+hp_percent=1
+keys=3
+gems=moonstone,thirsty
+offered_gems=moonstone,thirsty,hero,pearl,explorer,blood
+gem_offers=deceit,rusty,pendant
+shops_seen=2,3
+trial_seen=true
+paid_heals=0

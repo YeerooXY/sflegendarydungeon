@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monster / mystery footage review</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#10191f;color:#f2eee4}body{margin:0;padding:20px}h1{font-size:24px;margin:0 0 8px}p{line-height:1.5}.muted{color:#acb9c0;font-size:14px}button,input,select,textarea{font:inherit;border:1px solid #6a7880;border-radius:5px;padding:8px;background:#1e303a;color:inherit}button{cursor:pointer}button:hover{background:#365063}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #edc65d}button.primary{background:#e7bd57;color:#141c22;font-weight:700}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}.layout{display:grid;grid-template-columns:minmax(480px,1fr) 360px;gap:20px;align-items:start}#image{width:100%;max-height:69vh;object-fit:contain;background:black;cursor:zoom-in}#video{width:100%;max-height:62vh;background:black}.panel{background:#18262f;padding:15px;border-radius:8px}label{display:block;margin:12px 0 5px}input,select,textarea{box-sizing:border-box;width:100%}textarea{min-height:64px}a{color:#f3ce6e}.framebuttons{display:flex;gap:6px;flex-wrap:wrap}.framebuttons button.active{border:3px solid #e7bd57;padding:6px}.badge{display:inline-block;border:1px solid #6a7880;padding:5px;border-radius:5px;margin:4px}#saveStatus{min-height:24px;color:#f3ce6e}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;padding:7px;border-bottom:1px solid #52626a}.controlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.controlgrid img{width:100%}.controlcard{padding:10px;background:#18262f}.hidden{display:none!important}@media(max-width:900px){.layout{grid-template-columns:1fr}body{padding:10px}}
+</style>
+<header>
+<h1>Monster / mystery footage review</h1>
+<p class="muted">Confirm one offered pair per visit. Keep unreadable traps and stones unknown. Exclude rooms 1–5, bosses, shops and trials from ordinary-room trap counts. Record Standard / Ultimate mode separately.</p>
+<div id="summary"></div>
+<div class="toolbar"><label>Source <select id="sourceFilter"><option value="">All sources</option></select></label><label>Queue <select id="statusFilter"><option value="all">All candidates</option><option value="unreviewed">Unreviewed</option><option value="reviewed">Reviewed</option></select></label><label>Visual cue <select id="cueFilter"><option value="all">All views, including doubtful ones</option><option value="red">Red visible inside monster doorway</option><option value="uncertain">Dark or uncertain doorway</option></select></label><button id="export">Export reviews</button><label>Import reviews <input id="import" type="file" accept=".json"></label><button id="controlsToggle">Check sampled frames</button></div>
+<div class="toolbar"><label>Navigation <select id="groupFilter"><option value="rooms">Group views with the same stable counter</option><option value="raw">Every detector view</option></select></label><button id="coverageToggle">Room counter coverage</button></div>
+<section id="coveragePanel" class="panel hidden"><p>Read room numbers across the entire footage, including other room types. A readable counter does not prove its choice screen was visible. Sequence boundaries and repeated phases still need review.</p><div id="coverage"></div></section>
+<p id="saveStatus" role="status"></p>
+</header>
+<main id="main">
+<div class="toolbar"><button id="previous">← Previous</button><strong id="position"></strong><button id="next">Next →</button><button id="reject">Not this pair — save and next (1)</button><a id="sourceLink" target="_blank" rel="noopener">Open original video</a></div>
+<p id="context"></p>
+<div class="toolbar"><strong id="roomAnchor"></strong><label>Views in this counter group <select id="groupView"></select></label><img id="counterImage" alt="Magnified room-counter evidence" style="width:260px;max-width:100%;height:auto"></div>
+<div class="layout">
+<section>
+<img id="image" alt="Native game capture for the candidate pair">
+<div id="framebuttons" class="framebuttons"></div>
+<div class="toolbar"><button id="playContext">Play nearby video</button><button id="minusFrame">−0.125 s</button><button id="plusFrame">+0.125 s</button><label>Playback <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></label><span id="videoTime"></span></div>
+<video id="video" controls muted preload="metadata"></video>
+<p id="suggestions" class="muted"></p>
+<p id="nearby" class="muted"></p>
+</section>
+<form id="reviewForm" class="panel">
+<label for="verdict">What does the footage show?</label><select id="verdict"><option value="">Not reviewed</option><option value="confirmed_pair">Monster + mystery</option><option value="not_pair">Different pair / animation / non-dungeon</option><option value="duplicate">Repeated view of an earlier visit</option><option value="unclear">Cannot establish the pair</option></select>
+<label for="monsterSide">Monster side</label><select id="monsterSide"><option value="">Unknown</option><option value="0">Left</option><option value="1">Right</option></select>
+<label for="leftTrap">Left trap</label><select id="leftTrap"><option value="">Unknown / obscured</option><option value="no">Absent</option><option value="yes">Present</option></select>
+<label for="rightTrap">Right trap</label><select id="rightTrap"><option value="">Unknown / obscured</option><option value="no">Absent</option><option value="yes">Present</option></select>
+<label for="room">Displayed room</label><input id="room" type="number" min="0" max="100" placeholder="Unknown">
+<label for="phase">Scene</label><select id="phase"><option value="unknown">Unknown</option><option value="ordinary">Ordinary room choice</option><option value="opening">Opening (rooms 1–5)</option><option value="boss">Boss</option><option value="shop">Shop</option><option value="trial">Trial / arena</option><option value="gems">Stone selection</option><option value="other">Other forced scene</option></select>
+<label for="mode">Dungeon mode</label><select id="mode"><option value="unknown">Unknown</option><option value="ordinary">Ordinary Legendary Dungeon</option><option value="ultimate">Ultimate Legendary Dungeon</option></select>
+<label for="event">Event / game version</label><input id="event" placeholder="Unknown; upload date alone is insufficient">
+<label for="run">Run / character identifier</label><input id="run" placeholder="e.g. character A, run 2">
+<label for="runClass">Run class</label><select id="runClass"><option value="unknown">Unknown</option><option value="first">First run of event</option><option value="later">Later run</option></select>
+<label for="stones">Active stones (comma separated)</label><input id="stones" placeholder="Unknown; leave blank if no stones">
+<label for="stonesKnown">All stone slots checked?</label><select id="stonesKnown"><option value="unknown">No / incomplete</option><option value="yes">Yes — including empty slots</option></select>
+<label for="duplicate">Earlier candidate ID, if repeated</label><input id="duplicate">
+<label for="notes">Notes</label><textarea id="notes" placeholder="Occlusion, run boundary, missed earlier frame…"></textarea>
+<div class="toolbar"><button type="submit" class="primary">Save and next</button><button id="saveOnly" type="button">Save</button></div>
+<p class="muted">Reviews save in this browser. Use Export reviews to keep a file. A saved review remains separate from the probability dataset until duplicate, mode and context checks pass.</p>
+</form>
+</div>
+</main>
+<section id="controls" class="hidden"><h2>Sampled footage checks</h2><p>These frames were sampled every 30 seconds, regardless of detection. They can reveal missed pairs. They are not a denominator for room odds. Flag a missed pair in the exported notes; inspect the original video for its exact boundary.</p><div class="toolbar"><button id="controlsPrev">Previous page</button><span id="controlPosition"></span><button id="controlsNext">Next page</button></div><div id="controlGrid" class="controlgrid"></div></section>
+<details><summary>Source inventory</summary><div id="inventory"></div></details>
+<script>
+const $=id=>document.getElementById(id), KEY='sfld-older-pair-reviews-v1';
+let data,rows=[],index=0,controlPage=0,annotations={},controlNotes={},dirty=false,viewOverride=null;
+const fields=['verdict','monsterSide','leftTrap','rightTrap','room','phase','mode','event','run','runClass','stones','stonesKnown','duplicate','notes'];
+const text=(element,value)=>{element.textContent=value};
+function clock(s){s=Math.max(0,s);return `${Math.floor(s/3600)}:${String(Math.floor(s/60)%60).padStart(2,'0')}:${(s%60).toFixed(3).padStart(6,'0')}`}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({annotations,controlNotes}));text($('saveStatus'),'Saved in this browser. Export reviews for a separate copy.')}catch(e){text($('saveStatus'),'Browser save failed. Export reviews now to keep your work.')}}
+function current(){return viewOverride||rows[index]}
+function groupKey(r){return r.room_sequence?.group_id||r.id}
+function groupMembers(r){return $('groupFilter').value==='raw'?[r]:data.candidates.filter(v=>groupKey(v)===groupKey(r))}
+function filtered(){const sid=$('sourceFilter').value,filter=$('statusFilter').value,cue=$('cueFilter').value;let list=data.candidates.filter(r=>(!sid||r.source_id===sid)&&(filter==='all'||(filter==='reviewed')===Boolean(annotations[r.id]))&&(cue==='all'||(cue==='red')===Boolean(r.color_support?.monster_color_supported)));if($('groupFilter').value==='raw')return list;const groups=new Map();for(const r of list){const key=groupKey(r),old=groups.get(key),rank=v=>Number(Boolean(v.color_support?.monster_color_supported))*2+v.score;if(!old||rank(r)>rank(old))groups.set(key,r)}return [...groups.values()].sort((a,b)=>a.source_id.localeCompare(b.source_id)||a.start-b.start)}
+function setFilter(){if(dirty&&!confirm('Leave this unsaved review?'))return;rows=filtered();index=0;viewOverride=null;dirty=false;render();renderControls();renderCoverage()}
+function render(){
+ const r=current();text($('summary'),`${data.sources.length} sources · ${data.candidates.length} candidate views · ${Object.keys(annotations).length} saved reviews. Candidates may include duplicate visits and opening rooms.`);
+ $('main').classList.toggle('hidden',!r||!$('controls').classList.contains('hidden'));if(!r)return;
+ text($('position'),`${index+1} / ${rows.length}`);text($('context'),`${r.uploader} · uploaded ${r.upload_date} · ${clock(r.start)}–${clock(r.end)} · ${r.id}`);
+ const anchor=r.room_sequence,members=groupMembers(r);text($('roomAnchor'),anchor?.room!=null?`Room ${anchor.room}/100 · sequence ${anchor.sequence_id?.split(':').at(-1)||'?'} · ${members.length} view(s)`:`Room unresolved${anchor?.possible_rooms?.length?' — nearby readings: '+anchor.possible_rooms.join(', '):''}`);
+ $('counterImage').classList.toggle('hidden',!anchor?.proofs?.length);if(anchor?.proofs?.length)$('counterImage').src=anchor.proofs[0].image;
+ $('groupView').replaceChildren();for(const member of members){const o=document.createElement('option');o.value=member.id;o.textContent=`${clock(member.start)}–${clock(member.end)} · ${member.id.split(':').at(-1)}`;$('groupView').append(o)}$('groupView').value=r.id;
+ $('sourceLink').href=r.source_link;
+ const proofs=r.evidence||[];const best=proofs.reduce((a,b)=>Math.abs(b.source_seconds-r.best_time)<Math.abs(a.source_seconds-r.best_time)?b:a,proofs[0]);
+ $('image').src=best?.image||r.thumbnail;$('framebuttons').replaceChildren();
+ proofs.forEach(p=>{const b=document.createElement('button');b.type='button';b.textContent=clock(p.source_seconds);b.onclick=()=>{$('image').src=p.image;document.querySelectorAll('.framebuttons button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('video').pause();$('video').currentTime=p.source_seconds-r.clip_start};if(p===best)b.classList.add('active');$('framebuttons').append(b)});
+ $('video').pause();$('video').src=r.video;$('video').onloadedmetadata=()=>{$('video').currentTime=Math.max(0,r.start-r.clip_start-1)};
+ text($('suggestions'),`Unverified suggestions: monster ${r.monster_side===0?'left':'right'}; room ${r.room_suggestion?.displayed_room??'unknown'}; stones ${(r.gem_suggestions?.gems_suggested||[]).join(', ')||'unknown/empty'}. ${r.color_support?.monster_color_supported?'Red is visible in the proposed monster doorway.':'The proposed monster doorway is dark or has weak color support; inspect closely.'} These cues are not pre-filled as observations.`);
+ text($('nearby'),r.nearby_candidate_ids.length?`Nearby views to check for repetition: ${r.nearby_candidate_ids.join(', ')}`:'No nearby candidate; this alone does not establish a unique visit.');
+ const a=annotations[r.id]||{};fields.forEach(f=>{$(f).value=a.form?.[f]??(['phase','mode','runClass','stonesKnown'].includes(f)?'unknown':'')});dirty=false;
+}
+function makeReview(){
+ const r=current(),form=Object.fromEntries(fields.map(f=>[f,$(f).value]));if(!form.verdict)throw Error('Choose a review result before saving.');
+ if(form.verdict==='duplicate'&&!form.duplicate.trim())throw Error('Enter the earlier candidate ID for a repeated visit.');
+ if(form.room!==''&&(!Number.isInteger(Number(form.room))||Number(form.room)<0||Number(form.room)>100))throw Error('Room must be an integer from 0 to 100, or unknown.');
+ if(form.verdict==='confirmed_pair'&&form.monsterSide==='')throw Error('Confirm which side shows the monster.');
+ const traps=[form.leftTrap,form.rightTrap].map(v=>v==='yes'?true:v==='no'?false:null),room=form.room===''?null:Number(form.room);
+ return {schema:1,id:r.id,source_id:r.source_id,source_url:r.source_url,source_seconds:r.best_time,upload_date:r.upload_date,reviewed_at:new Date().toISOString(),reviewer:'user',form,
+ verdict:form.verdict,monster_side:form.monsterSide===''?null:Number(form.monsterSide),traps,room,phase:form.phase,mode:form.mode,event:form.event||null,run_id:form.run||null,run_class:form.runClass,
+ gems:form.stonesKnown==='yes'?form.stones.split(',').map(s=>s.trim()).filter(Boolean):null,stone_set_complete:form.stonesKnown==='yes',duplicate_of:form.duplicate||null,notes:form.notes,
+ eligible_context:form.verdict==='confirmed_pair'&&form.phase==='ordinary'&&room!==null&&room>5&&![25,50,75,100].includes(room),
+ evidence:r.evidence,video_sha256:r.video_sha256,counter_evidence:r.room_sequence||null,proposed_counter_group:groupKey(r),group_member_ids:groupMembers(r).map(v=>v.id)};
+}
+function save(next=false){try{const a=makeReview();annotations[a.id]=a;persist();dirty=false;if(next){viewOverride=null;if($('statusFilter').value==='unreviewed'){rows=filtered();index=Math.min(index,rows.length-1)}else index=Math.min(index+1,rows.length-1)}render()}catch(e){text($('saveStatus'),e.message)}}
+function move(d){if(dirty&&!confirm('Leave this unsaved review?'))return;index=Math.max(0,Math.min(rows.length-1,index+d));viewOverride=null;dirty=false;render()}
+function renderCoverage(){
+ $('coverage').replaceChildren();if(!data.room_sequence){text($('coverage'),'Counter scan is not available yet.');return}const source=$('sourceFilter').value;
+ for(const s of data.room_sequence.sources.filter(s=>!source||s.source_id===source)){const heading=document.createElement('h3');heading.textContent=`${s.source_id} · ${s.anchored_candidates}/${s.candidates} candidate views anchored · ${s.gap_rooms} numbers not read between anchors`;$('coverage').append(heading);
+ for(const block of data.room_sequence.blocks.filter(b=>(b.video_source_id||b.source_id)===s.source_id)){const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent=`Sequence ${block.id.split(':').at(-1)} · ${clock(block.start)}–${clock(block.end)} · ${block.observed_rooms.length} room numbers read · boundary: ${block.boundary_reason}`;details.append(summary);const strip=document.createElement('div');strip.className='toolbar';
+ for(let room=block.first_room;room<=block.last_room;room++){const span=data.room_sequence.spans.find(v=>v.sequence_id===block.id&&v.room===room&&v.stable),matches=data.candidates.filter(r=>r.room_sequence?.sequence_id===block.id&&r.room_sequence.room===room),button=document.createElement('button');button.textContent=String(room);button.title=matches.length?`${matches.length} target-detector view(s)`:(span?'Counter seen; no target-detector view':'Number not read between anchors');button.style.borderColor=matches.length?'#edc65d':span?'#69b6a4':'#d87777';button.style.opacity=span?'1':'.7';button.onclick=()=>{if(dirty&&!confirm('Leave this unsaved review?'))return;if(matches.length){$('sourceFilter').value=s.source_id;$('statusFilter').value='all';$('cueFilter').value='all';rows=filtered();index=rows.findIndex(r=>groupKey(r)===groupKey(matches[0]));viewOverride=null;dirty=false;render()}else{const src=data.sources.find(v=>v.id===s.source_id),stamp=span?.start||block.gaps.find(g=>g.rooms.includes(room))?.start||block.start;window.open(src.url+(src.url.includes('?')?'&':'?')+'t='+Math.floor(stamp)+'s','_blank','noopener')}};strip.append(button)}details.append(strip);$('coverage').append(details)}}
+}
+function renderControls(){
+ const controls=data.controls.filter(c=>!$('sourceFilter').value||c.source_id===$('sourceFilter').value),size=24;controlPage=Math.max(0,Math.min(controlPage,Math.ceil(controls.length/size)-1));
+ text($('controlPosition'),`${controlPage+1} / ${Math.ceil(controls.length/size)}`);$('controlGrid').replaceChildren();
+ controls.slice(controlPage*size,(controlPage+1)*size).forEach(c=>{const card=document.createElement('div');card.className='controlcard';const img=document.createElement('img');img.src=c.image;img.loading='lazy';img.alt='Time sampled footage check';const label=document.createElement('p');label.textContent=`${c.source_id} ${clock(c.source_seconds)} — ${c.accepted?'detector positive':'detector negative'}`;const link=document.createElement('a');const s=data.sources.find(s=>s.id===c.source_id);link.href=s.url+(s.url.includes('?')?'&':'?')+'t='+Math.floor(c.source_seconds)+'s';link.textContent='Original video';link.target='_blank';link.rel='noopener';const note=document.createElement('input');note.placeholder='Flag a missed pair / note';const key=c.source_id+':'+c.source_seconds;note.value=controlNotes[key]?.note||'';note.onchange=()=>{controlNotes[key]={...c,note:note.value,reviewed_at:new Date().toISOString()};persist()};card.append(img,label,link,note);$('controlGrid').append(card)})
+}
+$('reviewForm').onsubmit=e=>{e.preventDefault();save(true)};$('saveOnly').onclick=()=>save(false);fields.forEach(f=>$(f).oninput=()=>{dirty=true});
+$('previous').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('sourceFilter').onchange=setFilter;$('statusFilter').onchange=setFilter;$('cueFilter').onchange=setFilter;$('groupFilter').onchange=setFilter;
+$('groupView').onchange=()=>{if(dirty&&!confirm('Leave this unsaved review?'))return;viewOverride=data.candidates.find(r=>r.id===$('groupView').value);dirty=false;render()};
+$('coverageToggle').onclick=()=>{$('coveragePanel').classList.toggle('hidden');renderCoverage()};
+$('reject').onclick=()=>{$('verdict').value='not_pair';save(true)};
+$('image').onclick=()=>window.open($('image').src,'_blank','noopener');
+$('playContext').onclick=()=>{const r=current();$('video').currentTime=Math.max(0,r.start-r.clip_start-1);$('video').play().catch(e=>text($('saveStatus'),e.message))};
+for(const [id,delta] of [['minusFrame',-.125],['plusFrame',.125]])$(id).onclick=()=>{$('video').pause();$('video').currentTime=Math.max(0,$('video').currentTime+delta)};
+$('speed').onchange=()=>{$('video').playbackRate=Number($('speed').value)};$('video').ontimeupdate=()=>{if(current())text($('videoTime'),clock(current().clip_start+$('video').currentTime))};
+$('controlsToggle').onclick=()=>{$('controls').classList.toggle('hidden');$('main').classList.toggle('hidden',!$('controls').classList.contains('hidden'));renderControls()};
+$('controlsPrev').onclick=()=>{controlPage--;renderControls()};$('controlsNext').onclick=()=>{controlPage++;renderControls()};
+$('export').onclick=()=>{const payload={schema:1,exported_at:new Date().toISOString(),annotations:Object.values(annotations),control_reviews:Object.values(controlNotes)};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='monster-mystery-reviews.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('import').onchange=async()=>{try{const raw=JSON.parse(await $('import').files[0].text());if(raw.schema!==1||!Array.isArray(raw.annotations))throw Error('Expected a schema-1 review export.');for(const a of raw.annotations){if(!data.candidates.some(r=>r.id===a.id)||!a.form)throw Error('Unknown candidate or missing review fields: '+a.id)}for(const a of raw.annotations)annotations[a.id]=a;for(const c of raw.control_reviews||[])controlNotes[c.source_id+':'+c.source_seconds]=c;persist();rows=filtered();index=0;render()}catch(e){text($('saveStatus'),'Import failed: '+e.message)}};
+document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;if(e.key==='ArrowLeft'){e.preventDefault();move(-1)}else if(e.key==='ArrowRight'){e.preventDefault();move(1)}else if(e.key==='1'){e.preventDefault();$('reject').click()}});
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+fetch('monster-mystery-candidates.json').then(r=>{if(!r.ok)throw Error('Cannot load candidate file');return r.json()}).then(d=>{
+ data=d;try{const saved=JSON.parse(localStorage.getItem(KEY)||'{}');annotations=saved.annotations||{};controlNotes=saved.controlNotes||{}}catch(e){text($('saveStatus'),'Stored browser data could not be read. Import your exported reviews.');}
+ data.sources.forEach(s=>{const option=document.createElement('option');option.value=s.id;option.textContent=`${s.uploader} · ${s.upload_date} · ${s.id}`;$('sourceFilter').append(option)});
+ const table=document.createElement('table');const header=document.createElement('tr');['Source','Upload date','Scanned','Candidates'].forEach(t=>{const th=document.createElement('th');th.textContent=t;header.append(th)});table.append(header);data.sources.forEach(s=>{const tr=document.createElement('tr');[s.id,s.upload_date,clock(s.scanned_seconds),s.candidates].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td)});table.append(tr)});$('inventory').append(table);
+ rows=filtered();render();
+}).catch(e=>text($('saveStatus'),e.message));
+</script>
+</html>

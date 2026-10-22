@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "notice": "20,000 fresh seven-day events per policy and budget, random stone offers, return as soon as recovery allows. These are simulator estimates under the working assumptions, not verified live-game optima. Points are preferences, not odds.",
+  "profiles": [
+    {
+      "id": "score-free",
+      "title": "Free: strongest tested score policy",
+      "description": "Stone chart tested with the existing detailed action-scoring controller. Its weekly result belongs to that complete policy, not to a shortened checklist alone.",
+      "rules_text": "schema=1\nid=candidate-283\nfight_keys=10,6,2,0\ndoor_reserve=6,4,2,0\nmax_fight_death_risk=0.050000000000000003\nmin_fight_hp=0.20000000000000001\nfight_escape_cutoff=0.80000000000000004\ndoor_mode=0\nguaranteed_escape_door_preference=0\nshop_lookahead=8\nshop_key_reserve=4\nshop_allowance=5\nshop_mode=0\nshop_purchase_floor=0\nbarrel_mode=1\npaid_refill_mode=1\ntrap_hp=0.29999999999999999\nbarrel_hp=0.45000000000000001\nrevive_hp=0.20000000000000001\nshop_reserve_fraction=0\nlogin_interval_hours=0\ngem.rabbit=23\ngem.moonstone=21\ngem.spying=17\ngem.pendant=7\ngem.greasy=22\ngem.gambler=20\ngem.greed=18\ngem.hero=14\ngem.time_traveler=16\ngem.thirsty=13\ngem.pearl=19\ngem.blood=11\ngem.explorer=9\ngem.misadventurer=15\ngem.devil=10\ngem.deceit=12\ngem.lodestone=8\ngem.bull=6\ngem.hick=5\ngem.rusty=1\ngem.masochist=2\ngem.old_sacrifice=4\ngem.kidney=3\ngem.escape_pair_bonus=0\ngem.greasy_traveler_bonus=0\ngem.gambler_traveler_adjustment=-4\ngem.greasy_with_perfect_escape_adjustment=0\ngem.greasy_second_pick_adjustment=0\ngem.greasy_third_pick_adjustment=0\ngem.spying_pendant_adjustment=0\ngem.gambler_moonstone_adjustment=0\ngem.pearl_with_perfect_escape_adjustment=-12\n",
+      "results": [
+        {
+          "budget": 0,
+          "mean_completions": 2.3942
+        }
+      ],
+      "actions": [
+        "This profile uses detailed action scores. These notes summarize it; select a simple-rules profile for the separate, more easily followed strategy and its measured result.",
+        "Value keys most in stage 1, less in stage 2 and least late in a run. Fight when the expected keys justify the health cost; escape when survival is more valuable. One Hit makes ordinary fights especially attractive.",
+        "Without One Hit, the current scored policy always takes mystery beside a visible monster. Other pairs compare expected room contents, entry traps, key cost and stone effects. This unconditional mystery override remains a model-policy limitation when the mystery side is trapped.",
+        "Buy useful healing and survival effects after considering key cost, active effects and replacement losses. Skip offers whose estimated benefit is not worth their cost; there is no single fixed blessing order.",
+        "No mushrooms are spent. The free base chart supplies almost all the measured gain; its conditional adjustments add very little to the weekly average.",
+        "Drink from a barrel only when its weighted blessing benefit exceeds its curse cost. Skip barrels with Time Traveler. Ordinary containers, optional encounters and corpses use the corresponding estimated benefit or inherited room rule.",
+        "Recover to 20% after an ordinary death; wait for enough HP to survive the maximum configured boss hit on a retry. Restart after room 100. These results assume continuous availability."
+      ]
+    },
+    {
+      "id": "human-free",
+      "title": "Free: simple rules",
+      "description": "Everyday action thresholds and a stone chart. Exact special-room and shop rules are documented in RULE_POLICY_REFERENCE.md.",
+      "rules_text": "schema=1\nid=candidate-1014\nfight_keys=10,2,0,0\ndoor_reserve=6,4,4,1\nmax_fight_death_risk=0.050000000000000003\nmin_fight_hp=0\nfight_escape_cutoff=0.5\ndoor_mode=1\nguaranteed_escape_door_preference=1\nshop_lookahead=8\nshop_key_reserve=6\nshop_allowance=3\nshop_mode=1\nshop_purchase_floor=80\nbarrel_mode=2\npaid_refill_mode=1\ntrap_hp=0.80000000000000004\nbarrel_hp=0.45000000000000001\nrevive_hp=0.20000000000000001\nshop_reserve_fraction=0.29999999999999999\nlogin_interval_hours=0\ngem.rabbit=23\ngem.moonstone=21\ngem.spying=17\ngem.pendant=5\ngem.greasy=22\ngem.gambler=20\ngem.greed=18\ngem.hero=14\ngem.time_traveler=15\ngem.thirsty=13\ngem.pearl=19\ngem.blood=9\ngem.explorer=11\ngem.misadventurer=10\ngem.devil=12\ngem.deceit=16\ngem.lodestone=8\ngem.bull=6\ngem.hick=7\ngem.rusty=1\ngem.masochist=2\ngem.old_sacrifice=4\ngem.kidney=3\ngem.escape_pair_bonus=12\ngem.greasy_traveler_bonus=0\ngem.gambler_traveler_adjustment=-4\ngem.greasy_with_perfect_escape_adjustment=4\ngem.greasy_second_pick_adjustment=2\ngem.greasy_third_pick_adjustment=0\ngem.spying_pendant_adjustment=0\ngem.gambler_moonstone_adjustment=0\ngem.pearl_with_perfect_escape_adjustment=0\n",
+      "results": [
+        {
+          "budget": 0,
+          "mean_completions": 2.36345
+        }
+      ],
+      "actions": [
+        "Farm keys below the stage targets 10, 2, 0, 0. Stop farming once escape reaches 50% or modeled fight death risk exceeds 5%. One Hit overrides these limits; bosses must be fought.",
+        "Without One Hit, favor mystery beside a visible monster; check its trap. With One Hit, normally choose the monster. Favor golden rooms and try to retain 6, 4, 4, 1 keys across the four stages. Reserves are preferences, not spending bans.",
+        "With certain escape, prefer a trap-free monster to costly or cursed alternatives. Keep safe mystery and golden rooms ahead. Avoid a trap when the other route has no greater expected immediate damage; strongly avoid lethal entry damage.",
+        "Take One Hit from the free opening shop. Later, favor useful recovery, low-health potions, One Hit and strong escape. Buy Key Moment when farming keys or Lockpick below two keys. Skip redundant effects, ordinary Disarm and gold-only offers. The exact shop-score floor is 80.",
+        "Spend no mushrooms. Take the best qualifying shop offer you can afford with keys, or leave.",
+        "Open barrels unless Time Traveler makes their blessing chance zero. Search sleeping soldiers with One Hit, or when the risk limit allows it and you need keys or own Greed. Open ordinary containers and use fountains.",
+        "Leave mimics unless One Hit is active. Skip the arena route, rock-paper-scissors, wheel, rainbow, cursed chests and sacrifice chests for this completion objective. Optional special-room exceptions are listed in the full rule reference.",
+        "After ordinary death, return at 20% HP. For a boss retry, wait until you can survive its maximum configured hit. Restart at full health after room 100. The test assumes you return as soon as ready."
+      ]
+    },
+    {
+      "id": "score-paid",
+      "title": "20â€“500 mushrooms: strongest tested score policy",
+      "description": "Stone chart tested with the existing detailed action-scoring controller. Its weekly result belongs to that complete policy, not to a shortened checklist alone. Time Traveler ranks fourth here under the assumed full-healing instant potion; the simple paid policy ranks it lower.",
+      "rules_text": "schema=1\nid=candidate-0\nfight_keys=10,6,2,0\ndoor_reserve=6,4,2,0\nmax_fight_death_risk=0.050000000000000003\nmin_fight_hp=0.20000000000000001\nfight_escape_cutoff=0.80000000000000004\ndoor_mode=0\nguaranteed_escape_door_preference=0\nshop_lookahead=8\nshop_key_reserve=4\nshop_allowance=5\nshop_mode=0\nshop_purchase_floor=0\nbarrel_mode=1\npaid_refill_mode=1\ntrap_hp=0.29999999999999999\nbarrel_hp=0.45000000000000001\nrevive_hp=0.20000000000000001\nshop_reserve_fraction=0\nlogin_interval_hours=0\ngem.rabbit=23\ngem.moonstone=21\ngem.spying=17\ngem.pendant=8\ngem.greasy=22\ngem.gambler=18\ngem.greed=14\ngem.hero=16\ngem.time_traveler=20\ngem.thirsty=15\ngem.pearl=19\ngem.blood=12\ngem.explorer=11\ngem.misadventurer=10\ngem.devil=9\ngem.deceit=13\ngem.lodestone=1\ngem.bull=6\ngem.hick=5\ngem.rusty=7\ngem.masochist=2\ngem.old_sacrifice=4\ngem.kidney=3\ngem.escape_pair_bonus=4\ngem.greasy_traveler_bonus=0\ngem.gambler_traveler_adjustment=-12\ngem.greasy_with_perfect_escape_adjustment=0\ngem.greasy_second_pick_adjustment=0\ngem.greasy_third_pick_adjustment=2\ngem.spying_pendant_adjustment=-4\ngem.gambler_moonstone_adjustment=0\ngem.pearl_with_perfect_escape_adjustment=0\n",
+      "results": [
+        {
+          "budget": 20,
+          "mean_completions": 2.51145
+        },
+        {
+          "budget": 50,
+          "mean_completions": 2.6503
+        },
+        {
+          "budget": 100,
+          "mean_completions": 2.91455
+        },
+        {
+          "budget": 500,
+          "mean_completions": 5.07645
+        }
+      ],
+      "actions": [
+        "This profile uses detailed action scores. These notes summarize it; select a simple-rules profile for the separate, more easily followed strategy and its measured result.",
+        "Value keys most in stage 1, less in stage 2 and least late in a run. Fight when the expected keys justify the health cost; escape when survival is more valuable. One Hit makes ordinary fights especially attractive.",
+        "Without One Hit, the current scored policy always takes mystery beside a visible monster. Other pairs compare expected room contents, entry traps, key cost and stone effects. This unconditional mystery override remains a model-policy limitation when the mystery side is trapped.",
+        "Buy useful healing and survival effects after considering key cost, active effects and replacement losses. Skip offers whose estimated benefit is not worth their cost; there is no single fixed blessing order.",
+        "Accrue five refresh credits per eligible shop, carry unused credits forward and refresh only with at least four keys. Stop early for a useful offer. Rescue/refills and refreshes share the event cap; full refills are compared by price per HP.",
+        "Drink from a barrel only when its weighted blessing benefit exceeds its curse cost. Skip barrels with Time Traveler. Ordinary containers, optional encounters and corpses use the corresponding estimated benefit or inherited room rule.",
+        "Recover to 20% after an ordinary death; wait for enough HP to survive the maximum configured boss hit on a retry. Restart after room 100. These results assume continuous availability."
+      ]
+    },
+    {
+      "id": "human-paid",
+      "title": "20â€“500 mushrooms: simple rules",
+      "description": "Everyday action thresholds and a stone chart. Exact special-room and shop rules are documented in RULE_POLICY_REFERENCE.md.",
+      "rules_text": "schema=1\nid=candidate-991\nfight_keys=10,1,1,0\ndoor_reserve=6,6,6,1\nmax_fight_death_risk=0.20000000000000001\nmin_fight_hp=0\nfight_escape_cutoff=0.5\ndoor_mode=1\nguaranteed_escape_door_preference=1\nshop_lookahead=0\nshop_key_reserve=4\nshop_allowance=12\nshop_mode=1\nshop_purchase_floor=80\nbarrel_mode=2\npaid_refill_mode=3\ntrap_hp=0.80000000000000004\nbarrel_hp=0.59999999999999998\nrevive_hp=0.20000000000000001\nshop_reserve_fraction=0\nlogin_interval_hours=0\ngem.rabbit=23\ngem.moonstone=21\ngem.spying=17\ngem.pendant=8\ngem.greasy=22\ngem.gambler=18\ngem.greed=20\ngem.hero=16\ngem.time_traveler=14\ngem.thirsty=15\ngem.pearl=19\ngem.blood=12\ngem.explorer=11\ngem.misadventurer=10\ngem.devil=9\ngem.deceit=13\ngem.lodestone=1\ngem.bull=6\ngem.hick=5\ngem.rusty=7\ngem.masochist=2\ngem.old_sacrifice=4\ngem.kidney=3\ngem.escape_pair_bonus=4\ngem.greasy_traveler_bonus=0\ngem.gambler_traveler_adjustment=-4\ngem.greasy_with_perfect_escape_adjustment=0\ngem.greasy_second_pick_adjustment=0\ngem.greasy_third_pick_adjustment=2\ngem.spying_pendant_adjustment=-4\ngem.gambler_moonstone_adjustment=0\ngem.pearl_with_perfect_escape_adjustment=-12\n",
+      "results": [
+        {
+          "budget": 20,
+          "mean_completions": 2.4971
+        },
+        {
+          "budget": 50,
+          "mean_completions": 2.63305
+        },
+        {
+          "budget": 100,
+          "mean_completions": 2.8746
+        },
+        {
+          "budget": 500,
+          "mean_completions": 4.85705
+        }
+      ],
+      "actions": [
+        "Farm keys below the stage targets 10, 1, 1, 0. Stop farming once escape reaches 50% or modeled fight death risk exceeds 20%. One Hit overrides these limits; bosses must be fought.",
+        "Without One Hit, favor mystery beside a visible monster; check its trap. With One Hit, normally choose the monster. Favor golden rooms and try to retain 6, 6, 6, 1 keys across the four stages. Reserves are preferences, not spending bans.",
+        "With certain escape, prefer a trap-free monster to costly or cursed alternatives. Keep safe mystery and golden rooms ahead. Avoid a trap when the other route has no greater expected immediate damage; strongly avoid lethal entry damage.",
+        "Take One Hit from the free opening shop. Later, favor useful recovery, low-health potions, One Hit and strong escape. Buy Key Moment when farming keys or Lockpick below two keys. Skip redundant effects, ordinary Disarm and gold-only offers. The exact shop-score floor is 80.",
+        "Allow up to 12 new refresh credits per eligible shop, carrying leftovers forward. This is a ceiling, not forced spending. Refresh only with at least four keys; accept progressively weaker useful offers as the visit uses its credits. Buy at most one.",
+        "Open barrels unless Time Traveler makes their blessing chance zero. Search sleeping soldiers with One Hit, or when the risk limit allows it and you need keys or own Greed. Open ordinary containers and use fountains.",
+        "Leave mimics unless One Hit is active. Skip the arena route, rock-paper-scissors, wheel, rainbow, cursed chests and sacrifice chests for this completion objective. Optional special-room exceptions are listed in the full rule reference.",
+        "Use the shared budget for rescue and recovery. Compare mushroom cost per HP: full refills usually beat repeated 20% purchases. Near the final boss, a cheaper sufficient partial refill can win. With no money, recover naturally."
+      ]
+    }
+  ]
+}

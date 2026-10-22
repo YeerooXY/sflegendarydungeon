@@ -1,0 +1,7 @@
+# Optional isolated OCR environment. Do not install over an active decoder.
+rapidocr==3.9.2
+onnxruntime==1.30.0
+opencv-python==5.0.0.93
+numpy==2.5.3
+imageio-ffmpeg==0.6.0
+yt-dlp==2026.8.19

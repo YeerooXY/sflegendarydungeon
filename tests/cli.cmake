@@ -115,7 +115,7 @@ foreach(index RANGE 0 3)
     message(FATAL_ERROR "Shop comparison violated budget, recovery cap or strength assumptions")
   endif()
 endforeach()
-foreach(option IN ITEMS --shop-policy --recovery-budget)
+foreach(option IN ITEMS --shop-policy --recovery-budget --strategy)
   execute_process(COMMAND "${SFLD}" simulate --profile "${profile}" --allow-assumptions
     --runs 1 ${option} invalid RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
   if(NOT status EQUAL 1)

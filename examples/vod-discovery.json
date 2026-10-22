@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "id": "2880176202",
+      "url": "https://www.twitch.tv/videos/2880176202",
+      "windows": [
+        [
+          4950,
+          6750
+        ]
+      ],
+      "note": "Storyboard reviewed: sustained LD beginning around 01:22; preliminary 37-67min windows were mostly menus."
+    },
+    {
+      "id": "2882738740",
+      "url": "https://www.twitch.tv/videos/2882738740",
+      "windows": [
+        [
+          9660,
+          11340
+        ]
+      ],
+      "note": "Storyboard reviewed: sustained LD late in stream, including stage and stone choices."
+    }
+  ]
+}

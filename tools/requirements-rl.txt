@@ -1,0 +1,4 @@
+# Install the suitable PyTorch build first; CUDA12.8 supports the local RTX5080.
+# Example: python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+numpy>=1.26
+torch>=2.7

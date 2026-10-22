@@ -1,4 +1,5 @@
 #include "sfld/experiment.hpp"
+#include "sfld/damage_risk.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -16,17 +17,26 @@ std::vector<Action> legal_actions(const Game& game) {
     std::vector<Action> result;
     if (game.finished()) return result;
     const auto add = [&](Action a) { if (game.legal(a)) result.push_back(a); };
-    for (auto k : {ActionKind::choose_door, ActionKind::buy, ActionKind::choose_gem, ActionKind::rps})
-        for (int i = 0; i < (k == ActionKind::choose_gem || k == ActionKind::rps ? 3 : 2); ++i) add({k, i});
+    for (auto k : {ActionKind::choose_door, ActionKind::buy, ActionKind::choose_gem})
+        for (int i = 0; i < (k == ActionKind::choose_gem ? 3 : 2); ++i) add({k, i});
     for (auto k : {ActionKind::fight, ActionKind::flee, ActionKind::interact, ActionKind::skip, ActionKind::reroll,
                    ActionKind::heal_step, ActionKind::heal_full, ActionKind::reenter, ActionKind::restart}) add({k});
     if (game.state().phase == Phase::recovery) {
-        double previous = -1;
-        for (double target : {.2, .4, .6, .8, 1.0}) {
+        std::vector<double> targets{.2, .4, .6, .8, 1.0};
+        if (game.state().room % 25 == 0) targets.push_back(std::clamp(game.damage_ceiling(true) + .001, .2, 1.0));
+        std::sort(targets.begin(), targets.end());
+        std::vector<double> waits;
+        const auto wait = [&](double hours) {
+            if (hours > 1e-12 && std::none_of(waits.begin(), waits.end(), [&](double old) { return std::abs(old - hours) <= 1e-12; })) {
+                add({ActionKind::wait, 0, hours}); waits.push_back(hours);
+            }
+        };
+        for (double target : targets) {
             const double hours = std::min((target - game.state().hp) * game.profile().recovery_hours,
                                          game.limits().deadline_hours - game.state().elapsed_hours);
-            if (hours > 1e-12 && std::abs(hours - previous) > 1e-12) { add({ActionKind::wait, 0, hours}); previous = hours; }
+            wait(hours);
         }
+        wait(game.limits().deadline_hours - game.state().elapsed_hours);
         // If less than one ordinary action fits, allow the clock to expire.
         if (result.empty()) add({ActionKind::wait, 0, game.limits().deadline_hours - game.state().elapsed_hours});
     }
@@ -42,6 +52,107 @@ void effect_json(std::ostream& out, const Effect& e) {
 void action_json(std::ostream& out, Action a) {
     out << "{\"kind\":" << json_string(name(a.kind)) << ",\"index\":" << a.index << ",\"value\":" << a.value << '}';
 }
+// Public-state forecast of the hit in Game::fight. It never samples damage or
+// predicts newly rolled curses, healing rewards, or room-exit effect ticks.
+DamageRisk combat_damage(const Game& game, bool fleeing, Encounter encounter) {
+    const auto& s = game.state(); const auto& p = game.profile();
+    const auto stage = static_cast<std::size_t>(std::clamp((s.room - 1) / 25, 0, 3));
+    if (encounter == Encounter::boss) return {p.boss_damage[stage], p.damage_distribution};
+    if (!fleeing && s.effect(EffectKind::one_hit)) return {{0, 0, 0}, p.damage_distribution};
+    auto range = fleeing ? p.escape_damage[stage] : p.monster_damage[stage];
+    double multiplier = game.battle_multiplier(fleeing);
+    if (encounter == Encounter::undead || encounter == Encounter::tube || encounter == Encounter::beta) multiplier *= .5;
+    if (encounter == Encounter::trial_monster) multiplier *= p.trial_multipliers.at(static_cast<std::size_t>(s.trial_depth));
+    if (encounter == Encounter::shakes) range = {.3, .3, .3};
+    if (encounter == Encounter::valaraukar) range = {.6, .6, .6};
+    if (encounter == Encounter::pig) range = {.4, .4, .4};
+    return {{range.low * multiplier, range.high * multiplier, range.mean * multiplier}, p.damage_distribution};
+}
+void combat_forecast_json(std::ostream& out, const Game& game) {
+    if (!game.legal({ActionKind::fight}) && !game.legal({ActionKind::flee})) return;
+    out << ",\"combat_forecast\":{\"scope\":\"hit_only\",\"distribution\":" << json_string(game.profile().damage_distribution);
+    for (bool fleeing : {false, true}) {
+        if (!game.legal({fleeing ? ActionKind::flee : ActionKind::fight})) continue;
+        const auto damage = combat_damage(game, fleeing, game.state().encounter);
+        const double escape = fleeing ? game.flee_probability() : 0;
+        const double survival = damage.below(game.state().hp - 1e-12);
+        out << (fleeing ? ",\"flee\":" : ",\"fight\":")
+            << "{\"max_damage\":" << (escape >= 1 ? 0 : damage.maximum())
+            << ",\"mean_damage\":" << (1 - escape) * damage.mean()
+            << ",\"hit_survival\":" << survival << ",\"escape_chance\":" << escape
+            << ",\"survival\":" << escape + (1 - escape) * survival << '}';
+    }
+    out << '}';
+}
+// Marginals of the configured entry tables, not a peek at a sampled room.
+// Corpses waking and optional mimic fights are separate from a live monster.
+void door_forecast_json(std::ostream& out, const Game& game) {
+    const auto& s = game.state(); const auto& p = game.profile();
+    if (s.phase != Phase::doors) return;
+    out << ",\"door_forecast\":[";
+    for (std::size_t i = 0; i < s.doors.size(); ++i) {
+        const auto d = s.doors[i];
+        std::array<double, ix(Encounter::count)> weights{};
+        switch (d.kind) {
+        case Door::monster: case Door::blessing: weights[ix(Encounter::monster)] = 1; break;
+        case Door::boss: weights[ix(Encounter::boss)] = 1; break;
+        case Door::trial: weights[ix(Encounter::trial_monster)] = 1; break;
+        case Door::mystery: {
+            const auto other = s.doors[1 - i].kind;
+            weights = p.mystery_for_alternative(other);
+            if (other == Door::monster)
+                for (std::size_t j = 0; j < weights.size(); ++j)
+                    if (is_enemy(static_cast<Encounter>(j))) weights[j] = 0;
+            break;
+        }
+        case Door::unlocked: weights = p.mystery_weights; break;
+        case Door::locked: case Door::double_locked: weights = p.locked_weights; break;
+        case Door::epic: weights[ix(Encounter::epic)] = 1; break;
+        case Door::destiny: weights = p.destiny_weights; break;
+        case Door::golden:
+            weights = p.golden_weights;
+            if (s.room < 90 || s.room > 98) weights[ix(Encounter::armory)] = 0;
+            break;
+        default: break;
+        }
+        const double total = std::accumulate(weights.begin(), weights.end(), 0.0);
+        double monster = 0, mimic = total > 0 ? weights[ix(Encounter::mimic)] / total : 0;
+        if (total > 0) for (std::size_t j = 0; j < weights.size(); ++j)
+            if (is_enemy(static_cast<Encounter>(j)) && static_cast<Encounter>(j) != Encounter::mimic)
+                monster += weights[j] / total;
+        if (d.kind == Door::locked || d.kind == Door::double_locked || d.kind == Door::epic) {
+            const double retained = (s.has(Gem::old_sacrifice) ? .8 : 1) * (s.has(Gem::kidney) ? .8 : 1);
+            const double hidden = s.has(Gem::deceit) ? std::clamp(p.hidden_monster_chance, 0.0, 1.0) : 0;
+            monster = monster * retained * (1 - hidden) + hidden;
+            mimic *= retained * (1 - hidden);
+        }
+        double entry_damage = d.kind == Door::sacrifice ? .12 * (s.has(Gem::blood) ? .6 : 1) : 0;
+        double entry_curse = d.kind == Door::cursed ? 1 : 0;
+        if (d.kind == Door::destiny) {
+            const double sum = std::accumulate(p.destiny_reward_weights.begin(), p.destiny_reward_weights.end(), 0.0);
+            entry_curse = sum > 0 ? p.destiny_reward_weights[5] / sum : 0;
+        }
+        if (s.room > 5 && d.trap && d.kind != Door::golden && !s.effect(EffectKind::disarm)) {
+            if (d.cursed_trap || s.has(Gem::gambler)) entry_curse = 1;
+            else entry_damage += .1 * (s.has(Gem::masochist) ? .8 : 1);
+        }
+        const double hp = s.hp - entry_damage;
+        const auto encounter = d.kind == Door::boss ? Encounter::boss : d.kind == Door::trial ? Encounter::trial_monster : Encounter::monster;
+        if (i) out << ',';
+        out << "{\"index\":" << i << ",\"monster_chance\":" << monster << ",\"mimic_chance\":" << mimic
+            << ",\"entry_damage\":" << entry_damage << ",\"entry_curse_chance\":" << entry_curse;
+        for (const bool fleeing : {false, true}) {
+            const auto damage = combat_damage(game, fleeing, encounter);
+            const double escape = fleeing && encounter != Encounter::boss ? game.flee_probability() : 0;
+            out << (fleeing ? ",\"monster_flee\":{" : ",\"monster_fight\":{")
+                << "\"max_damage\":" << (escape >= 1 ? 0 : damage.maximum())
+                << ",\"mean_damage\":" << (1 - escape) * damage.mean()
+                << ",\"survival\":" << (hp > 1e-12 ? escape + (1 - escape) * damage.below(hp - 1e-12) : 0) << '}';
+        }
+        out << '}';
+    }
+    out << ']';
+}
 }
 std::string observation_json(const Game& game) {
     const auto& s = game.state(); const auto& l = game.limits();
@@ -49,23 +160,40 @@ std::string observation_json(const Game& game) {
     std::ostringstream out; out << std::setprecision(17) << std::boolalpha;
     out << "{\"schema\":1,\"engine\":" << json_string(engine_version) << ",\"synthetic\":true,\"terminal\":" << game.finished()
         << ",\"action_limit\":" << (s.actions >= l.max_actions) << ",\"phase\":" << json_string(name(s.phase))
+        << ",\"max_actions\":" << l.max_actions
         << ",\"resume_phase\":" << json_string(name(phase)) << ",\"room\":" << s.room << ",\"run_number\":" << s.run_number
         << ",\"completed_runs\":" << s.completed_runs << ",\"hp\":" << s.hp << ",\"keys\":" << s.keys
         << ",\"turn\":" << s.turn << ",\"elapsed_hours\":" << s.elapsed_hours
+        << ",\"local_hour\":" << game.local_hour() << ",\"event_start_hour\":" << l.event_start_hour << ",\"sleep_until_hour\":" << l.sleep_until_hour
+        << ",\"run_elapsed_hours\":" << s.elapsed_hours - s.run_start_hours
+        << ",\"run_mushrooms_spent\":" << s.mushrooms - s.run_start_mushrooms
+        << ",\"epics\":" << s.epics << ",\"legendaries\":" << s.legendaries
         << ",\"hours_left\":" << std::max(0.0, l.deadline_hours - s.elapsed_hours)
         << ",\"mushrooms_spent\":" << s.mushrooms << ",\"mushrooms_left\":" << l.budget - s.mushrooms
+        << ",\"mushrooms_found\":" << s.mushrooms_found
+        << ",\"gold_reward_units\":" << s.gold_units << ",\"lucky_coins\":" << s.lucky_coins
         << ",\"recovery_mushrooms\":" << s.recovery_mushrooms << ",\"reroll_mushrooms\":" << s.reroll_mushrooms
         << ",\"heal_step_price\":" << game.step_price() << ",\"heal_full_price\":" << (s.hp < 1 ? game.full_price() : 0)
+        << ",\"boss_damage_max\":" << game.damage_ceiling(true)
         << ",\"paid_heals\":" << s.paid_steps << ",\"shop_rerolls\":" << s.shop_rerolls
+        << ",\"reroll_shop_visits\":" << s.reroll_shop_visits << ",\"reroll_bank_used\":" << s.reroll_bank_used
         << ",\"trial_depth\":" << s.trial_depth << ",\"trial_seen\":" << s.trial_seen
         << ",\"pending_trial_reward\":" << s.pending_trial_reward
+        << ",\"donated_resource\":" << (phase == Phase::encounter && s.encounter == Encounter::sated_chest ? s.donated_resource : -1)
         << ",\"actions\":" << s.actions << ",\"deaths\":" << s.deaths
         << ",\"first_completion_hours\":";
     if (s.first_completion_hours < 0) out << "null"; else out << s.first_completion_hours;
-    out << ",\"resources\":[";
+    out << ",\"shops_seen\":[";
+    for (std::size_t i = 0; i < s.shops_seen.size(); ++i) { if (i) out << ','; out << s.shops_seen[i]; }
+    out << "],\"resources\":[";
     for (std::size_t i = 0; i < s.resources.size(); ++i) { if (i) out << ','; out << s.resources[i]; }
     out << "],\"gems\":["; bool comma = false;
     for (std::size_t i = 0; i < s.gems.size(); ++i) if (s.gems[i]) {
+        if (comma) out << ',';
+        comma = true; out << json_string(name(static_cast<Gem>(i)));
+    }
+    out << "],\"offered_gems\":["; comma = false;
+    for (std::size_t i = 0; i < s.offered_gems.size(); ++i) if (s.offered_gems[i]) {
         if (comma) out << ',';
         comma = true; out << json_string(name(static_cast<Gem>(i)));
     }
@@ -101,9 +229,53 @@ std::string observation_json(const Game& game) {
         for (std::size_t i = 0; i < 3; ++i) { if (i) out << ','; out << json_string(name(s.gem_offers[i])); }
         out << ']';
     }
-    out << ",\"legal_actions\":["; comma = false;
+    out << ",\"outcomes\":["; comma = false;
+    for (const auto& event : game.outcomes()) {
+        if (comma) out << ','; comma = true;
+        out << "{\"kind\":" << json_string(event.kind) << ",\"detail\":" << json_string(event.detail)
+            << ",\"amount\":" << event.amount << ",\"duration\":" << event.duration << '}';
+    }
+    out << "],\"legal_actions\":["; comma = false;
     for (auto a : legal_actions(game)) { if (comma) out << ','; comma = true; action_json(out, a); }
     out << "]}"; return out.str();
+}
+std::string ui_observation_json(const Game& game, const LearnedPolicy* learned, const Policy* settings) {
+    std::string base = observation_json(game); base.pop_back();
+    std::ostringstream out; out << std::setprecision(17) << base << ",\"suggestions\":[";
+    bool comma = false;
+    const auto add = [&](std::string_view label, Action action) {
+        if (action.kind == ActionKind::wait)
+            action.value = std::min(action.value, game.limits().deadline_hours - game.state().elapsed_hours);
+        if (!game.legal(action)) return;
+        if (comma) out << ','; comma = true;
+        out << "{\"strategy\":" << json_string(label) << ",\"action\":";
+        action_json(out, action); out << '}';
+    };
+    if (!game.finished()) {
+        for (auto strategy : {Strategy::baseline, Strategy::strategic, Strategy::key_stockpile}) {
+            Policy policy = settings ? *settings : Policy{};
+            policy.strategy = strategy; add(name(strategy), policy.choose(game));
+        }
+        if (learned) add("learned", learned->choose(game));
+    }
+    const auto& p = game.profile();
+    out << ']';
+    combat_forecast_json(out, game);
+    door_forecast_json(out, game);
+    out << ",\"scenario\":{\"id\":" << json_string(p.id) << ",\"fingerprint\":" << json_string(p.fingerprint)
+        << ",\"shop_schedule\":" << json_string(p.shop_schedule) << ",\"escape_chance\":" << p.escape_chance
+        << ",\"key_chance\":" << p.key_chance << ",\"recovery_hours\":" << p.recovery_hours
+        << ",\"combat_curse_chance\":" << p.combat_curse_chance
+        << ",\"floor_specific_curses\":" << (p.floor_specific_curses ? "true" : "false")
+        << ",\"barrel_blessing\":" << p.barrel_blessing
+        << ",\"current_barrel_blessing\":" << barrel_blessing_chance(p, game.state())
+        << ",\"time_traveler_barrel_curse_multiplier\":" << p.time_traveler_barrel_curse_multiplier
+        << ",\"later_stage_one_shop\":" << (p.later_stage_one_shop ? "true" : "false")
+        << ",\"exclude_offered_gems\":" << (p.exclude_offered_gems ? "true" : "false")
+        << ",\"time_traveler_elixir_full_heal\":" << (p.time_traveler_elixir_full_heal ? "true" : "false")
+        << ",\"spider_success\":[" << p.spider_success[0] << ',' << p.spider_success[1] << ',' << p.spider_success[2]
+        << "],\"spider_bite_damage\":" << p.spider_bite_damage << "}}";
+    return out.str();
 }
 EventResult run_event(const Profile& profile, const Controller& choose, std::uint64_t seed, Limits limits, const StartState* start) {
     limits.repeat_runs = true;
@@ -115,7 +287,8 @@ EventResult run_event(const Profile& profile, const Controller& choose, std::uin
     }
     const auto& s = game.state();
     return {s.completed_runs, s.mushrooms, s.recovery_mushrooms, s.reroll_mushrooms, s.room, s.deaths,
-            s.first_completion_hours, s.elapsed_hours, s.actions, s.actions >= limits.max_actions};
+            s.first_completion_hours, s.elapsed_hours, s.actions, s.actions >= limits.max_actions, s.mushrooms_found,
+            s.reroll_shop_visits, s.shop_purchases, s.strong_one_hit_purchases};
 }
 std::vector<EventResult> event_batch(const Profile& profile, const Controller& choose, const BatchOptions& options) {
     if (options.runs < 1 || options.runs > 10000000 || options.threads < 1 || options.threads > 256)
@@ -140,11 +313,14 @@ std::vector<EventResult> event_batch(const Profile& profile, const Controller& c
 }
 std::string event_report(const Profile& profile, const BatchOptions& options, const std::vector<EventResult>& results, std::string_view label) {
     if (results.empty()) throw std::invalid_argument("No event results");
-    double total = 0, squares = 0, spent = 0, healing = 0, rerolls = 0, first = 0, restricted = 0;
+    double total = 0, squares = 0, spent = 0, healing = 0, rerolls = 0, first = 0, restricted = 0, mushrooms_found = 0;
+    double shop_visits = 0, purchases = 0, strong_one_hit = 0;
     std::size_t completed_events = 0, invalid = 0; std::uint64_t actions = 0;
     for (const auto& r : results) {
         total += r.completions; squares += static_cast<double>(r.completions) * r.completions;
         spent += r.mushrooms; healing += r.recovery_mushrooms; rerolls += r.reroll_mushrooms; actions += r.actions;
+        mushrooms_found += r.mushrooms_found;
+        shop_visits += r.reroll_shop_visits; purchases += r.shop_purchases; strong_one_hit += r.strong_one_hit_purchases;
         invalid += r.action_limit ? 1 : 0;
         if (r.first_completion_hours >= 0) { ++completed_events; first += r.first_completion_hours; restricted += r.first_completion_hours; }
         else restricted += options.limits.deadline_hours;
@@ -156,6 +332,7 @@ std::string event_report(const Profile& profile, const BatchOptions& options, co
         << ",\"profile_fingerprint\":" << json_string(profile.fingerprint) << ",\"policy\":" << json_string(label)
         << ",\"events\":" << results.size() << ",\"master_seed\":" << options.seed << ",\"budget_per_event\":" << options.limits.budget
         << ",\"deadline_hours\":" << options.limits.deadline_hours << ",\"restart_health\":" << json_string(options.limits.restart_health)
+        << ",\"sleep_until_hour\":" << options.limits.sleep_until_hour << ",\"event_start_hour\":" << options.limits.event_start_hour
         << ",\"initial_run_number\":" << (options.start ? options.start->state.run_number : options.limits.run_number)
         << ",\"start_fingerprint\":" << (options.start ? json_string(options.start->fingerprint()) : "null")
         << ",\"damage_distribution\":" << json_string(profile.damage_distribution)
@@ -163,6 +340,10 @@ std::string event_report(const Profile& profile, const BatchOptions& options, co
         << ",\"mean_completions\":" << mean << ",\"mean_completions_mc_se\":";
     if (n > 1) out << se; else out << "null";
     out << ",\"mean_mushrooms\":" << spent / n << ",\"mean_recovery_mushrooms\":" << healing / n
+        << ",\"mean_mushrooms_found\":" << mushrooms_found / n
+        << ",\"mushroom_budget_basis\":\"gross spend; rewards do not raise the cap\""
+        << ",\"mean_reroll_shop_visits\":" << shop_visits / n << ",\"mean_shop_purchases\":" << purchases / n
+        << ",\"mean_strong_one_hit_purchases\":" << strong_one_hit / n
         << ",\"mean_reroll_mushrooms\":" << rerolls / n << ",\"mushrooms_per_completion\":";
     if (total > 0) out << spent / total; else out << "null";
     out << ",\"probability_at_least_one_completion\":" << static_cast<double>(completed_events) / n

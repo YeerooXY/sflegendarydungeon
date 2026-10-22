@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "note": "Starting crops for these six VODs. Recalibrate from a visible dungeon frame and inspect the generated image. Anchors are local assets, not distributed.",
+  "layouts": [
+    {
+      "source_id": "2878232329",
+      "crop": [
+        0.20546875,
+        0.0902777778,
+        0.6171875,
+        0.7777777777
+      ],
+      "calibration_source_seconds": 1445.0
+    },
+    {
+      "source_id": "2879181344",
+      "crop": [
+        0.20546875,
+        0.0902777778,
+        0.6171875,
+        0.7777777777
+      ],
+      "calibration_source_seconds": 2340.0
+    },
+    {
+      "source_id": "2879246515",
+      "crop": [
+        0.0390625,
+        0.0694444444,
+        0.69140625,
+        0.8680555555
+      ],
+      "calibration_source_seconds": 8002.0,
+      "additional_anchor_source_seconds": [
+        10771.99208484165
+      ],
+      "additional_anchor_note": "Reviewed HUD appearance missed by the first reference; capture a full-stream frame near this source time and use add-anchor. Source times are approximate."
+    },
+    {
+      "source_id": "2881153716",
+      "crop": [
+        0.4484375,
+        0.288888889,
+        0.534375,
+        0.666666667
+      ],
+      "calibration_source_seconds": 8940.0
+    },
+    {
+      "source_id": "2881859569",
+      "crop": [
+        0.4484375,
+        0.288888889,
+        0.534375,
+        0.666666667
+      ],
+      "calibration_source_seconds": 7000.0
+    },
+    {
+      "source_id": "youtube-DCb80VikGM0",
+      "crop": [
+        0.225,
+        0.0,
+        0.775,
+        1.0
+      ],
+      "calibration_source_seconds": 9865.0,
+      "additional_anchor_source_seconds": [
+        11609.361033960618
+      ],
+      "additional_anchor_note": "Reviewed HUD appearance missed by the first reference; capture a full-stream frame near this source time and use add-anchor. Source times are approximate."
+    }
+  ]
+}

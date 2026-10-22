@@ -1,0 +1,25 @@
+body.watch-mode { display:flex; flex-direction:column; height:100dvh; }
+.watch-mode .watch-bar { flex:none; display:flex; flex-wrap:wrap; align-items:center; gap:7px; padding:7px 10px 5px; background:#10232d; border-bottom:2px solid #a98c48; }
+.watch-bar[data-paused="true"] { border-bottom-color:#f4c363; background:#302a1e; }
+.watch-bar .watch-identity { flex:1; min-width:230px; }
+.watch-identity strong { display:block; color:#ffe3a0; font-size:17px; }
+.watch-identity strong span { color:#aebfc2; font-size:9px; margin-left:8px; }
+.watch-identity small { display:block; color:#d5dedb; font-size:13px; }
+.watch-bar button,.watch-bar select { font-size:14px; padding:6px 9px; min-height:30px; white-space:nowrap; }
+.watch-bar label { display:flex; align-items:center; gap:5px; font-size:11px; color:#dfd7bc; }
+#watch-note { flex-basis:100%; font-size:13px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#e5dfcd; min-height:18px; }
+.watch-mode.game-view main { flex:1; height:auto; width:100%; margin:0; min-height:0; padding:3px; }
+.watch-mode .run-summary,.watch-mode .run-tools,.watch-mode .keyboard-hint { display:none!important; }
+.watch-mode .error { position:absolute; z-index:40; top:90px; left:5%; right:5%; }
+.watch-mode.game-view .workspace,.watch-mode.game-view .play-panel { height:100%; }
+.watch-mode.game-view .scene { height:100%!important; border-radius:3px; }
+.watch-mode .hud-top { top:7px; }
+.watch-mode .decision-banner { top:15%; padding:8px 15px; font-size:14px; }
+.watch-mode .scene .offer strong { font-size:18px; }
+.watch-mode .scene .offer small,.watch-mode .offer-analysis { font-size:12px; }
+.watch-mode .scene .offer img { width:45px; height:45px; }
+.watch-mode .stone-choice { gap:6px; }
+.watch-mode .stone-choice .gem-offer { gap:7px; padding:10px; }
+.watch-mode .stone-choice .gem-offer>strong { font-size:19px; }
+.watch-mode .stone-choice .gem-offer>small { font-size:12px; }
+.watch-mode .stone-choice .gem-offer .stone-icon { width:48px; height:48px; }

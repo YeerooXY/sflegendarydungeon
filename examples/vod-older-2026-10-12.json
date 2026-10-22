@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "id": "youtube-jI45ZmPGuA8",
+      "url": "https://www.youtube.com/watch?v=jI45ZmPGuA8",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older footage search; metadata and visual validation pending."
+    },
+    {
+      "id": "youtube-y-_kM8vi0rQ",
+      "url": "https://www.youtube.com/watch?v=y-_kM8vi0rQ",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older footage search; metadata and visual validation pending."
+    },
+    {
+      "id": "youtube-R4BaFbNCKMg",
+      "url": "https://www.youtube.com/watch?v=R4BaFbNCKMg",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older footage search; metadata and visual validation pending."
+    },
+    {
+      "id": "youtube-fA4hH6ZnuS0",
+      "url": "https://www.youtube.com/watch?v=fA4hH6ZnuS0",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older footage search; metadata and visual validation pending."
+    },
+    {
+      "id": "youtube-_rkFzsZJ_sg",
+      "url": "https://www.youtube.com/watch?v=_rkFzsZJ_sg",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older footage search; metadata and visual validation pending."
+    },
+    {
+      "id": "youtube-z9-ZQXSYilE",
+      "url": "https://www.youtube.com/watch?v=z9-ZQXSYilE",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Title explicitly identifies Ultimate mode. Official gameplay is the same with multiplied rewards; keep mode as a stratum for trap generation and do not pool raw reward amounts."
+    },
+    {
+      "id": "youtube-DGjXHJwpBpk",
+      "url": "https://www.youtube.com/watch?v=DGjXHJwpBpk",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older public POV; retain separately by source and event; visual validation pending."
+    },
+    {
+      "id": "youtube-ebPi6T3ZnfM",
+      "url": "https://www.youtube.com/watch?v=ebPi6T3ZnfM",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older public POV; retain separately by source and event; visual validation pending."
+    },
+    {
+      "id": "youtube-l5sDUG3vMG4",
+      "url": "https://www.youtube.com/watch?v=l5sDUG3vMG4",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older public POV; retain separately by source and event; visual validation pending."
+    },
+    {
+      "id": "youtube-3Wj28RH0P8w",
+      "url": "https://www.youtube.com/watch?v=3Wj28RH0P8w",
+      "windows": [
+        [
+          0,
+          null
+        ]
+      ],
+      "note": "Older public POV; retain separately by source and event; visual validation pending."
+    }
+  ]
+}

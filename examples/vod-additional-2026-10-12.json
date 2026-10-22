@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "selection": "Additional creator and retry of preview-positive public VOD; before any native outcomes reviewed.",
+  "sources": [
+    {
+      "id": "2881714434",
+      "url": "https://www.twitch.tv/videos/2881714434",
+      "windows": [
+        [
+          17835,
+          20050
+        ]
+      ],
+      "channel": "Jarzuul",
+      "upload_date": "20260923",
+      "cohort": "September_2026_main_event",
+      "note": "Public chapter is Shakes and Fidget; native LD preview at 05:04 and 05:20. Entire 36m55s chapter."
+    },
+    {
+      "id": "2881887759",
+      "url": "https://www.twitch.tv/videos/2881887759",
+      "windows": [
+        [
+          16200,
+          18000
+        ]
+      ],
+      "channel": "Fuxelbau",
+      "upload_date": "20260923",
+      "cohort": "September_2026_main_event",
+      "note": "Retry with local fragment acquisition; previous positive preview, exact native game coverage pending."
+    },
+    {
+      "id": "2885567293",
+      "url": "https://www.twitch.tv/videos/2885567293",
+      "windows": [
+        [
+          1717,
+          3559
+        ]
+      ],
+      "channel": "Nils",
+      "upload_date": "20260927",
+      "cohort": "September_2026_main_event",
+      "note": "Entire public Shakes and Fidget chapter, independently located via latest-event search; LD visible at36m37s and45m46s storyboard. Selected before native outcomes."
+    }
+  ]
+}

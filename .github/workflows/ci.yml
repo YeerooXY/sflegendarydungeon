@@ -35,6 +35,10 @@ jobs:
         run: cmake --build build --config Release --parallel
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
+      - name: Verify study recorder and controller
+        run: python -m unittest discover -s tests -p test_study.py -v
+      - name: Exercise offline observation pipeline
+        run: python tools/study.py demo --directory out/study-fixture
       - name: Exercise sweeps
         run: ${{ matrix.executable }} compare --allow-assumptions --sweep gems --runs 1000 --threads 2 --output results/gems.json
       - name: Forecast from observed progress
@@ -58,6 +62,42 @@ jobs:
             profiles/
             examples/
             docs/
+            data/vods/
+            tools/study.py
+            tools/sfld_study/*.py
+            tools/visual_lab.py
+            tools/extract_local_art.py
+            tools/vod.py
+            tools/vod_traps.py
+            tools/vod_trials.py
+            tools/vod_doors.py
+            tools/vod_recognize.py
+            tools/vod_full_traps.py
+            tools/vod_full_reanalysis.py
+            tools/vod_arena_rewards.py
+            tools/vod_full_door_check.py
+            tools/vod_calibration_evidence.py
+            tools/benchmark_strategies.py
+            tools/benchmark_vod_assumptions.py
+            src/strategy.cpp
+            tools/vod_entry_reanalysis.py
+            tools/vod_container_reanalysis.py
+            tools/vod_trap_detector.py
+            tools/vod_benchmark.py
+            tools/vod_transitions.py
+            tools/analyze_vod_traps.py
+            tools/analyze_vod_monsters.py
+            tools/render_vod_monster_report.py
+            tools/analyze_vod_containers.py
+            tools/prepare_container_audit.py
+            tools/record_container_audit.py
+            tools/requirements-vod.txt
+            tools/requirements-vod-ocr.txt
+            tools/sfld_vod/*.py
+            tools/sfld_vod/*.html
+            web/index.html
+            web/app.js
+            web/style.css
             results/
             README.md
             LICENSE

@@ -11,13 +11,25 @@ string(JSON hours GET "${report}" deadline_hours)
 if(NOT valid OR NOT budget EQUAL 0 OR NOT hours EQUAL 168)
   message(FATAL_ERROR "Bad event metadata")
 endif()
+foreach(strategy IN ITEMS strategic key-stockpile)
+execute_process(COMMAND "${SFLD}" event --profile "${profile}" --allow-assumptions --strategy ${strategy}
+  --budget 500 --runs 16 --threads 2 RESULT_VARIABLE status OUTPUT_VARIABLE report ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "Strategic event failed: ${details}")
+endif()
+string(JSON chosen_policy GET "${report}" policy)
+string(JSON spend GET "${report}" mean_mushrooms)
+if(NOT chosen_policy MATCHES "^${strategy}:" OR spend GREATER 500)
+  message(FATAL_ERROR "Strategic event missing policy identity or exceeded its cap")
+endif()
+endforeach()
 file(WRITE "${WORK_DIR}/agent.state" "schema=1\nroom=1\nrun_number=1\nphase=doors\nhp_percent=50\nkeys=0\ndoors=monster,wall\n")
-file(WRITE "${WORK_DIR}/commands.txt" "choose_door 1 0\nchoose_door 0 0\nheal_step 0 0\n")
+file(WRITE "${WORK_DIR}/commands.txt" "choose_door 1 0\nchoose_door 0 0\nheal_step 0 0\nfight 0 0\n")
 execute_process(COMMAND "${SFLD}" agent --profile "${profile}" --state "${WORK_DIR}/agent.state" --allow-assumptions
   --budget 10 --max-actions 2 --trace "${WORK_DIR}/agent.jsonl"
   INPUT_FILE "${WORK_DIR}/commands.txt" RESULT_VARIABLE status OUTPUT_VARIABLE observations ERROR_VARIABLE details)
 if(NOT status EQUAL 2 OR NOT observations MATCHES "\"error\":" OR NOT observations MATCHES "\"terminal\":true" OR
-   NOT observations MATCHES "\"mushrooms_spent\":10")
+   NOT observations MATCHES "\"mushrooms_spent\":0")
   message(FATAL_ERROR "Agent command/limit protocol failed: ${details}\n${observations}")
 endif()
 foreach(cmd IN ITEMS event train agent)
@@ -37,6 +49,29 @@ execute_process(COMMAND "${SFLD}" event --profile "${profile}" --allow-assumptio
   --policy "${WORK_DIR}/learned.policy" RESULT_VARIABLE status OUTPUT_QUIET ERROR_VARIABLE details)
 if(NOT status EQUAL 0)
   message(FATAL_ERROR "Learned evaluation failed: ${details}")
+endif()
+file(WRITE "${WORK_DIR}/empty.txt" "")
+execute_process(COMMAND "${SFLD}" agent --profile "${profile}" --allow-assumptions --ui-hints true
+  --advisor-policy "${WORK_DIR}/learned.policy" INPUT_FILE "${WORK_DIR}/empty.txt"
+  RESULT_VARIABLE status OUTPUT_VARIABLE ui ERROR_VARIABLE details)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "UI learned adviser failed: ${details}")
+endif()
+string(JSON count LENGTH "${ui}" suggestions)
+string(JSON adviser GET "${ui}" suggestions 3 strategy)
+if(NOT count EQUAL 4 OR NOT adviser STREQUAL "learned")
+  message(FATAL_ERROR "Missing UI advisers")
+endif()
+execute_process(COMMAND "${SFLD}" agent --profile "${profile}" --allow-assumptions
+  --advisor-policy "${WORK_DIR}/learned.policy" INPUT_FILE "${WORK_DIR}/empty.txt"
+  RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+if(NOT status EQUAL 1)
+  message(FATAL_ERROR "Adviser must require explicit UI hints")
+endif()
+execute_process(COMMAND "${SFLD}" event --profile "${profile}" --allow-assumptions --strategy strategic
+  --policy "${WORK_DIR}/learned.policy" RESULT_VARIABLE status OUTPUT_QUIET ERROR_QUIET)
+if(NOT status EQUAL 1)
+  message(FATAL_ERROR "Strategy must not be silently ignored for a learned policy")
 endif()
 foreach(cmd IN ITEMS event train agent)
   execute_process(COMMAND "${SFLD}" ${cmd} --profile "${profile}" --allow-assumptions --output "${profile}"

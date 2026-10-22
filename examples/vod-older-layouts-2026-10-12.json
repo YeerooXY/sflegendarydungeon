@@ -1,0 +1,335 @@
+{
+  "schema": 1,
+  "layouts": {
+    "youtube-3Wj28RH0P8w": {
+      "schema": 1,
+      "source_id": "youtube-3Wj28RH0P8w",
+      "crop": [
+        0.2140625,
+        0,
+        0.7859375,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Native game bounds x274 y0 w1006 h720 reviewed. Keep all run/stone/mode labels unknown pending temporal review."
+    },
+    "youtube-_rkFzsZJ_sg": {
+      "schema": 1,
+      "source_id": "youtube-_rkFzsZJ_sg",
+      "crop": [
+        0.10625,
+        0,
+        0.7875,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Source preview inspected. Broad target-pair detector; candidate crops and boundaries still need review."
+    },
+    "youtube-DGjXHJwpBpk": {
+      "schema": 1,
+      "source_id": "youtube-DGjXHJwpBpk",
+      "crop": [
+        0.10625,
+        0,
+        0.7875,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Visible game viewport calibrated from source preview. Unverified target-pair suggestions only."
+    },
+    "youtube-ebPi6T3ZnfM": {
+      "schema": 1,
+      "source_id": "youtube-ebPi6T3ZnfM",
+      "crop": [
+        0.08125,
+        0,
+        0.8375,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Visible game viewport calibrated from source preview. Unverified target-pair suggestions only."
+    },
+    "youtube-fA4hH6ZnuS0": {
+      "schema": 1,
+      "source_id": "youtube-fA4hH6ZnuS0",
+      "crop": [
+        0.2166666667,
+        0,
+        0.78125,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Source preview inspected. Broad target-pair detector; candidate crops and boundaries still need review."
+    },
+    "youtube-jI45ZmPGuA8": {
+      "schema": 1,
+      "source_id": "youtube-jI45ZmPGuA8",
+      "crop": [
+        0.10625,
+        0,
+        0.7875,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Source preview inspected. Broad target-pair detector; candidate crops and boundaries still need review."
+    },
+    "youtube-l5sDUG3vMG4": {
+      "schema": 1,
+      "source_id": "youtube-l5sDUG3vMG4",
+      "crop": [
+        0.2640625,
+        0.09166666666666666,
+        0.6453125,
+        0.8166666666666667
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Native 1280x720 source preview inspected; gameplay bounds x338 y66 w826 h588. Predictions remain unverified."
+    },
+    "youtube-R4BaFbNCKMg": {
+      "schema": 1,
+      "source_id": "youtube-R4BaFbNCKMg",
+      "crop": [
+        0.2166666667,
+        0,
+        0.78125,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Source preview inspected. Broad target-pair detector; candidate crops and boundaries still need review."
+    },
+    "youtube-y-_kM8vi0rQ": {
+      "schema": 1,
+      "source_id": "youtube-y-_kM8vi0rQ",
+      "crop": [
+        0.10625,
+        0,
+        0.7875,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Source preview inspected. Broad target-pair detector; candidate crops and boundaries still need review."
+    },
+    "youtube-z9-ZQXSYilE": {
+      "schema": 1,
+      "source_id": "youtube-z9-ZQXSYilE",
+      "crop": [
+        0.2166666667,
+        0,
+        0.78125,
+        1
+      ],
+      "door_search": [
+        [
+          42,
+          20,
+          102,
+          173
+        ],
+        [
+          186,
+          20,
+          102,
+          173
+        ]
+      ],
+      "pair_template_heights": [
+        122,
+        128,
+        134,
+        140,
+        146,
+        152
+      ],
+      "note": "Source preview inspected. Broad target-pair detector; candidate crops and boundaries still need review."
+    }
+  }
+}

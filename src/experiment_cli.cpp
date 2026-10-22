@@ -1,4 +1,5 @@
 #include "sfld/experiment.hpp"
+#include "sfld/planning_wire.hpp"
 #include <algorithm>
 #include <charconv>
 #include <cmath>
@@ -39,23 +40,36 @@ Options:
   --state PATH          Start from observed progress; remaining event limits apply
   --budget N            Shared event budget, default 500 (use 0 for F2P)
   --deadline-hours H    Default 168 (seven days)
+  --sleep-until-hour H  No actions from midnight until H; 0 disables, 8 means 08:00
+  --event-start-hour H  Local clock at elapsed time zero, e.g. 17 for 17:00
   --restart-health MODE full (player report), carry, empty
   --run-number N        1 for first event run; 2+ enables the later-run gem pool
   --seed N              Default 42; held-out training evaluation uses another stream
   --runs N              Default 1000; independent events
   --threads N           Event workers, default hardware concurrency
   --max-actions N       Event-wide safety cap, default 100000
-  --policy PATH         Evaluate a learned policy instead of the baseline
-  --barrels POLICY      Baseline only: skip, always, low-hp, adaptive
-  --rerolls N           Baseline maximum rerolls per shop (default 0)
-  --shop-policy POLICY  Baseline: adaptive, one-hit, one-hit-8
-  --revive-hp FRACTION  Baseline recovery target (default .2)
+  --policy PATH         Evaluate a learned policy instead of a built-in policy
+  --barrels POLICY      Built-in policy: skip, always, low-hp, adaptive
+  --strategy POLICY     Handwritten: baseline, strategic, key-stockpile
+  --rerolls N           Built-in policy: maximum rerolls per shop (default 0)
+  --shop-policy POLICY  Built-in policy: adaptive, one-hit, one-hit-8
+  --revive-hp FRACTION  Built-in policy: recovery target (default .2)
+  --survival-aware BOOL Built-in policy: integrate combat survival probability
+  --practical-tactics B Candidate key, trial and curse-trade rules; default false
+  --patient-boss-hp P   Natural final-boss target after two step refills; 0 disables
+  --adaptive-gems BOOL  Built-in policy: choose stones using the current set
+  --early-key-target N  Build an early key reserve (default 0)
+  --shop-allowance N    Rolling reroll allowance per eligible shop (default 0)
+  --shop-key-reserve N  Minimum keys for a reroll, plus pre-shop saving
+  --shop-mushroom-reserve N  Protect shared-budget mushrooms from recovery
   --generations N       train only, default 12
   --population N        train only, default 32
   --training-events N   Per candidate per generation, default 24
   --save-policy PATH    Required for train; refuses to overwrite existing files
   --output PATH         Event/evaluation report; refuses to overwrite input files
   --trace PATH          agent only: observation/action JSONL audit trail
+  --ui-hints true       agent only: include built-in strategy suggestions
+  --advisor-policy PATH agent only, with --ui-hints: include a learned suggestion
 
 See docs/EXPERIMENTS.md and docs/AGENT_RULES.md. No game server connections.
 )";
@@ -78,9 +92,10 @@ bool same_path(const std::string& a, const std::string& b) {
 }
 int experiment_cli(int argc, char** argv) {
     const std::string command = argv[1];
-    const std::set<std::string> accepted{"--profile", "--state", "--budget", "--deadline-hours", "--restart-health", "--run-number",
+    const std::set<std::string> accepted{"--profile", "--state", "--budget", "--deadline-hours", "--restart-health", "--run-number", "--sleep-until-hour", "--event-start-hour",
         "--seed", "--runs", "--threads", "--max-actions", "--policy", "--barrels", "--rerolls", "--shop-policy", "--revive-hp",
-        "--generations", "--population", "--training-events", "--save-policy", "--output", "--trace"};
+        "--generations", "--population", "--training-events", "--save-policy", "--output", "--trace", "--strategy", "--ui-hints", "--advisor-policy",
+        "--survival-aware", "--adaptive-gems", "--early-key-target", "--shop-allowance", "--shop-key-reserve", "--shop-mushroom-reserve", "--practical-tactics", "--patient-boss-hp"};
     std::map<std::string, std::string> args; bool allowed = false;
     for (int i = 2; i < argc; ++i) {
         const std::string key = argv[i];
@@ -95,12 +110,19 @@ int experiment_cli(int argc, char** argv) {
     if (command != "train") for (const auto* key : {"--generations", "--population", "--training-events", "--save-policy"})
         if (args.contains(key)) throw std::invalid_argument(std::string(key) + " requires train");
     if (command != "agent" && args.contains("--trace")) throw std::invalid_argument("Event traces require agent");
-    if (command == "agent") for (const auto* key : {"--policy", "--barrels", "--rerolls", "--shop-policy", "--revive-hp", "--output", "--runs", "--threads"})
+    if (args.contains("--ui-hints") && (command != "agent" || args.at("--ui-hints") != "true"))
+        throw std::invalid_argument("--ui-hints true is only available to agent");
+    if (args.contains("--advisor-policy") && (command != "agent" || !args.contains("--ui-hints")))
+        throw std::invalid_argument("--advisor-policy requires agent --ui-hints true");
+    if (command == "agent") for (const auto* key : {"--policy", "--barrels", "--rerolls", "--shop-policy", "--output", "--runs", "--threads", "--strategy"})
         if (args.contains(key)) throw std::invalid_argument(std::string(key) + " does not apply to agent");
+    if (command == "agent" && !args.contains("--ui-hints")) for (const auto* key : {"--revive-hp", "--survival-aware", "--adaptive-gems", "--early-key-target", "--shop-allowance", "--shop-key-reserve", "--shop-mushroom-reserve"})
+        if (args.contains(key)) throw std::invalid_argument(std::string(key) + " requires agent --ui-hints true");
     if (command == "train" && (args.contains("--policy") || !args.contains("--save-policy")))
         throw std::invalid_argument("train needs --save-policy and starts without --policy");
-    if (command == "train" || args.contains("--policy")) for (const auto* key : {"--barrels", "--rerolls", "--shop-policy", "--revive-hp"})
-        if (args.contains(key)) throw std::invalid_argument("Baseline options do not apply to learned policies");
+    if (command == "train" || args.contains("--policy")) for (const auto* key : {"--barrels", "--rerolls", "--shop-policy", "--revive-hp", "--strategy",
+        "--survival-aware", "--adaptive-gems", "--early-key-target", "--shop-allowance", "--shop-key-reserve", "--shop-mushroom-reserve", "--practical-tactics", "--patient-boss-hp"})
+        if (args.contains(key)) throw std::invalid_argument("Built-in policy options do not apply to learned policies");
     const std::string profile_path = get("--profile", "profiles/synthetic.profile");
     const auto profile = Profile::load(profile_path);
     BatchOptions options;
@@ -109,6 +131,8 @@ int experiment_cli(int argc, char** argv) {
     options.seed = number<std::uint64_t>(get("--seed", "42"));
     options.limits.budget = number<int>(get("--budget", "500"));
     options.limits.deadline_hours = number<double>(get("--deadline-hours", "168"));
+    options.limits.sleep_until_hour = number<double>(get("--sleep-until-hour", "0"));
+    options.limits.event_start_hour = number<double>(get("--event-start-hour", "0"));
     options.limits.max_actions = number<std::uint64_t>(get("--max-actions", "100000"));
     options.limits.run_number = number<int>(get("--run-number", "1"));
     options.limits.repeat_runs = true; options.limits.restart_health = get("--restart-health", "full");
@@ -123,26 +147,54 @@ int experiment_cli(int argc, char** argv) {
     Game validation = options.start ? Game(profile, options.seed, *options.start, options.limits) : Game(profile, options.seed, options.limits);
     for (const auto* key : {"--output", "--trace", "--save-policy"}) if (args.contains(key)) {
         if (same_path(args.at(key), profile_path)) throw std::invalid_argument("Output would overwrite profile");
-        for (const auto* other : {"--state", "--policy", "--output", "--trace", "--save-policy"})
+        for (const auto* other : {"--state", "--policy", "--advisor-policy", "--output", "--trace", "--save-policy"})
             if (std::string_view(key) != other && args.contains(other) && same_path(args.at(key), args.at(other)))
                 throw std::invalid_argument("Input and output paths must be distinct");
     }
     if (args.contains("--save-policy") && std::filesystem::exists(args.at("--save-policy")))
         throw std::invalid_argument("Policy output exists; choose a new path");
+    Policy baseline; baseline.barrels = barrel_policy_from(get("--barrels", "adaptive"));
+    baseline.strategy = strategy_from(get("--strategy", "baseline"));
+    baseline.shop = shop_policy_from(get("--shop-policy", "adaptive")); baseline.reroll_limit = number<int>(get("--rerolls", "0"));
+    baseline.revive_hp = number<double>(get("--revive-hp", ".2"));
+    const auto boolean_option = [&](const char* key) {
+        const auto value = get(key, "false");
+        if (value != "true" && value != "false") throw std::invalid_argument(std::string(key) + " needs true or false");
+        return value == "true";
+    };
+    baseline.survival_aware = boolean_option("--survival-aware");
+    baseline.adaptive_gems = boolean_option("--adaptive-gems");
+    baseline.practical_tactics = boolean_option("--practical-tactics");
+    baseline.patient_boss_hp = number<double>(get("--patient-boss-hp", "0"));
+    baseline.early_key_target = number<int>(get("--early-key-target", "0"));
+    baseline.shop_allowance = number<int>(get("--shop-allowance", "0"));
+    baseline.shop_key_reserve = number<int>(get("--shop-key-reserve", "0"));
+    baseline.shop_mushroom_reserve = number<int>(get("--shop-mushroom-reserve", "0"));
+    baseline.validate();
     std::cerr << "Synthetic event; damage=" << profile.damage_distribution << ", restart health=" << options.limits.restart_health << ".\n";
     if (command == "agent") {
+        std::optional<LearnedPolicy> adviser;
+        if (args.contains("--advisor-policy")) adviser = LearnedPolicy::load(args.at("--advisor-policy"));
         std::ofstream trace;
         if (args.contains("--trace")) {
             trace = output(args.at("--trace"));
             trace << "{\"type\":\"manifest\",\"engine\":" << json_string(engine_version) << ",\"seed\":" << options.seed
                   << ",\"profile_fingerprint\":" << json_string(profile.fingerprint) << ",\"budget\":" << options.limits.budget
-                  << ",\"deadline_hours\":" << options.limits.deadline_hours << ",\"restart_health\":" << json_string(options.limits.restart_health) << "}\n";
+                  << ",\"deadline_hours\":" << options.limits.deadline_hours << ",\"restart_health\":" << json_string(options.limits.restart_health)
+                  << ",\"sleep_until_hour\":" << options.limits.sleep_until_hour << ",\"event_start_hour\":" << options.limits.event_start_hour << "}\n";
         }
-        const auto observe = [&] { const auto line = observation_json(validation); std::cout << line << std::endl; if (trace.is_open()) trace << line << '\n'; };
+        const auto observe = [&] {
+            const auto line = args.contains("--ui-hints") ? ui_observation_json(validation, adviser ? &*adviser : nullptr, &baseline) : observation_json(validation);
+            std::cout << line << std::endl; if (trace.is_open()) trace << line << '\n';
+        };
         observe(); std::string line;
         while (!validation.finished() && std::getline(std::cin, line)) {
             try {
                 if (line.size() > 1024) throw std::invalid_argument("Command too long");
+                if (line == "planning_snapshot") {
+                    std::cout << "{\"planning_state\":" << json_string(planning_state_text(validation)) << "}" << std::endl;
+                    continue; // Read-only: no action, time, RNG draw or trace step.
+                }
                 std::istringstream in(line); std::string kind, index, value, extra;
                 if (!(in >> kind >> index >> value) || (in >> extra)) throw std::invalid_argument("Expected ACTION INDEX VALUE");
                 Action action{action_from(kind), number<int>(index), number<double>(value)};
@@ -155,12 +207,13 @@ int experiment_cli(int argc, char** argv) {
         if (trace.is_open()) trace.close();
         return validation.state().actions >= options.limits.max_actions ? 2 : 0;
     }
-    Policy baseline; baseline.barrels = barrel_policy_from(get("--barrels", "adaptive"));
-    baseline.shop = shop_policy_from(get("--shop-policy", "adaptive")); baseline.reroll_limit = number<int>(get("--rerolls", "0"));
-    baseline.revive_hp = number<double>(get("--revive-hp", ".2")); baseline.validate();
     std::optional<LearnedPolicy> learned;
-    std::string label = "baseline:barrels=" + std::string(name(baseline.barrels)) + ",shop=" + std::string(name(baseline.shop)) +
+    std::string label = std::string(name(baseline.strategy)) + ":barrels=" + std::string(name(baseline.barrels)) + ",shop=" + std::string(name(baseline.shop)) +
         ",rerolls=" + std::to_string(baseline.reroll_limit) + ",revive=" + std::to_string(baseline.revive_hp);
+    label += ",survival=" + std::to_string(baseline.survival_aware) + ",adaptive-gems=" + std::to_string(baseline.adaptive_gems) +
+        ",early-keys=" + std::to_string(baseline.early_key_target) + ",shop-allowance=" + std::to_string(baseline.shop_allowance) +
+        ",shop-keys=" + std::to_string(baseline.shop_key_reserve) + ",shop-reserve=" + std::to_string(baseline.shop_mushroom_reserve) +
+        ",practical-tactics=" + std::to_string(baseline.practical_tactics) + ",patient-boss-hp=" + std::to_string(baseline.patient_boss_hp);
     const auto training_seed = options.seed;
     if (command == "train") {
         TrainingOptions config;

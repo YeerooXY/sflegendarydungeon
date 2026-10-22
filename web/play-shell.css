@@ -1,0 +1,365 @@
+/* Practice is a play surface. Playback and review stay inside the game frame. */
+.game-controls{display:none}
+.game-view{background:#080d13;overflow:hidden}
+.game-view main{padding:0;max-width:none}
+.game-view .workspace{display:block}
+.game-view .workspace>aside,.game-view .run-summary,.game-view .keyboard-hint{display:none!important}
+.game-view .scene{height:100dvh!important;min-height:0!important;border:0;border-radius:0;box-shadow:none}
+.game-view .scene:after{border-radius:0;box-shadow:inset 0 0 100px #0006}
+.game-view .play-panel{height:100dvh}
+.game-view .scene-footer{display:none}
+.game-view .game-controls{display:flex;position:absolute;z-index:19;left:50%;top:12px;transform:translateX(-50%);gap:3px;padding:5px;background:#0c131de8;border:1px solid #b99b584f;border-radius:12px;box-shadow:0 7px 22px #0005;backdrop-filter:blur(12px)}
+.game-controls button{display:flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 11px;border:0;border-radius:7px;background:transparent;color:#d9dfe1;font:600 12px "Segoe UI",system-ui,sans-serif;white-space:nowrap}
+.game-controls button>span:first-child{font-size:15px;line-height:1}
+.game-controls kbd{font:600 10px "Segoe UI",sans-serif;padding:1px 4px;margin-left:3px;border:1px solid #89939c;border-radius:3px;color:#f4e6bf}
+.scene img{-webkit-user-drag:none;user-select:none}
+#retry-stone-advice{align-self:center;min-height:44px;padding:10px 18px;background:#24633e;color:#f0fff5;border:2px solid #8cdda9}
+.game-controls button:hover:not(:disabled){background:#ffffff13;color:#fff4d8}
+.game-controls button:focus-visible{outline:2px solid #ffe0a0;outline-offset:2px}
+.game-controls button:disabled{opacity:.35}
+.game-controls .game-play{background:#e7c57a;color:#261c0c;padding:0 14px}
+.game-controls .game-play:hover:not(:disabled){background:#f5d79a;color:#261c0c}
+.game-controls .game-play.is-playing{background:#293932;color:#b5edc4;box-shadow:inset 0 0 0 1px #8acba44d}
+.game-view .hud-top{top:14px;left:20px;right:20px}
+.game-view .hud-location,.game-view .hud-currency{background:linear-gradient(135deg,#101a24e8,#111a20be);border:1px solid #b99b5840;border-radius:10px;padding:10px 14px;box-shadow:0 6px 20px #0004;backdrop-filter:blur(10px)}
+.game-view .hud-location strong{font:700 19px "Segoe UI",system-ui,sans-serif;letter-spacing:-.4px;color:#f7e4bb}
+.game-view .hud-location small{display:block;margin-top:4px;letter-spacing:1px;font:600 9px "Segoe UI",system-ui,sans-serif;color:#b5bec3}
+.game-view .hud-currency{gap:20px}
+.game-view .hud-currency b{font:700 18px "Segoe UI",system-ui,sans-serif;color:#f7e4bb}
+.game-view .hud-currency small{margin-top:4px;letter-spacing:1px;color:#aab7be}
+.game-view .hud-bottom{bottom:20px;left:22px;right:22px;display:grid;grid-template-columns:1fr minmax(240px,580px) 1fr;align-items:end;gap:20px}
+.game-view .hud-center{gap:10px}
+.game-view .hud-health{height:36px;border-radius:5px;border-color:#baa46d;box-shadow:0 4px 16px #0009,inset 0 0 0 2px #081017}
+.game-view .hud-health strong{font-size:21px}
+.game-view .hud-stone{width:48px;height:48px;border-color:#ab935e;background:#0d1922d9;box-shadow:0 3px 10px #0007}
+.game-view .hud-stone.empty{border:1px solid #c8b17c50;opacity:.7}
+.game-view .hud-effect,.game-view .hud-effects .empty-slot{background:#0c18239c;border-color:#d5be7e6b;border-radius:7px}
+.game-view .hud-run{font:11px/1.65 "Segoe UI",system-ui,sans-serif;color:#d1d9dd}
+.game-view .hud-run strong{font-size:15px;color:#f5e1b8}
+.game-view .door-choice .door-label{background:#111d28e8;border:1px solid #bda66b6b;border-radius:8px;padding:8px 15px;font:600 13px "Segoe UI",system-ui,sans-serif;box-shadow:0 4px 12px #0007}
+.game-view .door-choice.recommended:after{background:#eed18a;color:#2c210d;border-radius:20px;padding:5px 12px;font-size:10px;font-weight:700;letter-spacing:.5px}
+.game-view .scene-controls{bottom:132px}
+.game-view .scene-controls .actions button{border-radius:8px;box-shadow:0 4px 14px #0007}
+.game-view .scene-advice{border:1px solid #bda66b55;border-radius:8px;background:#101d27e8}
+.game-view .encounter-tag{border-radius:20px;top:96px;border-color:#bda66b55;background:#101d27dc}
+.game-view .stone-choice{bottom:135px}
+.game-view .stone-choice .gem-offer{border-radius:12px;background:linear-gradient(145deg,#142e3aed,#0c1c27f2);border-color:#96845b99;box-shadow:0 14px 35px #0005}
+.game-view .scene .offer{border-radius:10px;background:linear-gradient(145deg,#173440f5,#0b1b27f5);box-shadow:0 12px 25px #0006}
+.game-view .scene .offer.selected{border-radius:10px}
+.play-menu{width:min(510px,calc(100vw - 30px));padding:28px;background:linear-gradient(145deg,#1b2935,#101922);border:1px solid #93815c99;border-radius:16px;box-shadow:0 24px 100px #000a;color:#edf1ef;font-family:"Segoe UI",system-ui,sans-serif}
+.play-menu::backdrop{background:#040a10b8;backdrop-filter:blur(8px)}
+.play-menu-heading{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.play-menu-heading h2{margin:0;font:650 24px "Segoe UI",system-ui,sans-serif;letter-spacing:-.5px;color:#f2dfba}
+.play-menu .eyebrow{color:#a9b8c0;font-size:9px;letter-spacing:2px;margin:0 0 7px}
+.play-menu-heading>button{width:38px;height:38px;padding:0;border:1px solid #7d8d973d;border-radius:9px;font-size:25px;color:#cfdbdf}
+.menu-progress{font-size:12px;color:#b7c6ce;line-height:1.6;margin:18px 0}
+.menu-advice{padding:18px;border:1px solid #b7a16d4f;border-radius:10px;background:#09141b73;line-height:1.5}
+.menu-advice>span{display:block;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#a8bac4}
+.menu-advice>strong{display:block;font-size:17px;color:#f2d891;margin-top:5px}
+.menu-advice p{font-size:12px;color:#c6d2d8;margin:8px 0 0}.menu-advice p:empty{display:none}
+.menu-pace{display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:12px;margin:20px 0}
+.menu-pace select{width:auto;max-width:65%;padding:10px;border-radius:8px;background:#12222e}
+.menu-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.menu-actions button{font:600 12px "Segoe UI",system-ui,sans-serif;padding:13px;border:1px solid #7d8d974d;border-radius:8px;background:#243441;color:#e5edef}
+.menu-actions button:hover{border-color:#d4b775;background:#2e4352}
+.menu-shortcuts{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:22px 0 0;color:#a4b5bf;font-size:10px}
+.menu-shortcuts kbd{padding:3px 5px;background:#08131b;border:1px solid #51616a77;border-radius:4px;color:#e5e7df}
+#play-journal-entries{padding:0;list-style:none;max-height:65dvh;overflow:auto;margin:22px 0 0}
+#play-journal-entries li{padding:13px 0;border-top:1px solid #7a8f9c33;font-size:13px;line-height:1.6}
+#play-journal-entries small{display:block;color:#a9beca;margin-top:5px;font-size:11px}
+.watch-mode .game-controls{display:none}
+@media(max-width:1000px){.game-view .hud-bottom{grid-template-columns:110px minmax(200px,1fr) 110px;gap:12px}.game-view .hud-stone{width:34px;height:34px}.game-view .hud-currency{gap:12px}.game-controls button{padding:0 9px}}
+@media(max-width:820px){.game-view .game-controls{top:84px}.game-view .hud-top{left:10px;right:10px;top:10px}.game-view .hud-location,.game-view .hud-currency{padding:8px 10px}.game-view .hud-location strong{font-size:16px}.game-view .hud-currency b{font-size:15px}.game-view .hud-currency small{font-size:8px}.game-view .encounter-tag{top:136px}.game-view .stone-choice{top:135px}.game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .offer-grid{top:135px}.game-view .hud-bottom{left:12px;right:12px;bottom:14px}.game-view .hud-run{font-size:9px}}
+@media(max-width:580px){.game-view .hud-bottom{display:block}.game-view .hud-center{max-width:100%;gap:7px}.game-view .hud-stones{bottom:90px}.game-view .hud-run{bottom:90px}.game-view .hud-health{height:33px}.game-view .scene-controls{bottom:168px}.game-view .hud-currency{gap:9px}.game-view .stone-choice{bottom:175px}.play-menu{padding:22px}.play-menu-heading h2{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.game-controls,.play-menu{backdrop-filter:none}}
+.game-view .scene .offer>strong{order:1}
+.game-view .scene .offer>img{order:2}
+.game-view .scene .offer>small{order:3}
+.game-view .scene .offer>.offer-analysis{order:4}
+.game-view .scene .offer>.offer-price{order:5}
+.game-view .scene .offer>.offer-suggestion{order:0}
+.game-view .scene .offer>.offer-selected{display:none}
+.game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .offer-grid{align-content:stretch;grid-template-rows:minmax(0,1fr)}
+.game-view .scene .offer{min-height:0;min-width:0}
+@media(min-width:581px) and (max-width:1000px){
+ .game-view .game-controls{top:12px}
+ .game-controls button:not(.game-play)>span:last-child{display:none}
+ .game-controls button:not(.game-play){width:35px;padding:0}
+ .game-view .stone-choice{top:84px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .offer-grid{top:86px}
+}
+@media(max-height:720px) and (min-width:581px){
+ .game-view .scene .offer{gap:5px;padding:10px}
+ .game-view .scene .offer.selected{padding:8px}
+ .game-view .scene .offer>img{width:40px;height:40px}
+ .game-view .scene .offer>strong{font-size:20px}
+ .game-view .scene .offer>small,.game-view .offer-analysis{font-size:11px;line-height:1.35;min-height:0}
+ .game-view .scene .offer>.offer-price{padding:7px;margin-top:2px;font-size:14px}
+ .game-view .offer-suggestion{padding:3px 7px;font-size:9px}
+ .game-view .shop-guard{padding:5px 9px;gap:6px;font-size:10px;line-height:1.3}
+ .game-view .shop-guard button{padding:5px 8px;font-size:10px}
+ .game-view .scene-controls .actions{gap:5px;padding:5px 0}
+ .game-view .scene-controls .actions button{min-height:34px;padding:7px 10px;font-size:13px}
+ .game-view .scene-controls .actions button small{font-size:9px}
+ .game-view .scene-advice{font-size:10px;padding:5px 8px;margin:0 0 5px}
+ .game-view .hud-effect{height:35px;width:35px}
+}
+@media(max-width:580px){
+ .game-view .hud-bottom{grid-template-columns:minmax(0,1fr)}
+ .game-view .hud-location{flex-shrink:0;padding:8px}
+ .game-view .hud-location strong{font-size:14px;white-space:nowrap}
+ .game-view .hud-currency{gap:7px;padding:8px}
+ .game-view .hud-currency b{font-size:14px}
+ .game-view .game-controls{top:96px}
+ .game-view .stone-choice{top:150px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .offer-grid{top:151px}
+}
+
+/* Original dungeon HUD: stones and room count left, health center, keys right. */
+.game-view .hud-top{justify-content:flex-end}
+.game-view .hud-bottom{grid-template-columns:180px minmax(240px,540px) 180px;justify-content:space-between;align-items:end}
+.hud-stone-cluster{--stone-width:155px;position:relative;width:var(--stone-width);height:calc(var(--stone-width) * 353 / 287 + 26px)}
+.hud-stone-frame{position:absolute;top:0;left:0;width:100%;height:auto;pointer-events:none}
+.game-view .hud-stone-cluster .hud-stones{display:block;position:absolute;left:0;top:0;bottom:auto;width:100%;height:calc(var(--stone-width) * 353 / 287);padding:0}
+/* Socket centers in the cropped 287 x 353 frame: (72,66), (199,122), (225,255). */
+.game-view .hud-stone-cluster .hud-stone{position:absolute;width:36.237%;height:29.462%;padding:0;border:0;background:transparent;box-shadow:none}
+.game-view .hud-stone-cluster .hud-stone:nth-child(1){left:6.969%;top:3.966%}
+.game-view .hud-stone-cluster .hud-stone:nth-child(2){left:51.22%;top:19.83%}
+.game-view .hud-stone-cluster .hud-stone:nth-child(3){left:60.279%;top:57.507%}
+.game-view .hud-stone-cluster .hud-stone.empty{opacity:0}
+.game-view .hud-stone-cluster .hud-stone img{width:100%;height:100%;object-fit:contain}
+.game-view .hud-stone-cluster .hud-location{position:absolute;bottom:0;left:5px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
+.game-view .hud-stone-cluster .hud-location strong{font:27px "SF Tobi","Segoe UI",sans-serif;color:#ffedab;text-shadow:0 2px 4px #000,1px 0 #000;letter-spacing:-.7px}
+.hud-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.game-view .hud-right .hud-run{position:static;font-size:10px;line-height:1.6}
+.game-view .hud-right .hud-run strong{font-size:12px}
+.hud-keys{display:flex;align-items:center;gap:5px;min-height:64px;text-shadow:0 2px 4px #000}
+.hud-key-icon{width:67px;height:64px;object-fit:contain}
+.hud-keys b{font:28px "SF Tobi","Segoe UI",sans-serif;color:#f8df9b}
+.hud-clock{display:block}
+.game-view .hud-currency{gap:17px}
+.game-view .hud-currency b{white-space:nowrap}
+.game-view .door-choice .door-price{font-size:12px;padding:5px 10px}
+@media(min-width:581px) and (max-width:1100px){
+ .game-view .game-controls{left:16px;top:12px;transform:none}
+ .game-view .hud-bottom{grid-template-columns:130px minmax(240px,540px) 130px;gap:10px}
+ .hud-stone-cluster{--stone-width:120px}
+ .game-view .hud-currency{gap:12px}
+ .game-view .hud-right .hud-run{font-size:9px}
+ .game-view .scene .scene-controls{left:145px;right:145px}
+}
+@media(max-width:580px){
+ .game-view .hud-top{left:8px;right:8px;top:8px}
+ .game-view .hud-currency{gap:10px;padding:8px;width:100%;justify-content:space-around}
+ .game-view .hud-currency b{font-size:13px}
+ .game-view .hud-currency small{font-size:8px}
+ .game-view .hud-bottom{display:block!important;height:210px;left:12px;right:12px;bottom:12px}
+ .game-view .hud-center{position:absolute;bottom:0;left:0;width:100%}
+ .hud-stone-cluster{--stone-width:96px;position:absolute;bottom:87px;left:0}
+ .game-view .hud-stone-cluster .hud-location strong{font-size:22px}
+ .hud-right{position:absolute;right:0;bottom:100px;gap:0;max-width:145px}
+ .game-view .hud-right .hud-run{font-size:8px;line-height:1.3}
+ .game-view .hud-right .hud-run strong{font-size:10px}
+ .hud-keys{min-height:38px}
+ .hud-key-icon{width:42px;height:38px}
+ .hud-keys b{font-size:22px}
+ .game-view .scene[data-phase] .scene-controls{bottom:250px}
+ .game-view .stone-choice{bottom:250px}
+}
+/* Short phone viewports include browser chrome. Leave room for both shop
+   prices and controls while keeping the compact stone/health HUD visible. */
+@media(max-width:580px) and (max-height:740px){
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .game-controls{top:82px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .offer-grid{top:138px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .scene-controls{bottom:190px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .hud-stone-cluster{--stone-width:64px;bottom:70px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .hud-location strong{font-size:18px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .hud-right{bottom:80px}
+ .game-view .scene .offer{gap:5px}
+ .game-view .scene .offer>strong{font-size:17px}
+ .game-view .scene .offer>small,.game-view .scene .offer-analysis{font-size:11px;line-height:1.35}
+ .game-view .scene .offer>img{width:30px;height:30px}
+ .game-view .scene .offer-suggestion{font-size:9px}
+}
+
+/* Native currency artwork, sized independently from encounter/item sprites. */
+.currency-icon{display:inline-block;width:1.4em;height:1.4em;object-fit:contain;vertical-align:middle;flex:none}
+.hud-currency b{display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.hud-currency .currency-icon{width:25px;height:25px}
+.hud-currency .hud-loot .backpack-icon{width:28px;height:28px}
+.hud-run .currency-icon,.menu-progress .currency-icon{width:1.5em;height:1.5em}
+.currency-fallback{font-size:.8em}
+
+/* Advice is visible in both color and its explicit Recommended label. */
+.scene .scene-controls .actions button,.scene #refills button,.recovery-targets button{background:linear-gradient(#793d35,#572720);color:#fff8ef;border:2px solid #c77f72;box-shadow:0 3px 8px #0006}
+.scene .scene-controls .actions button.suggested,.scene #refills button.suggested,.recovery-targets button.suggested{background:linear-gradient(#24633e,#17462c);color:#f0fff5;border-color:#8cdda9;box-shadow:0 0 0 1px #143b28,0 0 15px #70d88d32}
+.scene .scene-controls .actions button:hover:not(:disabled),.scene #refills button:hover:not(:disabled),.recovery-targets button:hover:not(:disabled){background:#87453a;border-color:#ffe1d8}
+.scene .scene-controls .actions button.suggested:hover:not(:disabled),.scene #refills button.suggested:hover:not(:disabled),.recovery-targets button.suggested:hover:not(:disabled){background:#2b7147;border-color:#d3ffe1}
+.scene .action-recommendation{color:inherit}
+.scene .action-detail{font-size:12px;line-height:1.5;max-width:46ch;margin:6px auto 0;color:inherit}
+.game-view .door-choice.recommended:after{background:#225e3b;border:2px solid #98e6b2;color:#f0fff5}
+.scene .offer.recommended{border-color:#92e2ad;background:linear-gradient(#1c4537f5,#102a24f5)}
+.scene .offer:not(.recommended){border-color:#c97c70;background:linear-gradient(#492d31f5,#281b23f5)}
+.scene .offer.selected{box-shadow:0 0 0 3px #fff1c6,0 0 18px #0006}
+.scene .offer-suggestion,.stone-choice .stone-recommendation{background:#225e3b;color:#f0fff5}
+.scene[data-phase="recovery"],.scene[data-phase="recovery"] button,.scene[data-phase="recovery"] summary{cursor:default!important}
+
+/* Recovery is one health-target plan followed by one explicit wait action. */
+.scene[data-phase="recovery"] .scene-controls,.game-view .scene[data-phase="recovery"] .scene-controls{left:max(18px,calc((100% - 680px)/2));right:max(18px,calc((100% - 680px)/2));top:100px;bottom:auto;max-height:calc(100% - 240px);padding:22px;overflow-y:auto;pointer-events:auto;background:linear-gradient(#172e39f5,#0b1c28f5);border:1px solid #ac9a62;border-radius:12px;box-shadow:0 14px 45px #0008;justify-content:flex-start;gap:16px}
+.recovery-picker{flex-shrink:0}
+.recovery-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.recovery-heading h2{font:700 27px Georgia,serif;color:#ffe5a5;margin:5px 0 0}
+.recovery-heading small,.recovery-plan small{display:block;color:#c6d2d7;font-size:11px}
+.recovery-current{font:700 30px "SF Tobi",Georgia,serif;text-align:right;color:#f9e1a3}
+.recovery-current small{font:11px "Segoe UI",sans-serif;margin-top:3px}
+.recovery-meter{height:12px;background:#050d16;border:1px solid #708e88;border-radius:20px;position:relative;overflow:hidden}
+.recovery-meter span{position:absolute;inset:0 auto 0 0;border-radius:20px}
+.recovery-target-fill{background:#63ba83}.recovery-current-fill{background:#edcb77;border-right:2px solid #fff6d9}
+.recovery-target-label{font-size:13px;margin:16px 0 8px;color:#edf5f0}
+.recovery-targets{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px}
+.recovery-targets button{padding:10px 4px;min-height:58px;border-radius:7px}
+.recovery-targets strong{display:block;font-size:20px;line-height:1.2}.recovery-targets small{display:block;font-size:9px;margin-top:5px}
+.recovery-targets .selected{outline:3px solid #fff0bc;outline-offset:2px}
+.recovery-plan{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.recovery-plan strong{display:block;font-size:23px;color:#fff0c7;margin-top:4px}
+.recovery-plan>span{grid-column:1/-1;font-size:12px;color:#c6dcd0}
+.scene[data-phase="recovery"] .actions{grid-template-columns:repeat(2,minmax(0,1fr));flex-shrink:0}
+.scene[data-phase="recovery"] .actions>button:only-child{grid-column:1/-1}
+.scene[data-phase="recovery"] .actions .suggested{grid-column:auto}
+.scene[data-phase="recovery"] .actions .suggested:only-child{grid-column:1/-1}
+.scene[data-phase="recovery"] .recovery-tools{display:block;margin:0;padding:0;border:0;border-top:1px solid #6d858a;border-radius:0;background:none;flex-shrink:0}
+.scene[data-phase="recovery"] .recovery-tools[hidden]{display:none}
+.scene[data-phase="recovery"] .recovery-tools summary{min-height:44px;align-content:center;color:#f3e2b8;font-size:13px;padding:10px 2px;pointer-events:auto}
+.scene[data-phase="recovery"] #refill-price{float:right;color:#d8e3e4;font-size:12px}
+.scene[data-phase="recovery"] #refill-note{font-size:11px;color:#c8d3d5;line-height:1.5;margin:0 0 10px}
+.scene[data-phase="recovery"] #refills{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.scene[data-phase="recovery"] #refills button{flex:1;min-width:140px;min-height:48px;font-size:13px;padding:8px;border-radius:7px}
+.recovery-picker[hidden]{display:none}
+@media(max-width:580px){
+ .hud-currency .currency-icon{width:20px;height:20px}.hud-currency .hud-loot .backpack-icon{width:23px;height:23px}
+ .scene .action-detail{font-size:11px;line-height:1.45}
+ .game-view .scene[data-phase="recovery"] .scene-controls{top:150px;bottom:auto;max-height:calc(100% - 310px);left:12px;right:12px;padding:12px;gap:10px}
+ .game-view .scene[data-phase="recovery"] .hud-stone-cluster{--stone-width:64px;bottom:70px}
+ .game-view .scene[data-phase="recovery"] .hud-location strong{font-size:18px}
+ .game-view .scene[data-phase="recovery"] .hud-right{bottom:80px}
+ .recovery-heading{margin-bottom:10px}.recovery-heading h2{font-size:20px}.recovery-current{font-size:26px}
+ .recovery-target-label{margin:10px 0 8px}.recovery-meter{height:8px}
+ .recovery-targets{grid-template-columns:repeat(auto-fit,minmax(43px,1fr));gap:6px}
+ .recovery-targets button{padding:7px 2px;min-height:49px}.recovery-targets strong{font-size:16px}
+ .recovery-targets small{font-size:8px;overflow-wrap:anywhere}
+ .recovery-plan{margin-top:10px;gap:5px}.recovery-plan strong{font-size:19px}
+ .scene[data-phase="recovery"] .scene-controls .actions button{padding:8px;min-height:50px}
+ .scene[data-phase="recovery"] .action-detail{margin-top:3px}
+}
+
+/* Stable native-art slots. Only the contents are reordered; artwork and
+   hit targets share the same coordinates through entry zoom and resize. */
+.scene .door-choice .door-art{border-radius:0;overflow:hidden}
+.scene .door-choice .door-art.mirrored{transform:scaleX(-1)}
+.scene .door-choice,.scene .door-choice:hover:not(:disabled){transform:none;background:none;border:0;border-radius:0;outline:none;box-shadow:none;filter:none}
+.scene .door-choice .door-art img{transition:filter .16s ease}
+.scene .door-choice:hover:not(:disabled) .door-art img{filter:brightness(1.16) saturate(1.08)}
+.scene .door-choice:active:not(:disabled) .door-art img{filter:brightness(1.3)}
+.scene .door-choice:focus-visible .door-art{outline:3px solid #ffdf8e;outline-offset:4px}
+.scene .door-choice .door-info{position:absolute;top:calc(100% + 16px);left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% + 26px);display:flex;flex-direction:column;gap:4px;padding:6px 10px;border-radius:5px;background:#08151be8;box-shadow:0 3px 9px #0007;color:#f8ecd1;text-align:center;font:600 12px/1.35 "Segoe UI",sans-serif;pointer-events:none}
+.door-info:empty{display:none!important}
+.door-info .door-price{font-size:12px;padding:0!important;color:#ffde8c}
+.door-info .door-hazard{font-size:11px;color:#ffbdab}
+.scene .door-choice.recommended:after{font-size:11px;top:-31px;padding:4px 10px}
+.scene .scene-controls .actions button:hover:not(:disabled),.scene #refills button:hover:not(:disabled){outline:none;border-color:#c77f72;box-shadow:0 3px 8px #0006}
+.scene .scene-controls .actions button.suggested:hover:not(:disabled),.scene #refills button.suggested:hover:not(:disabled){border-color:#8cdda9;box-shadow:0 0 16px #70d88d32}
+.scene .scene-controls .actions button,.scene #refills button,.recovery-targets button{background-color:#572720;transition:filter .12s ease,transform .12s ease,box-shadow .12s ease}
+.scene .scene-controls .actions button.suggested,.scene #refills button.suggested,.recovery-targets button.suggested{background-color:#17462c}
+.scene button:focus:not(:focus-visible):not(.selected){outline:none}
+.scene .actions button:active:not(:disabled){transform:translateY(1px)}
+
+/* Anchor HUD parts independently: a wide health/effect row cannot push the
+   native room frame outside the viewport. Counter uses the client's Tobi font. */
+.game-view .scene .hud-bottom{display:block!important;left:16px;right:16px;bottom:14px;height:190px;min-width:0;pointer-events:none}
+.game-view .scene .hud-stone-cluster{--stone-width:118px;position:absolute;left:0;bottom:0;top:auto;transform:none}
+.game-view .scene .hud-stone-frame{width:100%;height:auto;object-fit:contain}
+.game-view .scene .hud-stone-cluster .hud-location{left:5px;right:0;bottom:0;width:auto;text-align:left}
+.game-view .scene .hud-stone-cluster .hud-location strong{font:26px/1 "SF Tobi","Segoe UI",sans-serif;letter-spacing:-.5px;white-space:nowrap;color:#ffedab}
+.game-view .scene .hud-center{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:clamp(260px,42vw,540px);max-width:calc(100% - 260px);min-width:0}
+.game-view .scene .hud-right{position:absolute;right:0;bottom:0;max-width:120px}
+.game-view .scene .hud-effect-groups{min-width:0}
+.game-view .scene .hud-keys{min-height:45px;gap:3px}
+.game-view .scene .hud-key-icon{width:55px;height:50px}
+.game-view .scene .hud-keys b{font-size:27px}
+#hud-loot{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px}
+#hud-loot small{font-size:12px}#hud-loot .currency-icon{width:27px;height:27px}
+.game-view .game-controls{top:12px;left:50%;transform:translateX(-50%)}
+.fx-item:is(.epic,.legendary):after{content:"✦";position:absolute;right:0;top:0;color:#fff4c4;text-shadow:0 0 12px #ffda70;animation:loot-glint .65s ease-out both;font-size:32px}
+@keyframes loot-glint{0%{transform:scale(.2) rotate(-40deg);opacity:0}35%{opacity:1;transform:scale(1.25) rotate(10deg)}100%{transform:scale(.2) rotate(70deg);opacity:0}}
+@media(max-width:820px){
+ .game-view .scene .hud-stone-cluster{--stone-width:96px}
+ .game-view .scene .hud-center{max-width:calc(100% - 200px);width:420px}
+ .game-view .scene .hud-right{max-width:90px}
+ .game-view .scene .hud-key-icon{width:43px;height:42px}
+ .game-view .scene .hud-keys b{font-size:23px}
+}
+@media(max-width:580px){
+ .game-view .scene .hud-bottom{left:10px;right:10px;bottom:10px;height:190px}
+ .game-view .scene .hud-bottom .hud-stone-cluster{--stone-width:76px;bottom:0}
+ .game-view .scene .hud-stone-cluster .hud-location strong{font-size:22px}
+ .game-view .scene .hud-center{width:calc(100% - 96px);max-width:none;left:96px;transform:none}
+ .game-view .scene .hud-effect-groups{gap:10px}
+ .game-view .scene .hud-effects{gap:4px;min-height:0}
+ .game-view .scene .hud-effect,.game-view .scene .hud-effects .empty-slot{--effect-size:clamp(24px,8vw,36px);width:var(--effect-size);height:var(--effect-size);flex:0 0 var(--effect-size)}
+ .game-view .scene .hud-health strong{font-size:18px}
+ .game-view .scene .hud-bottom .hud-right{bottom:100px}
+ .game-view .scene .game-controls{top:10px;left:50%;transform:translateX(-50%);max-width:calc(100% - 12px);padding:4px}
+ .game-controls button{padding:0 7px;gap:4px;font-size:11px}
+ .game-controls button>span:first-child{font-size:13px}
+ .game-view .scene .encounter-tag{top:65px}
+ .game-view .scene .mimic-warning{top:72px}
+ .game-view .scene .stone-choice{top:65px;bottom:210px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .offer-grid{top:72px}
+ .game-view .scene:is([data-phase="shop"],[data-phase="curse_shop"]) .game-controls{top:10px}
+ .game-view .scene[data-phase="recovery"] .scene-controls{top:72px;max-height:calc(100% - 282px)}
+ .scene .door-choice .door-info{font-size:10px;top:calc(100% + 8px);padding:4px 5px;gap:2px}
+ .door-info .door-price,.door-info .door-hazard{font-size:10px}
+ .scene .door-choice.recommended:after{font-size:9px;top:-28px;padding:4px 6px}
+}
+@media(prefers-reduced-motion:reduce){
+ .scene .door-choice .door-art img{transition:none}
+ .fx-item:is(.epic,.legendary):after{animation:none;display:none}
+}
+
+/* New run: one budget field; reproducibility and research controls stay optional. */
+#setup{width:min(500px,calc(100vw - 28px));padding:26px;background:#14252e;color:#f3ead7;max-height:90dvh}
+#setup .panel-title{gap:16px;align-items:center}
+#setup h2{margin:0;font:700 27px "Segoe UI",system-ui,sans-serif}
+#setup #close-setup{width:44px;height:44px;padding:0;flex:none;font-size:21px}
+#setup .setup-intro{color:#c7d3d9;font-size:14px;line-height:1.6;margin:16px 0 24px}
+#setup .setup-budget{display:block;color:#f3ead7;font-size:16px;font-weight:600;margin:0}
+#setup #budget-input{font-size:28px;font-weight:650;margin-top:10px;min-height:60px;font-variant-numeric:tabular-nums}
+#setup .subtle{color:#bacbd2;font-size:13px;line-height:1.6}
+#setup #budget-help{margin:8px 0 22px}
+#setup #advanced-settings{border-top:1px solid #647981;border-bottom:1px solid #647981}
+#setup summary{padding:15px 2px;color:#d8e4e9;font-size:14px;min-height:48px}
+#setup .setup-advanced-content{padding:2px 0 16px}
+#setup .setup-advanced-content label{font-size:13px;color:#d8e4e9;line-height:1.5}
+#setup .setup-advanced-content input,#setup .setup-advanced-content select{margin-top:7px;min-height:44px;font-size:15px}
+#setup .setup-advanced-content .form-grid{min-width:0}
+#setup .setup-advanced-content .form-grid>label{min-width:0}
+#setup .dialog-actions{margin-top:24px}
+#setup #start-run{width:100%;min-height:48px;font-size:16px;font-weight:700}
+#setup #setup-error{color:#ffd2ca;background:#4a2928;padding:12px;border-radius:6px;font-size:14px;line-height:1.5}
+#setup :is(button,input,select,summary,textarea):focus-visible{outline:3px solid #ffe0a0;outline-offset:3px}
+#setup :is(input,select,textarea):not(:disabled){border-color:#8297a0}
+@media(max-width:480px){#setup{padding:20px}#setup .form-grid{grid-template-columns:1fr}#setup h2{font-size:25px}}
+
+/* The original frame belongs to the scene corner, independently of the inset
+   health bar. Keep the number inside its black base and sockets on the art. */
+.scene #scene-hud > .hud-stone-cluster{--stone-width:clamp(100px,9vw,160px);position:absolute;left:0;bottom:0;top:auto;width:var(--stone-width);height:auto;aspect-ratio:287/353;transform:none}
+.scene #scene-hud > .hud-stone-cluster .hud-stone-frame{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain}
+.scene #scene-hud > .hud-stone-cluster .hud-stones{display:block;position:absolute;inset:0;width:100%;height:100%;padding:0}
+.scene #scene-hud > .hud-stone-cluster .hud-stone{position:absolute;width:36.237%;height:29.462%;padding:0;border:0;background:transparent;box-shadow:none;pointer-events:auto}
+.scene #scene-hud > .hud-stone-cluster .hud-stone:nth-child(1){left:6.969%;top:3.966%}
+.scene #scene-hud > .hud-stone-cluster .hud-stone:nth-child(2){left:51.22%;top:19.83%}
+.scene #scene-hud > .hud-stone-cluster .hud-stone:nth-child(3){left:60.279%;top:57.507%}
+.scene #scene-hud > .hud-stone-cluster .hud-stone.empty{opacity:0;pointer-events:none}
+.scene #scene-hud > .hud-stone-cluster .hud-stone img{width:100%;height:100%;object-fit:contain}
+.scene #scene-hud > .hud-stone-cluster .hud-location{position:absolute;left:5%;right:auto;bottom:3.5%;width:65%;height:16%;display:flex;align-items:center;padding:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;text-align:left}
+.scene #scene-hud > .hud-stone-cluster .hud-location strong{font:calc(var(--stone-width) * .17)/1 "SF Tobi","Segoe UI",sans-serif;letter-spacing:-.5px;white-space:nowrap;color:#ffedab;text-shadow:0 2px 4px #000,1px 0 #000}

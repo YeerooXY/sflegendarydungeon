@@ -68,6 +68,18 @@ void check_effect(const Effect& e, int turn) {
         e.remaining < 1 || e.remaining > 1000 || e.starts_at < turn || e.starts_at > turn + 1)
         throw std::invalid_argument("Invalid effect strength, counter or activation delay");
 }
+std::array<bool, ix(Gem::count)> known_gem_history(const StartState& start) {
+    auto history = start.state.offered_gems;
+    for (std::size_t i = 0; i < history.size(); ++i)
+        history[i] = history[i] || start.state.gems[i];
+    // A restored, visible menu is already displayed history, not a fresh draw.
+    if (start.decision_phase() == Phase::gems && !start.generate_current)
+        for (Gem gem : start.state.gem_offers) {
+            if (ix(gem) >= history.size()) throw std::invalid_argument("Invalid observed gem offer");
+            history[ix(gem)] = true;
+        }
+    return history;
+}
 }
 
 StartState StartState::load(const std::string& path) {
@@ -114,6 +126,14 @@ StartState StartState::parse(std::string_view text) {
         if (s.has(gem)) throw std::invalid_argument("Duplicate held gem: " + text_gem);
         s.gems[ix(gem)] = true;
     }
+    // Legacy imports contain owned effects, but cannot reconstruct rejected
+    // offers from earlier selections. Preserve only the history actually known.
+    const auto offered_gems = take("offered_gems", "none");
+    if (offered_gems != "none") for (const auto& text_gem : split(offered_gems)) {
+        const auto gem = gem_from(text_gem);
+        if (s.offered_gems[ix(gem)]) throw std::invalid_argument("Duplicate offered gem: " + text_gem);
+        s.offered_gems[ix(gem)] = true;
+    }
     for (auto [key, effects] : {std::pair{"blessings", &s.blessings}, std::pair{"curses", &s.curses}}) {
         const auto value = take(key, "none");
         if (value == "none") continue;
@@ -130,6 +150,8 @@ StartState StartState::parse(std::string_view text) {
     for (std::size_t i = 0; i < resources.size(); ++i) s.resources[i] = integer(resources[i], 0, 1000000);
     s.paid_steps = integer(take("paid_heals", "0"), 0, 1000000);
     s.shop_rerolls = integer(take("shop_rerolls", "0"), 0, 1000000);
+    s.reroll_shop_visits = integer(take("reroll_shop_visits", "0"), 0, 1000000);
+    s.reroll_bank_used = integer(take("reroll_bank_used", std::to_string(s.shop_rerolls)), 0, 1000000);
     s.trial_seen = boolean(take("trial_seen", "false"));
     s.trial_depth = integer(take("trial_depth", "0"), 0, 5);
     s.pending_trial_reward = integer(take("pending_trial_reward", "0"), 0, 5);
@@ -178,13 +200,29 @@ StartState StartState::parse(std::string_view text) {
             for (std::size_t i = 0; i < 3; ++i) s.gem_offers[i] = gem_from(parts[i]);
         }
     } else throw std::invalid_argument("Unsupported progress phase");
+    const auto shops_seen = take("shops_seen", "infer");
+    if (shops_seen == "infer") {
+        for (int i = 0; i < (s.room - 1) / 25; ++i) s.shops_seen[static_cast<std::size_t>(i)] = true;
+        if (s.run_number == 1 && s.room > 5) s.shops_seen[0] = true;
+    } else if (shops_seen != "none") for (const auto& item : split(shops_seen)) {
+        const auto stage = static_cast<std::size_t>(integer(item, 1, 4) - 1);
+        if (s.shops_seen[stage]) throw std::invalid_argument("Duplicate shop stage");
+        s.shops_seen[stage] = true;
+    }
+    if (phase == Phase::shop || (phase == Phase::doors && !start.generate_current &&
+        std::any_of(s.doors.begin(), s.doors.end(), [](DoorView d) { return d.kind == Door::shop; })))
+        s.shops_seen[static_cast<std::size_t>((s.room - 1) / 25)] = true;
     if (!fields.empty()) throw std::invalid_argument("Unknown or inapplicable progress field: " + fields.begin()->first);
+    s.offered_gems = known_gem_history(start);
     return start;
 }
 
 void StartState::validate(const Profile& profile) const {
     const auto& s = state;
     const auto phase = decision_phase();
+    for (std::size_t i = 0; i < s.shops_seen.size(); ++i)
+        if (s.shops_seen[i] && static_cast<int>(i * 25 + 1) > s.room)
+            throw std::invalid_argument("shops_seen includes a future stage");
     if (!std::isfinite(s.flooded_seconds) || s.flooded_seconds < 0 || s.flooded_seconds >= 10 ||
         (s.flooded_seconds != 0 && (phase != Phase::encounter || s.encounter != Encounter::flooded)))
         throw std::invalid_argument("flooded_seconds must be in [0,10) in a flooded encounter");
@@ -192,10 +230,11 @@ void StartState::validate(const Profile& profile) const {
         !std::isfinite(s.hp) || s.hp < 0 || s.hp > 1 || (s.hp == 0 && s.phase != Phase::recovery) ||
         s.keys < 0 || s.keys > 1000000 || s.paid_steps < 0 || s.paid_steps > 1000000 ||
         s.shop_rerolls < 0 || s.shop_rerolls > 1000000 || ix(s.phase) > ix(Phase::recovery) ||
+        s.reroll_shop_visits < 0 || s.reroll_shop_visits > 1000000 || s.reroll_bank_used < 0 || s.reroll_bank_used > 1000000 ||
         (s.phase == Phase::recovery && phase != Phase::doors && phase != Phase::encounter && phase != Phase::shop && phase != Phase::curse_shop))
         throw std::invalid_argument("Invalid progress phase, room, run number, HP or counter");
     // Historical result counters are intentionally not part of this input format.
-    if (s.elapsed_hours != 0 || s.active_hours != 0 || s.actions != 0 || s.mushrooms != 0 || s.recovery_mushrooms != 0 ||
+    if (s.elapsed_hours != 0 || s.active_hours != 0 || s.actions != 0 || s.mushrooms != 0 || s.mushrooms_found != 0 || s.recovery_mushrooms != 0 ||
         s.reroll_mushrooms != 0 || s.deaths != 0 || s.barrels_opened != 0 || s.barrels_skipped != 0 ||
         s.epics != 0 || s.legendaries != 0 || s.gold_rewards != 0 || s.gold_units != 0 || s.lucky_coins != 0 ||
         s.shop_purchases != 0 || s.strong_one_hit_purchases != 0 || s.completed_runs != 0 || s.first_completion_hours != -1)
@@ -207,11 +246,18 @@ void StartState::validate(const Profile& profile) const {
     if (phase == Phase::gems && s.room != 26 && s.room != 51 && s.room != 76)
         throw std::invalid_argument("Gem selection must be at room 26, 51 or 76");
     const auto& pool = profile.gems_for_run(s.run_number);
+    const auto history = known_gem_history(*this);
+    const auto displayed_selections = count + (phase == Phase::gems && !generate_current ? 1 : 0);
+    if (std::count(history.begin(), history.end(), true) > 3 * displayed_selections)
+        throw std::invalid_argument("Offered gem history exceeds the selections reached in this run");
     // Held/explicitly observed gems can be outside the future pool, e.g. event data
     // has changed. Preserve observations; use the profile only for unknown offers.
-    const auto available = std::count_if(pool.begin(), pool.end(), [&s](Gem g) { return !s.has(g); });
-    if ((s.room <= 75 || phase == Phase::gems) && available < 3)
-        throw std::invalid_argument("Too few unowned gems in the selected run's pool");
+    const auto available = std::count_if(pool.begin(), pool.end(), [&s, &profile, &history](Gem g) {
+        return !s.has(g) && (!profile.exclude_offered_gems || !history[ix(g)]);
+    });
+    const bool needs_generated_offer = s.room <= 75 || (phase == Phase::gems && generate_current);
+    if (needs_generated_offer && available < 3)
+        throw std::invalid_argument("Too few eligible gems after known offered history in the selected run's pool");
     for (const auto* effects : {&s.blessings, &s.curses}) {
         if (effects->size < 0 || effects->size > 3) throw std::invalid_argument("Too many effect slots");
         std::set<EffectKind> kinds;
@@ -239,6 +285,8 @@ void StartState::validate(const Profile& profile) const {
     if (phase == Phase::doors && !generate_current) {
         int bosses = 0, walls = 0;
         for (auto d : s.doors) {
+            if (s.room <= 5 && (d.trap || d.cursed_trap))
+                throw std::invalid_argument("Rooms 1-5 cannot contain traps on any run");
             if (ix(d.kind) >= ix(Door::count) || (d.cursed_trap && !d.trap) ||
                 ((d.kind == Door::wall || d.kind == Door::boss) && d.trap)) throw std::invalid_argument("Invalid observed door/trap");
             bosses += d.kind == Door::boss ? 1 : 0; walls += d.kind == Door::wall ? 1 : 0;
@@ -284,6 +332,17 @@ std::string StartState::encode() const {
         out << name(static_cast<Gem>(i)); first = false;
     }
     if (first) out << "none";
+    const auto history = known_gem_history(*this);
+    out << "\noffered_gems="; first = true;
+    for (std::size_t i = 0; i < history.size(); ++i) if (history[i]) {
+        if (!first) out << ',';
+        out << name(static_cast<Gem>(i)); first = false;
+    }
+    if (first) out << "none";
+    const auto selections = std::count(s.gems.begin(), s.gems.end(), true) +
+        (decision_phase() == Phase::gems && !generate_current ? 1 : 0);
+    if (std::count(history.begin(), history.end(), true) < 3 * selections)
+        out << "\n# Earlier rejected offers may be incomplete; missing history cannot be reconstructed.";
     for (auto [key, effects] : {std::pair{"blessings", &s.blessings}, std::pair{"curses", &s.curses}}) {
         out << '\n' << key << '=';
         if (!effects->size) out << "none";
@@ -291,7 +350,13 @@ std::string StartState::encode() const {
     }
     out << "\nresources=";
     for (std::size_t i = 0; i < s.resources.size(); ++i) { if (i) out << ','; out << s.resources[i]; }
+    out << "\nshops_seen="; first = true;
+    for (std::size_t i = 0; i < s.shops_seen.size(); ++i) if (s.shops_seen[i]) {
+        if (!first) out << ','; out << i + 1; first = false;
+    }
+    if (first) out << "none";
     out << "\npaid_heals=" << s.paid_steps << "\nshop_rerolls=" << s.shop_rerolls
+        << "\nreroll_shop_visits=" << s.reroll_shop_visits << "\nreroll_bank_used=" << s.reroll_bank_used
         << "\ntrial_seen=" << (s.trial_seen ? "true" : "false") << "\ntrial_depth=" << s.trial_depth
         << "\npending_trial_reward=" << s.pending_trial_reward << "\ndonated_resource=" << s.donated_resource << '\n';
     if (s.phase == Phase::recovery) out << "resume_phase=" << name(resume_phase) << '\n';

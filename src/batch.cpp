@@ -5,6 +5,7 @@
 #include <exception>
 #include <fstream>
 #include <iomanip>
+#include <map>
 #include <mutex>
 #include <numeric>
 #include <sstream>
@@ -15,6 +16,7 @@ namespace sfld {
 Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed, Limits limits, std::ostream* trace, const StartState* start) {
     if (start) limits.run_number = start->state.run_number;
     Game game = start ? Game(profile, seed, *start, limits) : Game(profile, seed, limits);
+    Result r;
     if (trace) {
         *trace << "#sfld-trace-v2\t" << engine_version << '\t' << seed << '\t' << profile.fingerprint << '\t' << limits.budget
             << '\t' << std::setprecision(17) << limits.deadline_hours << '\t' << limits.max_actions << '\t' << limits.run_number << '\n';
@@ -29,18 +31,35 @@ Result run_one(const Profile& profile, const Policy& policy, std::uint64_t seed,
         else if (profile.action_seconds / 3600 > left) break;
         std::string before;
         if (trace) before = state_digest(game.state());
+        const auto& state = game.state();
+        const auto stage = static_cast<std::size_t>(std::clamp((state.room - 1) / 25, 0, 3));
+        auto& activity = r.stages[stage];
+        const int door_keys = action.kind == ActionKind::choose_door ? game.door_cost(state.doors.at(static_cast<std::size_t>(action.index)).kind) : 0;
+        const bool shop_buy = action.kind == ActionKind::buy && state.phase == Phase::shop;
+        const int shop_keys = shop_buy ? state.offers.at(static_cast<std::size_t>(action.index)).keys : 0;
+        const bool nonboss_fight = action.kind == ActionKind::fight && state.encounter != Encounter::boss;
         game.step(action);
+        activity.nonboss_fights += nonboss_fight ? 1 : 0;
+        activity.flee_actions += action.kind == ActionKind::flee ? 1 : 0;
+        activity.keys_spent_on_doors += door_keys;
+        activity.keys_spent_in_shops += shop_keys;
+        activity.free_shop_purchases += shop_buy && shop_keys == 0 ? 1 : 0;
+        if (state.room > static_cast<int>((stage + 1) * 25)) {
+            activity.keys_at_exit = state.keys; activity.completed = true;
+        }
+        r.reentries += action.kind == ActionKind::reenter ? 1 : 0;
+        if (action.kind == ActionKind::wait) r.recovery_wait_hours += action.value;
         if (trace) *trace << game.state().actions << '\t' << name(action.kind) << '\t' << action.index << '\t'
             << std::setprecision(17) << action.value << '\t' << before << '\t' << state_digest(game.state()) << '\t'
             << game.state().room << '\t' << game.state().hp << '\t' << game.state().elapsed_hours << '\n';
     }
     const auto& s = game.state();
-    Result r;
     r.complete = s.phase == Phase::complete;
     r.action_limit = !r.complete && s.actions >= limits.max_actions;
     r.hours = r.complete || r.action_limit ? s.elapsed_hours : limits.deadline_hours;
     r.active_hours = s.active_hours; r.mushrooms = s.mushrooms; r.recovery_mushrooms = s.recovery_mushrooms;
     r.reroll_mushrooms = s.reroll_mushrooms; r.deaths = s.deaths; r.room = s.room;
+    r.mushrooms_found = s.mushrooms_found;
     r.barrels_opened = s.barrels_opened; r.barrels_skipped = s.barrels_skipped; r.actions = s.actions; r.gems = s.gems;
     r.gold_units = s.gold_units; r.lucky_coins = s.lucky_coins; r.epics = s.epics; r.legendaries = s.legendaries;
     r.shop_purchases = s.shop_purchases; r.strong_one_hit_purchases = s.strong_one_hit_purchases;
@@ -101,16 +120,19 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
     if (results.empty()) throw std::invalid_argument("Cannot summarize an empty batch");
     std::vector<double> finished;
     double sum_hours = 0, sum_active = 0, spend = 0, recovery_spend = 0, reroll_spend = 0, deaths = 0;
-    double opened = 0, skipped = 0;
+    double opened = 0, skipped = 0, mushrooms_found = 0, reentries = 0, recovery_wait = 0;
+    std::map<int, std::size_t> completed_deaths;
     double gold_units = 0, lucky_coins = 0, epics = 0, legendaries = 0, purchases = 0, strong_one_hits = 0;
     std::uint64_t actions = 0;
     std::size_t capped = 0;
     std::array<std::size_t, ix(Gem::count)> picked{};
     for (const auto& r : results) {
-        if (r.complete) finished.push_back(r.hours);
+        if (r.complete) { finished.push_back(r.hours); ++completed_deaths[r.deaths]; }
         sum_hours += r.hours; sum_active += r.active_hours; spend += r.mushrooms;
         recovery_spend += r.recovery_mushrooms; reroll_spend += r.reroll_mushrooms;
+        mushrooms_found += r.mushrooms_found;
         deaths += r.deaths; opened += r.barrels_opened; skipped += r.barrels_skipped; actions += r.actions;
+        reentries += r.reentries; recovery_wait += r.recovery_wait_hours;
         gold_units += r.gold_units; lucky_coins += r.lucky_coins; epics += r.epics; legendaries += r.legendaries;
         purchases += r.shop_purchases; strong_one_hits += r.strong_one_hit_purchases;
         capped += r.action_limit ? 1 : 0;
@@ -150,13 +172,22 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
     for (std::size_t i = 0; i < pool.size(); ++i) { if (i) out << ','; out << json_string(name(pool[i])); }
     out << "],\n  \"future_gem_pool_source\": " << json_string(&pool == &profile.gem_pool ? "gems (fallback; run-specific split unverified)" :
         (run_number == 1 ? "gems_first_run" : "gems_later_runs"))
-        << ",\n  \"policy\": " << json_string(policy.label) << ",\n  \"barrels\": " << json_string(name(policy.barrels))
+        << ",\n  \"policy\": " << json_string(policy.label) << ",\n  \"strategy\": " << json_string(name(policy.strategy))
+        << ",\n  \"barrels\": " << json_string(name(policy.barrels))
         << ",\n  \"barrel_hp_threshold\": " << policy.barrel_hp << ",\n  \"revive_hp\": " << policy.revive_hp
         << ",\n  \"login_interval_hours\": " << policy.login_interval_hours << ",\n  \"reroll_limit\": " << policy.reroll_limit
         << ",\n  \"shop_policy\": " << json_string(name(policy.shop))
+        << ",\n  \"survival_aware\": " << (policy.survival_aware ? "true" : "false")
+        << ",\n  \"adaptive_gems\": " << (policy.adaptive_gems ? "true" : "false")
+        << ",\n  \"early_key_target\": " << policy.early_key_target
+        << ",\n  \"shop_allowance\": " << policy.shop_allowance
+        << ",\n  \"shop_key_reserve\": " << policy.shop_key_reserve
+        << ",\n  \"shop_mushroom_reserve\": " << policy.shop_mushroom_reserve
         << ",\n  \"paid_recovery_budget\": " << (policy.recovery_budget < 0 ? "null" : std::to_string(policy.recovery_budget))
         << ",\n  \"shop_strong_effect_probability\": " << profile.shop_strong_effect
-        << ",\n  \"shop_offer_model\": \"distinct identities; weighted without replacement; independent strength draws\""
+        << ",\n  \"container_blessing_requires_greed\": " << (profile.container_blessing_requires_greed ? "true" : "false")
+        << ",\n  \"shop_offer_model\": \"ordinary shops: distinct identities and independent strengths; opening shop: fixed weak One Hit/Escape\""
+        << ",\n  \"opening_shop_rerolls\": " << json_string(profile.opening_shop_rerolls)
         << ",\n  \"preferred_gem\": " << (policy.preferred_gem ? json_string(name(*policy.preferred_gem)) : "null")
         << ",\n  \"seed\": " << options.seed << ",\n  \"runs\": " << results.size()
         << ",\n  \"run_number_within_event\": " << run_number
@@ -175,9 +206,14 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
         << ",\n  \"completed_only_p90_hours\": " << number_or_null(finished.empty() ? 0 : percentile(finished, .9), !finished.empty())
         << ",\n  \"mean_active_hours_per_started_run\": " << sum_active / n
         << ",\n  \"mean_mushrooms_per_started_run\": " << spend / n
+        << ",\n  \"mean_mushrooms_found\": " << mushrooms_found / n
+        << ",\n  \"mushroom_budget_basis\": \"gross spend; rewards do not raise the cap\""
         << ",\n  \"total_mushrooms_divided_by_completions\": " << number_or_null(finished.empty() ? 0 : spend / successes, !finished.empty())
         << ",\n  \"mean_recovery_mushrooms\": " << recovery_spend / n << ",\n  \"mean_reroll_mushrooms\": " << reroll_spend / n
-        << ",\n  \"mean_deaths\": " << deaths / n << ",\n  \"mean_barrels_opened\": " << opened / n
+        << ",\n  \"mean_deaths\": " << deaths / n
+        << ",\n  \"mean_reentries\": " << reentries / n
+        << ",\n  \"mean_recovery_wait_hours\": " << recovery_wait / n
+        << ",\n  \"mean_barrels_opened\": " << opened / n
         << ",\n  \"mean_barrels_skipped\": " << skipped / n << ",\n  \"total_actions\": " << actions
         << ",\n  \"mean_shop_purchases\": " << purchases / n
         << ",\n  \"mean_strong_one_hit_purchases\": " << strong_one_hits / n
@@ -189,7 +225,29 @@ std::string report_json(const Profile& profile, const Policy& policy, const Batc
         if (i) out << ',';
         out << '\n' << "    " << json_string(name(static_cast<Gem>(i))) << ": " << picked[i];
     }
-    out << "\n  }\n}";
+    out << "\n  },\n  \"completed_run_death_histogram\": {";
+    bool comma = false;
+    for (const auto& [count, observations] : completed_deaths) {
+        if (comma) out << ',';
+        comma = true; out << json_string(std::to_string(count)) << ':' << observations;
+    }
+    out << "},\n  \"completed_stage_activity\": [";
+    for (std::size_t stage = 0; stage < 4; ++stage) {
+        if (stage) out << ',';
+        double count = 0, fights = 0, flees = 0, door_keys = 0, shop_keys = 0, free_shops = 0, keys = 0;
+        for (const auto& r : results) {
+            const auto& a = r.stages[stage]; if (!a.completed) continue;
+            ++count; fights += a.nonboss_fights; flees += a.flee_actions;
+            door_keys += a.keys_spent_on_doors; shop_keys += a.keys_spent_in_shops;
+            free_shops += a.free_shop_purchases; keys += a.keys_at_exit;
+        }
+        const auto stage_mean = [&](double sum) { return number_or_null(sum / std::max(1.0, count), count > 0); };
+        out << "{\"stage\":" << stage + 1 << ",\"samples\":" << count
+            << ",\"mean_nonboss_fights\":" << stage_mean(fights) << ",\"mean_flee_actions\":" << stage_mean(flees)
+            << ",\"mean_keys_spent_on_doors\":" << stage_mean(door_keys) << ",\"mean_keys_spent_in_shops\":" << stage_mean(shop_keys)
+            << ",\"mean_free_shop_purchases\":" << stage_mean(free_shops) << ",\"mean_keys_at_exit\":" << stage_mean(keys) << '}';
+    }
+    out << "]\n}";
     return out.str();
 }
 std::size_t replay(const Profile& profile, const std::string& path) {

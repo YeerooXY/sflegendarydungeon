@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Legendary Dungeon · Practice</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/game.css"><link rel="stylesheet" href="/play-shell.css">
+  <script defer src="/presentation.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/"><span class="brand-mark">◆</span><span>Legendary Dungeon<small>STRATEGY LAB</small></span></a><div class="header-actions"><span class="offline"><i></i> Offline simulation</span><button id="new-run">New run</button><button id="import-run" class="quiet">Load run</button><input id="recording-file" type="file" accept=".json" hidden></div></header>
+<main>
+  <div class="heading"><div><p id="chapter" class="eyebrow">RUN 1 / STAGE 1</p><h1 id="scene-title">Choose your next room</h1></div><div class="room-count"><strong id="room">1</strong><span>/ 100 rooms</span></div></div>
+  <section class="stats" aria-label="Current progress">
+    <div class="health-stat"><span>Health</span><strong id="hp">100%</strong><div class="health-track"><div id="hp-fill"></div></div></div>
+    <div><span>Keys</span><strong id="keys">0</strong></div><div><span>Mushrooms left</span><strong id="mushrooms">0</strong></div><div><span>Elapsed</span><strong id="time">0h 00m</strong></div><div><span>Completions</span><strong id="completions">0</strong></div>
+  </section>
+  <div id="error" class="error" role="alert" hidden></div>
+  <div class="workspace">
+    <section class="play-panel" aria-label="Dungeon">
+      <div class="run-summary"><span>This run: <strong id="run-time">0h 00m</strong> · <strong id="run-mushrooms">0 mushrooms</strong> spent</span><div class="play-toolbar"><button id="fullscreen-play" class="quiet">Watch play</button><button id="fullscreen" class="quiet">Fullscreen</button></div></div>
+      <div id="scene" class="scene" tabindex="0" aria-label="Dungeon play area">
+        <nav class="game-controls" aria-label="Simulation playback">
+          <button id="game-play" class="game-play" title="Watch or pause the recommended strategy (P)"><span class="play-icon" aria-hidden="true">▶</span><span class="play-label">Watch play</span></button>
+          <button id="game-step" aria-label="Take the recommended action" aria-keyshortcuts="N" title="Take the recommended action (N)"><span aria-hidden="true">▸│</span><span>Step <kbd>N</kbd></span></button>
+          <button id="game-undo" aria-label="Undo the last action" title="Undo the last action"><span aria-hidden="true">↶</span><span>Undo</span></button>
+          <button id="game-menu" aria-label="Run menu" title="Run settings, replay and journal" aria-haspopup="dialog"><span aria-hidden="true">☰</span><span>Menu</span></button>
+        </nav>
+        <div id="scene-world"><div id="scene-content"></div></div><div id="scene-hud" class="scene-hud"></div><div id="decision-banner" class="decision-banner" hidden></div><div id="scene-fx" aria-hidden="true"></div>
+        <section id="encounter-result" class="encounter-result" aria-label="Action result" aria-live="polite" hidden><p id="result-context" class="eyebrow"></p><h2 id="result-title"></h2><div id="reward-cards"></div><p id="result-message"></p></section><div id="effect-inspector" class="effect-inspector" hidden></div>
+        <div class="scene-controls"><p id="scene-advice" class="scene-advice" hidden></p><section id="recovery-picker" class="recovery-picker" aria-label="Recovery target" hidden></section><div id="shop-guard" class="shop-guard" role="status" hidden><span id="shop-guard-message"></span><button id="unlock-reroll" class="quiet">Keep looking</button></div><div id="actions" class="actions" aria-label="Available actions"></div><details class="recovery-tools" hidden><summary>Refill with mushrooms <span id="refill-price"></span></summary><p id="refill-note">Paid refills are available while recovering.</p><div id="refills"></div></details></div>
+        <div class="scene-footer"><span id="scene-note">Pick a door to reveal what is behind it.</span><span id="room-phase">DOORS</span></div>
+      </div>
+      <section id="outcome" class="outcome" aria-live="polite"><span class="eyebrow">LAST ACTION</span><strong id="outcome-title">Choose a room to begin.</strong><div id="outcome-details"></div></section>
+      <p id="keyboard-hint" class="keyboard-hint">← left / use · → right / escape · Space reroll · Enter take selected offer</p>
+      <div class="run-tools"><button id="undo" class="quiet" disabled>↶ Undo one action</button><button id="export" class="quiet">Save run &amp; decisions</button><span id="step-count">0 actions</span></div>
+    </section>
+    <aside>
+      <section class="panel strategy-panel"><div class="panel-title"><h2>At the controls</h2><span id="play-state" class="badge">Manual</span></div>
+        <p class="adviser-name">Recommended strategy</p><select id="strategy" hidden aria-label="Strategy"><option value="preferred-stones" selected>Recommended strategy</option></select>
+        <p id="recommendation" class="recommendation">Make your own choice, or follow a strategy.</p>
+        <p id="strategy-settings-summary" class="subtle" hidden></p>
+        <div class="button-pair"><button id="step-policy" class="primary">Take its next action</button><button id="autoplay">Watch play</button></div>
+        <div class="speed-row"><label for="speed">Feedback speed</label><select id="speed"><option value="450">Fast · 0.45s</option><option value="900" selected>Normal · 0.9s</option><option value="2400">Slow · 2.4s</option></select></div>
+        <button id="learned-load" class="quiet" hidden>Load a learned policy…</button><input id="policy-file" type="file" accept=".policy" hidden>
+      </section>
+      <section class="panel"><h2>Blessings &amp; curses</h2><div id="effects" class="effects"></div></section>
+      <section class="panel"><div class="panel-title"><h2>Stones of fate</h2><button id="all-stones" class="quiet">All stones</button></div><div id="gems" class="gems"></div></section>
+      <section class="panel"><h2>Completed runs</h2><div id="run-history" class="subtle">No completed runs yet.</div></section>
+      <section class="panel journal-panel"><div class="panel-title"><h2>Decision journal</h2><span id="deaths" class="subtle">0 deaths</span></div><ol id="journal"></ol></section>
+    </aside>
+  </div>
+  <section class="panel comparison" hidden><div class="panel-title"><div><p class="eyebrow">PUT THE IDEA TO A TEST</p><h2>Compare strategies</h2></div><div class="compare-controls"><label for="compare-runs">Events per strategy</label><select id="compare-runs"><option>100</option><option selected>1000</option><option>10000</option></select><button id="compare" class="primary">Run comparison</button></div></div>
+    <p id="compare-scope" class="subtle">Uses this event's starting setup and budget. Each strategy receives the same seed set.</p><div id="comparison-results" aria-live="polite"></div>
+  </section>
+  <footer><span id="model-status">Connecting to the C++ engine…</span><details><summary>About this model</summary><p>Some room probabilities, damage distributions and opening sequences remain provisional. Shops are compulsory; later runs have none in stage one. Base escape is 40%. Simulated time advances on actions, recovery and scheduled sleep; time spent thinking does not count. Daily availability is set when starting an event. Game artwork is loaded locally from your installation and is not included in the open-source project. Creature illustrations do not identify a separate damage model.</p></details></footer>
+</main>
+<dialog id="play-menu" class="play-menu" aria-labelledby="play-menu-title">
+  <div class="play-menu-heading"><div><p class="eyebrow">PRACTICE</p><h2 id="play-menu-title">Your dungeon run</h2></div><button id="close-play-menu" class="quiet" aria-label="Close run menu">×</button></div>
+  <p id="menu-progress" class="menu-progress"></p>
+  <div class="menu-advice"><span>Recommended next move</span><strong id="menu-recommendation"></strong><p id="menu-reason"></p></div>
+  <label class="menu-pace">Animation pace<select id="menu-speed"><option value="450">Fast · 0.45 seconds</option><option value="900">Normal · 0.9 seconds</option><option value="2400">Slow · 2.4 seconds</option></select></label>
+  <div class="menu-actions"><button id="menu-save">Save replay</button><button id="menu-load">Load replay</button><button id="menu-journal">Decision journal</button><button id="menu-new">New run</button><button id="hud-loot" class="hud-loot">Items kept</button></div>
+  <p class="menu-shortcuts"><kbd>P</kbd> Play / pause <kbd>N</kbd> Next move <kbd>←</kbd><kbd>→</kbd> Choose a side</p>
+</dialog>
+<dialog id="play-journal" class="play-menu" aria-labelledby="play-journal-title"><div class="play-menu-heading"><div><p class="eyebrow">DECISIONS &amp; REWARDS</p><h2 id="play-journal-title">Run journal</h2></div><button id="close-play-journal" class="quiet" aria-label="Close journal">×</button></div><ol id="play-journal-entries"></ol></dialog>
+<dialog id="setup" aria-labelledby="setup-title"><form id="setup-form"><div class="panel-title"><h2 id="setup-title">New run</h2><button type="button" id="close-setup" class="quiet" aria-label="Close settings">✕</button></div>
+  <p class="setup-intro">Start fresh. Seven days, with a new random seed.</p>
+  <label class="setup-budget" for="budget-input">Mushrooms to spend<input id="budget-input" type="number" min="0" max="1000000" step="1" inputmode="numeric" value="100" required aria-describedby="budget-help" autofocus></label>
+  <p id="budget-help" class="subtle">Your total budget for shop refreshes and healing.</p>
+  <details id="advanced-settings"><summary>Advanced settings</summary><div class="setup-advanced-content">
+  <div class="form-grid"><label>Seed<input id="seed-input" type="number" min="0" max="9007199254740991" step="1" placeholder="Random each time"><span class="subtle">Leave blank for a new seed.</span></label><label>Hours available<input id="hours-input" type="number" min="1" max="8760" value="168" required></label><label>Run within this event<input id="run-input" type="number" min="1" value="1" required></label></div>
+  <label>Starting mushroom balance 🍄<input id="wallet-input" type="number" min="0" max="1000000000" step="1" placeholder="Same as the event budget"><span class="subtle">Leave blank to use the budget as your starting balance.</span></label>
+  <div class="form-grid"><label>Daily availability<select id="sleep-input"><option value="0">Continuous availability</option><option value="8">Sleep 00:00–08:00</option></select></label><label>First play (local time)<input id="start-time-input" type="time" value="17:00" required></label></div>
+  <p class="subtle">During sleep, decisions pause until morning. Recovery after death continues; a living character keeps their current health. The trained policy has not yet learned to plan around bedtime.</p>
+  <label>Starting scene<select id="preset"><option value="fresh">Fresh run</option><option value="opening">Opening shop · room 5</option><option value="monster">Example fight with Recovery</option><option value="soldier">Example sleeping soldier</option><option value="chest">Example silver chest</option><option value="arena">Arena entrance · room 51</option><option value="shop">Example paid shop · room 82</option><option value="custom">My current progress</option></select></label>
+  <label>Damage scenario<select id="scenario-input"><option value="default">Current baseline · community calculator ranges</option><option value="mushroom-school">Mushroom School table · fitted reported averages</option></select></label>
+  <p class="subtle">The video table's distribution is fitted, not measured. Its scenario assumes failed escapes use the monster table too.</p>
+  <button id="shop-refresh-preset" type="button" class="quiet" aria-describedby="shop-refresh-preset-help">Use a 500-mushroom budget</button>
+  <p id="shop-refresh-preset-help" class="subtle">The trained policy chooses how to divide your event budget between refreshes and refills.</p>
+  <details id="strategy-settings"><summary>Rule adviser settings</summary>
+    <div class="form-grid">
+      <label>Normal recovery target (%)<input id="revive-hp-input" type="number" min="20" max="100" step="1" value="21" required></label>
+      <label>Combat risk<select id="survival-aware-input"><option value="false">Current strategy</option><option value="true">Use survival probabilities</option></select></label>
+      <label>Stone selection<select id="adaptive-gems-input"><option value="false">Current ranking</option><option value="true">Consider owned stones (experimental)</option></select></label>
+      <label>Early key target<input id="early-key-target-input" type="number" min="0" max="100" step="1" value="10" required></label>
+      <label>Refresh allowance per paid shop<input id="shop-allowance-input" type="number" min="0" max="1000" step="1" value="5" required></label>
+      <label>Keys needed before a refresh<input id="shop-key-reserve-input" type="number" min="0" max="100" step="1" value="4" required></label>
+      <label>Mushrooms reserved for shop refreshes<input id="shop-mushroom-reserve-input" type="number" min="0" max="1000000" step="1" value="0" required></label>
+    </div>
+    <p class="subtle">These settings apply only to the rule adviser. Its refresh allowance carries forward between shops and runs; its key requirement is adjustable.</p>
+    <p id="policy-settings-help" class="subtle">The trained policy chooses combat, stones, keys, refreshes and recovery within your event budget.</p>
+  </details>
+  <details id="progress-details"><summary>Enter current progress</summary><p class="subtle">Use the simulator's .state format. Time and budget apply from this position onward. Set <code>shops_seen=1,2</code> if you have already seen those stages' shops.</p><textarea id="state-input" rows="9" spellcheck="false" placeholder="schema=1&#10;room=1&#10;run_number=1&#10;phase=doors&#10;hp_percent=100&#10;keys=0&#10;doors=unknown"></textarea></details>
+  <p id="setup-policy" class="subtle"></p></div></details>
+  <p id="setup-error" role="alert" hidden></p>
+  <div class="dialog-actions"><button id="start-run" type="submit" class="primary">Start run</button></div>
+</form></dialog>
+<dialog id="stone-catalog"><div class="panel-title"><h2>Stones of fate</h2><button id="close-stones" class="quiet">Close</button></div><p class="subtle">Effects from the community chart. Frequency changes still use provisional probabilities. Escape changes are modeled as percentage points.</p><div id="stone-list"></div></dialog>
+</body></html>

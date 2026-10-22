@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Legendary Dungeon Companion</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="brand"><span class="sigil" aria-hidden="true">◇</span><div><strong>Legendary Dungeon</strong><small id="mode-label">COMPANION</small></div></div>
+<nav aria-label="Play mode"><button id="game" aria-pressed="true">Original game</button><button id="practice" aria-pressed="false">Practice</button></nav>
+<div class="tools"><button id="accounts">Logins</button><button id="fullscreen">Fullscreen</button></div></header>
+<main aria-label="Game view"></main>
+<footer hidden><span id="notice" role="status"></span></footer>
+<dialog id="profile-dialog" aria-labelledby="profile-title"><div class="dialog-title"><h1 id="profile-title">Your logins</h1><button id="close-profiles" aria-label="Close logins">×</button></div>
+<p>Each profile has its own game sign-in. Your characters appear in the original game after you sign in.</p>
+<div id="profile-list"></div>
+<form id="profile-form"><label>Profile label<input id="profile-label" maxlength="80" placeholder="Personal login" required></label><label>Game world<input id="profile-world" value="play.sfgame.net" required></label><button class="primary" type="submit">Add login profile</button></form>
+<div class="dialog-actions"><button id="import-profiles">Import profile JSON</button><button id="mimic-example">Preview a mimic in practice</button></div>
+<p class="hint">Profile files contain labels and world addresses. Sign-in details stay inside the game's own login screen.</p><p id="profile-error" class="error" role="alert"></p></dialog>
+<script src="renderer.js"></script></body></html>

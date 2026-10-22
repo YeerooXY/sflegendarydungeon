@@ -1,0 +1,2 @@
+# Optional readable-rule extraction; install requirements-rl.txt first.
+scikit-learn>=1.7,<2

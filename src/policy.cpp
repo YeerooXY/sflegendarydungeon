@@ -5,6 +5,18 @@
 #include <stdexcept>
 
 namespace sfld {
+std::string_view name(Strategy strategy) {
+    switch (strategy) {
+    case Strategy::baseline: return "baseline";
+    case Strategy::strategic: return "strategic";
+    case Strategy::key_stockpile: return "key-stockpile";
+    }
+    return "invalid";
+}
+Strategy strategy_from(std::string_view value) {
+    for (auto strategy : {Strategy::baseline, Strategy::strategic, Strategy::key_stockpile}) if (name(strategy) == value) return strategy;
+    throw std::invalid_argument("Unknown strategy: " + std::string(value));
+}
 std::string_view name(BarrelPolicy policy) {
     switch (policy) {
     case BarrelPolicy::skip: return "skip";
@@ -33,17 +45,23 @@ ShopPolicy shop_policy_from(std::string_view value) {
 void Policy::validate() const {
     if (!std::isfinite(barrel_hp) || barrel_hp < 0 || barrel_hp > 1 || !std::isfinite(revive_hp) || revive_hp < .2 || revive_hp > 1 ||
         !std::isfinite(login_interval_hours) || login_interval_hours < 0 || login_interval_hours > 1000000 ||
+        !std::isfinite(patient_boss_hp) || (patient_boss_hp != 0 && (patient_boss_hp < .2 || patient_boss_hp > 1)) ||
         reroll_limit < 0 || reroll_limit > 1000000 || recovery_budget < -1 || recovery_budget > 1000000 ||
-        shop < ShopPolicy::adaptive || shop > ShopPolicy::one_hit_8)
+        shop < ShopPolicy::adaptive || shop > ShopPolicy::one_hit_8 ||
+        strategy < Strategy::baseline || strategy > Strategy::key_stockpile ||
+        early_key_target < 0 || early_key_target > 100 || shop_allowance < 0 || shop_allowance > 1000 ||
+        shop_key_reserve < 0 || shop_key_reserve > 100 || shop_mushroom_reserve < 0 || shop_mushroom_reserve > 1000000 ||
+        (shop_allowance > 0 && (reroll_limit > 0 || shop != ShopPolicy::adaptive)))
         throw std::invalid_argument("Invalid policy thresholds");
 }
-double Policy::effect_value(const State& s, const Effect& e) const {
+double Policy::effect_value(const State& s, const Effect& e, const Profile& p) const {
     int useful = std::min(e.remaining, 100 - s.room);
     if (e.clock == Clock::room) for (int room = s.room + 1; room <= s.room + std::min(e.remaining, 100 - s.room); ++room)
         if (room % 25 == 0) --useful;
     const double rooms = static_cast<double>(useful);
     switch (e.kind) {
-    case EffectKind::elixir: return std::min(1 - s.hp, e.magnitude);
+    case EffectKind::elixir: return p.time_traveler_elixir_full_heal && s.has(Gem::time_traveler)
+        ? 1 - s.hp : std::min(1 - s.hp, e.magnitude);
     case EffectKind::recovery: return std::min(1.0, e.magnitude * rooms) * (s.hp < .8 ? 1 : .45);
     case EffectKind::one_hit: return .1 * rooms;
     case EffectKind::escape: return .055 * rooms;
@@ -54,6 +72,20 @@ double Policy::effect_value(const State& s, const Effect& e) const {
     }
 }
 Action Policy::choose(const Game& game) const {
+    const auto& state = game.state();
+    if (state.phase == Phase::gems && adaptive_gems) return choose_gem_adaptive(game);
+    if (practical_tactics || (patient_boss_hp > 0 && state.phase == Phase::recovery)) return choose_strategic(game);
+    if (state.phase == Phase::shop && shop_allowance > 0) return choose_strategic(game);
+    if (strategy == Strategy::baseline && !(survival_aware || early_key_target > 0) &&
+        state.phase == Phase::doors && !state.effect(EffectKind::one_hit)) {
+        for (int i = 0; i < 2; ++i)
+            if (state.doors[static_cast<std::size_t>(i)].kind == Door::mystery &&
+                state.doors[static_cast<std::size_t>(1-i)].kind == Door::monster)
+                return {ActionKind::choose_door, i};
+    }
+    const bool modified_baseline_decision = (survival_aware || early_key_target > 0) &&
+        (state.phase == Phase::doors || (state.phase == Phase::encounter && is_enemy(state.encounter)));
+    if (strategy != Strategy::baseline || modified_baseline_decision) return choose_strategic(game);
     const auto& s = game.state();
     switch (s.phase) {
     case Phase::doors: {
@@ -109,7 +141,7 @@ Action Policy::choose(const Game& game) const {
             (s.encounter == Encounter::skeleton && (s.room > 25 || s.keys >= 10)) ||
             (s.encounter == Encounter::locked_sarcophagus && !game.legal({ActionKind::interact})))
             return {ActionKind::skip};
-        if (s.encounter == Encounter::rps) return {s.hp <= barrel_hp ? ActionKind::rps : ActionKind::skip, 0};
+        if (s.encounter == Encounter::rps) return {s.hp <= barrel_hp ? ActionKind::interact : ActionKind::skip};
         if (s.encounter == Encounter::wheel && s.hp > barrel_hp) return {ActionKind::skip};
         return {ActionKind::interact};
     case Phase::shop: {
@@ -120,10 +152,10 @@ Action Policy::choose(const Game& game) const {
         for (int i = 0; i < 2; ++i) {
             const auto& offer = s.offers[static_cast<std::size_t>(i)];
             if (!game.legal({ActionKind::buy, i})) continue;
-            double score = effect_value(s, offer.effect) - .025 * offer.keys;
-            if (const auto* active = s.effect(offer.effect.kind)) score -= effect_value(s, *active);
+            double score = effect_value(s, offer.effect, game.profile()) - .025 * offer.keys;
+            if (const auto* active = s.effect(offer.effect.kind)) score -= effect_value(s, *active, game.profile());
             else if (offer.effect.kind != EffectKind::elixir && s.blessings.size == 3)
-                score -= effect_value(s, s.blessings.slots[0]);
+                score -= effect_value(s, s.blessings.slots[0], game.profile());
             if (score > value) { best = i; value = score; }
             if (offer.effect.kind == EffectKind::one_hit &&
                 (shop != ShopPolicy::one_hit_8 || offer.effect.remaining >= 8) && score > target_value) {
@@ -175,10 +207,11 @@ Action Policy::choose(const Game& game) const {
         if (safe_boss_reentry && s.room % 25 == 0) target = std::max(target, std::min(1.0, game.damage_ceiling(true) + .001));
         if (s.hp >= target - 1e-12) return {ActionKind::reenter};
         int remaining_budget = game.limits().budget - s.mushrooms;
+        remaining_budget -= std::max(0, std::min(shop_mushroom_reserve, game.limits().budget) - s.reroll_mushrooms);
         if (recovery_budget >= 0) remaining_budget = std::min(remaining_budget, std::max(0, recovery_budget - s.recovery_mushrooms));
         const int steps = static_cast<int>(std::ceil((target - s.hp - 1e-12) / .2));
         int cost = 0;
-        for (int n = 0; n < steps; ++n) cost += s.paid_steps + n == 0 ? 10 : (s.paid_steps + n == 1 ? 15 : 20);
+        for (int n = 0; n < steps; ++n) cost += 10 + 5 * (s.paid_steps + n);
         if (game.full_price() <= remaining_budget && game.full_price() <= cost) return {ActionKind::heal_full};
         if (game.step_price() <= remaining_budget && game.legal({ActionKind::heal_step})) return {ActionKind::heal_step};
         if (game.full_price() <= remaining_budget && game.legal({ActionKind::heal_full})) return {ActionKind::heal_full};

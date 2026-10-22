@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quick footage review</title>
+<style>
+:root{color-scheme:dark}body{margin:16px auto;max-width:1200px;padding:0 16px;font:16px system-ui;background:#10191f;color:#eee}button,select{font:inherit;background:#20313b;color:inherit;border:1px solid #657984;border-radius:4px;padding:8px;cursor:pointer}header,.actions,.types{display:flex;gap:8px;flex-wrap:wrap;align-items:center}header{margin-bottom:12px}a{color:#edc65d}#meta{color:#b8c6cd;margin:10px 0}#labels{display:grid;grid-template-columns:1fr 1fr;gap:12px}#labels button{text-align:center;font-size:21px;font-weight:700;cursor:default}#labels .trap{display:block;font-size:17px;font-weight:500;margin-top:4px}.present{color:#ff8b82}.absent{color:#bdcbd3}.unknown{color:#edc65d}#labels .selected{outline:3px solid #edc65d}.picture{position:relative;text-align:center;margin-top:8px;background:#080e12}#image{display:block;max-width:100%;max-height:calc(100vh - 230px);margin:auto;object-fit:contain}#loading{position:absolute;inset:0;display:grid;place-content:center;background:#10191fe0}.actions{margin-top:10px}.types{margin:10px 0}.types button{padding:6px;font-size:14px}#status{min-height:24px;color:#edc65d}.hidden{display:none!important}small{color:#b8c6cd}#empty{padding:40px 0;font-size:22px}#correctionHelp{margin:8px 0}.import{font-size:14px}input[type=file]{max-width:180px}button:disabled{opacity:.45;cursor:default}#leftLabel,#rightLabel{min-width:0}@media(max-width:700px){#labels button{font-size:17px}#image{max-height:65vh}header{font-size:14px}}
+</style>
+<header>
+ <select id="pass" aria-label="Review pass"><option value="vote">First pass: correct / incorrect / duplicate</option><option value="fix">Second pass: correct mistakes</option></select>
+ <select id="source" aria-label="Video"><option value="">All videos in this queue</option></select>
+ <span id="position"></span><button id="export">Export votes</button>
+ <label class="import">Import <input id="import" type="file" accept=".json"></label>
+</header>
+<div id="meta"></div>
+<div id="coverage"><small>Loading queue coverage…</small></div>
+<div id="empty" class="hidden"></div>
+<main id="main">
+ <div id="labels"><button id="leftLabel" type="button"></button><button id="rightLabel" type="button"></button></div>
+ <div class="picture"><img id="image" alt="Dungeon room choices"><div id="loading">Loading image…</div></div>
+ <div id="voteActions" class="actions"><button id="correct">C · Correct</button><button id="incorrect">I · Incorrect</button><button id="duplicate">D · Duplicate</button><small>Correct = both door types and the shown trap labels are correct. Each key saves and advances.</small></div>
+ <div id="correction" class="hidden">
+  <p id="correctionHelp"><b>1</b> left · <b>2</b> right · choose a type below · <b>T</b> toggle trap · <b>?</b> trap unreadable · <b>0</b> not a choice screen · <b>Enter</b> save and next</p>
+  <div id="typeKeys" class="types"></div>
+  <div class="actions"><button id="trap">T · Toggle trap</button><button id="trapUnknown">? · Trap unreadable</button><button id="notChoice">0 · Not a choice screen</button><button id="saveCorrection">Enter · Save and next</button></div>
+ </div>
+</main>
+<div class="actions"><button id="undo">Backspace · Undo last vote</button><a id="original" target="_blank" rel="noopener">Original video</a><small>Votes save in this browser. Export them to keep a file.</small></div>
+<p id="status" role="status" aria-live="polite"></p>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),KEY='sfld-quick-votes-v1';
+const TYPES=[['E','monster','Enemy'],['M','mystery','Mystery'],['L','locked','Locked door'],['U','unlocked','Unlocked door'],['D','double_locked','Double-locked door'],['Q','epic','Epic door'],['W','wall','Wall'],['C','cursed','Cursed door'],['S','sacrifice','Sacrificial door'],['H','hungry','Hungry door'],['B','blessing','Blessing door'],['F','destiny','Destiny / spinner door'],['G','golden','Golden room'],['P','shop','Shop'],['O','boss','Boss'],['A','trial','Trial'],['X','exit_trial','Trial exit'],['R',null,'Unknown']];
+let data,predictions,predictionHistory={},db,votes={},history=[],current=null,draft=null,selected=0,ready=false,saving=false,imageToken=0,screenIsChoice=true;
+const clone=x=>JSON.parse(JSON.stringify(x)),name=kind=>TYPES.find(x=>x[1]===kind)?.[2]||kind||'Unknown';
+const fingerprint=p=>JSON.stringify([p.image.sha256,p.doors.map(d=>[d.kind,d.trap])]);
+function matchingPrediction(row,vote){if(predictions[row.id]?.image.sha256!==vote.image?.sha256)return null;return [predictions[row.id],...(predictionHistory[row.id]||[])].find(p=>p&&p.image.sha256===vote.image?.sha256&&fingerprint(p)===vote.prediction_fingerprint)}
+function prediction(row){return (votes[row.id]&&matchingPrediction(row,votes[row.id]))||predictions[row.id]}
+function validVote(row){const vote=votes[row.id];return vote&&vote.prediction_fingerprint===fingerprint(prediction(row))?vote:null}
+function queue(){return data.candidates.filter(r=>!$('source').value||r.source_id===$('source').value).filter(r=>{const v=validVote(r);return $('pass').value==='fix'?v?.verdict==='incorrect'&&!v.corrected:!v})}
+function clock(t){return new Date(t*1000).toISOString().slice(11,19)}
+function setStatus(message){$('status').textContent=message}
+async function loadVotes(){
+ db=await new Promise((resolve,reject)=>{const request=indexedDB.open(KEY,1);request.onupgradeneeded=()=>request.result.createObjectStore('votes',{keyPath:'id'});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)});
+ const saved=await new Promise((resolve,reject)=>{const request=db.transaction('votes').objectStore('votes').getAll();request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)});
+ votes=Object.fromEntries(saved.map(v=>[v.id,v]));
+ let legacy;try{legacy=JSON.parse(localStorage.getItem(KEY)||'{}').votes}catch(e){}
+ if(legacy&&await persist({...legacy,...votes}))localStorage.removeItem(KEY);
+}
+async function persist(next){
+ try{await new Promise((resolve,reject)=>{const transaction=db.transaction('votes','readwrite'),store=transaction.objectStore('votes');transaction.oncomplete=resolve;transaction.onabort=()=>reject(transaction.error||Error('Vote transaction aborted'));transaction.onerror=()=>{};try{for(const [id,value]of Object.entries(next))if(votes[id]!==value)store.put(value);for(const id of Object.keys(votes))if(!(id in next))store.delete(id)}catch(e){transaction.abort();reject(e)}});votes=next;return true}
+ catch(e){setStatus('Could not save in this browser. Export your votes before continuing. '+e.message);return false}
+}
+function controls(){for(const id of ['correct','incorrect','duplicate','saveCorrection'])$(id).disabled=!ready||saving;for(const id of ['pass','source','import','export'])$(id).disabled=saving}
+function labels(){
+ for(const [side,id] of [[0,'leftLabel'],[1,'rightLabel']]){
+  const d=draft[side],button=$(id);button.replaceChildren();button.append(`${side+1} · ${name(d.kind)}`);
+  const trap=document.createElement('span');trap.className='trap '+(d.trap===true?'present':d.trap===false?'absent':'unknown');trap.textContent=d.trap===true?'TRAP'+(d.trap_visual?' · '+d.trap_visual:''):d.trap===false?'No trap':'Trap unreadable / unknown';button.append(trap);
+  button.classList.toggle('selected',$('pass').value==='fix'&&selected===side);
+ }
+ $('notChoice').textContent=screenIsChoice?'0 · Not a choice screen':'0 · Marked NOT a choice screen';
+}
+function show(id=null){
+ const items=queue();current=items.find(r=>r.id===id)||items[0]||null;
+ const corrected=Object.values(votes).filter(v=>v.corrected).length;
+ $('position').textContent=`${items.length} remaining · ${Object.keys(votes).length} voted · ${corrected} corrected`;
+ $('main').classList.toggle('hidden',!current);$('empty').classList.toggle('hidden',Boolean(current));
+ const fixing=$('pass').value==='fix';$('correction').classList.toggle('hidden',!fixing);$('voteActions').classList.toggle('hidden',fixing);
+ ready=false;controls();imageToken++;const token=imageToken;
+ if(!current){$('empty').textContent=fixing?'No incorrect cases left to correct.':'First pass complete for this selection.';$('meta').textContent='';$('original').removeAttribute('href');return}
+ const p=prediction(current),previous=validVote(current);draft=clone(previous?.corrected?previous.labels:p.doors);selected=0;screenIsChoice=true;labels();
+ const counter=current.frame_room_sequence||current.room_sequence,room=counter?.room;
+ $('meta').textContent=`${current.uploader} · ${clock(p.image.source_seconds)} · ${room!=null?'room '+room+'/100 (counter reading)':'room counter unresolved'}${counter?.sequence_id?' · sequence '+counter.sequence_id.split(':').at(-1):''}`;
+ if(current.recovery)$('meta').textContent+=' · recovered from a missing counter section';
+ $('original').href=current.source_link;$('loading').classList.remove('hidden');
+ $('image').onload=async()=>{try{await $('image').decode()}catch(e){}if(token!==imageToken)return;ready=true;controls();$('loading').classList.add('hidden')};
+ $('image').onerror=()=>{if(token!==imageToken)return;setStatus('Image could not be loaded. No vote was saved.');$('loading').textContent='Image unavailable';ready=false;controls()};
+ $('loading').textContent='Loading image…';$('image').src=p.image.image;
+ for(const row of items.slice(1,5)){const img=new Image();img.src=prediction(row).image.image}
+}
+async function record(verdict,corrected=false){
+ if(!current||!ready||saving)return;
+ const p=prediction(current),previous=votes[current.id]||null;
+ const reviewed=verdict==='correct'||corrected;
+ const row={schema:1,id:current.id,source_id:current.source_id,source_url:current.source_url,source_seconds:p.image.source_seconds,
+  image:p.image,verdict,corrected,decision:corrected?screenIsChoice:null,labels:(reviewed?draft:p.doors).map(d=>({kind:d.kind,trap:d.trap,trap_visual:d.trap_visual||null})),
+  label_verification:reviewed?draft.map(d=>({kind:d.kind!=null,trap:typeof d.trap==='boolean'})):null,
+  proposed_labels:clone(p.doors),prediction_fingerprint:fingerprint(p),prediction_version:p.inputs.version,
+  counter_suggestion:(current.frame_room_sequence||current.room_sequence)?.room??null,sequence_suggestion:(current.frame_room_sequence||current.room_sequence)?.sequence_id??null,
+  duplicate_of:null,reviewed_at:new Date().toISOString(),reviewer:'user',
+  scope:'Door/trap image labels only. Run identity, stones, room counter and action/outcome were not verified by this vote.'};
+ if(corrected&&previous)row.first_pass_reviewed_at=previous.reviewed_at;
+ saving=true;ready=false;controls();const saved=await persist({...votes,[row.id]:row});saving=false;
+ if(!saved){ready=true;controls();return}
+ history.push({id:row.id,previous,pass:$('pass').value,source:$('source').value});
+ setStatus(corrected?'Correction saved.':verdict==='duplicate'?'Duplicate flagged; excluded until its visit identity is resolved.':verdict==='incorrect'?'Saved for the correction pass.':'Correct labels saved.');show();
+}
+async function undo(){const last=history.at(-1);if(!last||saving)return;const next={...votes};if(last.previous)next[last.id]=last.previous;else delete next[last.id];saving=true;controls();const saved=await persist(next);saving=false;controls();if(!saved)return;history.pop();$('pass').value=last.pass;$('source').value=last.source;show(last.id);setStatus('Last action undone.')}
+function setKind(kind){if($('pass').value!=='fix'||!current)return;draft[selected].kind=kind;labels()}
+function setTrap(value){if($('pass').value!=='fix'||!current)return;draft[selected].trap=value;draft[selected].trap_visual=null;labels()}
+function exportVotes(){if(saving)return;const payload={schema:1,kind:'sfld-quick-label-review',exported_at:new Date().toISOString(),reviews:Object.values(votes)};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='dungeon-quick-reviews.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+for(const [key,kind,label]of TYPES){const b=document.createElement('button');b.textContent=key+' · '+label;b.dataset.kind=kind??'unknown';b.onclick=()=>setKind(kind);$('typeKeys').append(b)}
+$('correct').onclick=()=>record('correct');$('incorrect').onclick=()=>record('incorrect');$('duplicate').onclick=()=>record('duplicate');$('saveCorrection').onclick=()=>record('incorrect',true);
+$('leftLabel').onclick=()=>{selected=0;labels()};$('rightLabel').onclick=()=>{selected=1;labels()};$('trap').onclick=()=>setTrap(draft[selected].trap!==true);$('trapUnknown').onclick=()=>setTrap(null);$('notChoice').onclick=()=>{screenIsChoice=!screenIsChoice;labels()};
+$('undo').onclick=undo;$('export').onclick=exportVotes;$('pass').onchange=()=>{$('pass').blur();setStatus('');show()};$('source').onchange=()=>{$('source').blur();setStatus('');show()};
+$('import').onchange=async()=>{try{if(saving)return;const payload=JSON.parse(await $('import').files[0].text());if(payload.schema!==1||payload.kind!=='sfld-quick-label-review'||!Array.isArray(payload.reviews))throw Error('Expected a quick-review export.');const next={...votes};for(const r of payload.reviews){const row=data.candidates.find(c=>c.id===r.id);if(!row||!['correct','incorrect','duplicate'].includes(r.verdict)||!Array.isArray(r.labels)||r.labels.length!==2||!r.labels.every(d=>TYPES.some(t=>t[1]===d.kind)&&[true,false,null].includes(d.trap))||!matchingPrediction(row,r))throw Error('Unknown or changed prediction: '+r.id);next[r.id]=r}saving=true;const saved=await persist(next);saving=false;if(saved){history=[];show();setStatus('Votes imported.')}}catch(e){saving=false;setStatus('Import failed: '+e.message)}};
+document.addEventListener('keydown',e=>{
+ if(e.repeat||e.altKey||e.metaKey)return;
+ if(e.ctrlKey){if(e.key.toLowerCase()==='s'){e.preventDefault();exportVotes()}else if(e.key.toLowerCase()==='z'){e.preventDefault();undo()}return}
+ if(['SELECT','INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
+ if(e.key==='Backspace'){e.preventDefault();undo();return}
+ if(!current||!ready)return;
+ const key=e.key.toUpperCase();
+ if($('pass').value==='vote'){const action={C:'correct',I:'incorrect',D:'duplicate'}[key];if(action){e.preventDefault();record(action)}return}
+ if(key==='1'||key==='2'){e.preventDefault();selected=Number(key)-1;labels()}
+ else if(key==='ENTER'){e.preventDefault();record('incorrect',true)}
+ else if(key==='T'){e.preventDefault();setTrap(draft[selected].trap!==true)}
+ else if(e.key==='?'){e.preventDefault();setTrap(null)}
+ else if(key==='0'){e.preventDefault();screenIsChoice=!screenIsChoice;labels()}
+ else {const type=TYPES.find(t=>t[0]===key);if(type){e.preventDefault();setKind(type[1])}}
+});
+controls();
+async function loadCatalog(){let r=await fetch('quick-review-catalog.json',{cache:'no-store'});if(r.status===404)r=await fetch('monster-mystery-candidates.json',{cache:'no-store'});if(!r.ok)throw Error('Candidate data unavailable');return r.json()}
+Promise.all([loadCatalog(),fetch('quick-predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Predictions unavailable');return r.json()})]).then(async([catalog,parsed])=>{
+ data=catalog;predictions=parsed.predictions;predictionHistory=parsed.history||{};if(data.candidates.some(r=>!predictions[r.id]))throw Error('Predictions are incomplete. No candidates were silently removed.');
+ $('coverage').textContent=data.coverage?`${data.candidates.length} images · ${data.coverage.added_counter_sections} added counter sections · obscured counters and unverified scenes may still hide gaps.`:'Targeted monster/mystery candidates only. Other room types are missing from this queue.';
+ await loadVotes();
+ for(const s of data.sources){const option=document.createElement('option');option.value=s.id;option.textContent=s.uploader+' · '+s.upload_date;$('source').append(option)}show();
+}).catch(e=>setStatus(e.message));
+</script></html>
