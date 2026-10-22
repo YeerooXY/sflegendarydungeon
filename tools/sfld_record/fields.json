@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "note": "Shared by desktop/ld-recorder.cjs and tools/sfld_record/spool.py. Responses to IADungeon* commands keep every numeric field except the deny list, so unseen rooms are never dropped. Other responses keep only these dungeon fields.",
+  "dungeon_fields": ["iadungeonsave", "iadungeon20cost", "iadungeontime", "iadungeonsoulstones", "iamerchant",
+                     "iadungeonstats", "iadungeonstatstotal", "iadungeonchances", "iadungeon", "iapendingitems",
+                     "ialootitem", "usedbuffs", "iamap", "wheelresult", "reward", "rewardpreview"],
+  "context_fields": ["timestamp", "resources", "serverversion"],
+  "deny": ["sessionid", "cryptoid", "cryptokey", "ownplayername", "tracking", "login", "pgsession", "authtoken"],
+  "max_value_length": 100000
+}
