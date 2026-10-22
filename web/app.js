@@ -528,7 +528,9 @@ async function act(action,manual=false,actor=""){
   }
  }catch(e){stop();showError(e);}finally{busy=false;pendingAction=null;render();}
  await ensureFinalStoneAdvice();
- if(manual)document.querySelector('#actions button:not(:disabled),#scene-content button:not(:disabled)')?.focus({preventScroll:true});
+ // Focus the recommended choice so the focus ring never singles out the other option.
+ if(manual)(document.querySelector('#actions button.suggested:not(:disabled),#scene-content button.suggested:not(:disabled),#scene-content button.recommended:not(:disabled)')||
+  document.querySelector('#actions button:not(:disabled),#scene-content button:not(:disabled)'))?.focus({preventScroll:true});
  if(playing&&!obs().terminal)timer=setTimeout(()=>act(suggestion()),obs().phase==="gems"?Math.max(900,Number($("speed").value)):100);else if(playing)stop();
 }
 async function replaceSession(next,recording=null){
@@ -640,7 +642,12 @@ document.addEventListener("keydown",event=>{
  else if(event.key===" "){if(legal("reroll"))act(legal("reroll"),true);}
  else {const a=legal(o.phase==="gems"?"choose_gem":"buy",o.phase==="gems"?selectedGem:selectedOffer);if(a)act(a,true);}
 });
+// Touch has no cursor preview, so a stray tap on the background must not fight
+// or flee; touch players use the visible door and action buttons instead.
+let scenePointerType="mouse";
+$("scene").addEventListener("pointerdown",event=>{scenePointerType=event.pointerType||"mouse";});
 $("scene").addEventListener("click",event=>{
+ if(scenePointerType==="touch"&&event.detail!==0)return;
  if(event.target.closest('button,#encounter-result,#effect-inspector,.hud-top,.hud-bottom,.scene-controls,.game-controls')||document.querySelector('dialog[open]'))return;
  const bounds=$("scene").getBoundingClientRect();chooseSide(event.clientX>bounds.left+bounds.width/2);
 });
