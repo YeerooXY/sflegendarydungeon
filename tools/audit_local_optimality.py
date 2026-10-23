@@ -12,12 +12,24 @@ correction, so selection does not bias the confirmed estimates. A confirmed
 gain shows the deployed policy is not a fixed point of one-step improvement on
 this model. Absence of confirmed gains bounds only effects above the reported
 detection threshold; it is not a proof of optimality or of live performance.
+
+With --workers N each stage is split across N processes. Every shard appends its
+finished trials to parts/, so rerunning the same command resumes a cancelled
+audit. A trial's seed depends only on its job, but batch composition differs
+between shards, so float near-ties in the network can break differently from a
+single-process run.
 """
 import argparse
+from contextlib import contextmanager
 import gzip
+import hashlib
 import json
+import os
 from pathlib import Path
 from statistics import NormalDist
+import subprocess
+import sys
+import threading
 import time
 import numpy as np
 import torch
@@ -34,6 +46,7 @@ CHECKPOINT_SHA='9689128e5df57f75724b6c0384a3df040d866f283629b4bb9d4c61e630fba59e
 LIBRARY=ROOT/'build-ui-decisions/Release/sfld_rl.dll'
 PROFILE=ROOT/'profiles/synthetic.profile'
 OUTCOMES=('completions','legendaries','mushrooms','deaths')
+MASTERS=dict(screen=0x5C,confirm=0xC0)
 PHASES=('doors','encounter','shop','curse_shop','gems','recovery','boss','dead')
 
 
@@ -82,7 +95,7 @@ def sample(env, lab, adviser, weeks, rate, root):
     return states,snapshots,decisions
 
 
-def branch(env, lab, adviser, snapshots, jobs, master, label):
+def branch(env, lab, adviser, snapshots, jobs, master, label, on_record=None):
     """Run (state, arm action, trial) jobs; arms of one trial share a seed."""
     n=env.n_envs;records={};cursor=0;slots=[None]*n;active=np.ones(n,bool);forced=np.full(n,-1)
     spare=snapshots[0]
@@ -109,6 +122,7 @@ def branch(env, lab, adviser, snapshots, jobs, master, label):
             if slots[slot] is not None:
                 if info['mushrooms'][slot]>env.episode_budgets[slot]:raise RuntimeError('Spending error')
                 records[slots[slot]]=tuple(float(info[k][slot]) for k in OUTCOMES)
+                if on_record:on_record(slots[slot],records[slots[slot]])
             assign(int(slot))
         if len(ended):obs,masks=lab.observe()
         if len(records)//20000>reported:
@@ -124,15 +138,9 @@ def contrast(records, s, a, p, trials):
     return float(d.mean()),float(d.std(ddof=1)/trials**.5)
 
 
-def run(args):
-    if train_rl.sha(CHECKPOINT)!=CHECKPOINT_SHA:raise ValueError('Adviser checkpoint identity changed')
-    out=args.output/f'budget-{args.budget}';out.mkdir(parents=True,exist_ok=True)
-    plan=dict(budget=args.budget,rules=args.rules,weeks=args.weeks,rate=args.rate,screen_trials=args.screen_trials,
-        confirm_trials=args.confirm_trials,screen_z=args.screen_z,alpha=args.alpha,seed=args.seed,
-        namespace=args.namespace,event_start_hour=17,sleep_until_hour=0,device=args.device,
-        checkpoint=str(CHECKPOINT),checkpoint_sha256=CHECKPOINT_SHA,
-        library=str(LIBRARY),library_sha256=train_rl.sha(LIBRARY),profile=str(PROFILE),profile_sha256=train_rl.sha(PROFILE))
-    write_once(out/'plan.json',plan)
+@contextmanager
+def session(args):
+    """Load the adviser and sample decision states; every process samples the same states."""
     torch.set_num_threads(args.threads)
     saved,model=train_rl.load_checkpoint(CHECKPOINT,torch.device(args.device));model.eval()
     root=(args.namespace<<56)|(train_rl.seed_fingerprint(args.seed)<<24);started=time.monotonic()
@@ -146,40 +154,150 @@ def run(args):
         states,snapshots,decisions=sample(env,lab,adviser,args.weeks,args.rate,mix64(root^0x5A))
         print(json.dumps(dict(stage='sample',states=len(states),decisions=decisions,
             seconds=round(time.monotonic()-started))),flush=True)
-        try:
-            index={n:i for i,n in enumerate(env.action_names)}
-            jobs=[(s['id'],index[a],t) for s in states for t in range(args.screen_trials) for a in s['legal']]
-            screen=branch(env,lab,adviser,snapshots,jobs,mix64(root^0x5C),'screen')
-            for s in states:
-                p=index[s['policy']];arms={}
-                for a in s['legal']:
-                    ys=[screen[s['id'],index[a],t] for t in range(args.screen_trials)]
-                    arms[a]={k:float(np.mean([y[i] for y in ys])) for i,k in enumerate(OUTCOMES)}
-                    if a!=s['policy']:
-                        arms[a]['delta'],arms[a]['se']=contrast(screen,s['id'],index[a],p,args.screen_trials)
-                s['screen']=arms
-                alts=[a for a in s['legal'] if a!=s['policy']]
-                best=max(alts,key=lambda a:arms[a]['delta'])
-                s['best_alternative']=best
-                s['flagged']=arms[best]['delta']>args.screen_z*arms[best]['se']>0
-            flagged=[s for s in states if s['flagged']]
-            confirm={}
-            if flagged:
-                jobs=[(s['id'],index[a],t) for s in flagged for t in range(args.confirm_trials)
-                      for a in (s['policy'],s['best_alternative'])]
-                confirm=branch(env,lab,adviser,snapshots,jobs,mix64(root^0xC0),'confirm')
-            tests=[]
-            for s in flagged:
-                m,se=contrast(confirm,s['id'],index[s['best_alternative']],index[s['policy']],args.confirm_trials)
-                p_value=1-NormalDist().cdf(m/se) if se>0 else (0. if m>0 else 1.)
-                s['confirm']=dict(delta=m,se=se,p_one_sided=p_value);tests.append(s)
-            tests.sort(key=lambda s:s['confirm']['p_one_sided'])
-            for rank,s in enumerate(tests):
-                threshold=args.alpha/(len(tests)-rank)
-                s['confirm']['confirmed']=s['confirm']['p_one_sided']<=threshold and all(
-                    t['confirm']['confirmed'] for t in tests[:rank])
+        try:yield env,lab,adviser,root,states,snapshots,decisions
         finally:
             for snapshot in snapshots:snapshot.close()
+
+
+def fingerprint(states, decisions):
+    return hashlib.sha256(json.dumps([states,decisions],sort_keys=True).encode()).hexdigest()
+
+
+def load_part(path):
+    """Finished trials of one shard; a line cut off by a cancel is dropped from the file."""
+    records={};keep=0
+    if not path.exists():return records
+    with path.open('rb') as f:
+        for line in f:
+            if not line.endswith(b'\n'):break
+            row=json.loads(line);records[tuple(row['job'])]=tuple(row['y']);keep+=len(line)
+    with path.open('r+b') as f:f.truncate(keep)
+    return records
+
+
+@contextmanager
+def exclusive(path):
+    """Refuse a second process on the same shard; the OS drops the lock if this one dies."""
+    f=path.open('a+b')
+    try:
+        if os.name=='nt':
+            import msvcrt;msvcrt.locking(f.fileno(),msvcrt.LK_NBLCK,1)
+        else:
+            import fcntl;fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except OSError:
+        f.close();raise RuntimeError('Shard already running: '+str(path))
+    try:yield
+    finally:f.close()
+
+
+def exit_with_parent(pid):
+    """Workers stop when the coordinator dies, so a resume never races an orphan."""
+    if os.name!='nt':return
+    import ctypes
+    k32=ctypes.windll.kernel32;handle=k32.OpenProcess(0x100000,False,pid)
+    if not handle:os._exit(3)
+    def watch():
+        k32.WaitForSingleObject(handle,0xFFFFFFFF);os._exit(3)
+    threading.Thread(target=watch,daemon=True).start()
+
+
+def work(args):
+    exit_with_parent(args.parent)
+    parts=args.output/f'budget-{args.budget}'/'parts'
+    spec=json.loads((parts/f'{args.stage}-jobs.json').read_text(encoding='utf8'))
+    with exclusive(parts/f'{args.stage}-{args.shard}.lock'), session(args) as (env,lab,adviser,root,states,snapshots,decisions):
+        if fingerprint(states,decisions)!=spec['states_sha256']:raise RuntimeError('Worker sampled different states')
+        path=parts/f'{args.stage}-{args.shard}.jsonl';done=load_part(path)
+        todo=[j for j in map(tuple,spec['jobs'][args.shard::spec['workers']]) if j not in done]
+        print(json.dumps(dict(stage=args.stage,shard=args.shard,resumed=len(done),remaining=len(todo))),flush=True)
+        if not todo:return
+        with path.open('a',encoding='utf-8') as stream:
+            def keep(job, y):
+                stream.write(json.dumps(dict(job=job,y=y))+'\n');stream.flush()
+            branch(env,lab,adviser,snapshots,todo,mix64(root^MASTERS[args.stage]),args.stage,keep)
+
+
+def execute(args, out, label, jobs, sampled, inline):
+    """Run one stage inline, or across worker processes that resume from parts/."""
+    if args.workers<=1:return inline()
+    parts=out/'parts';started=time.monotonic()
+    write_once(parts/f'{label}-jobs.json',dict(states_sha256=sampled,workers=args.workers,jobs=[list(j) for j in jobs]))
+    flags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0;procs=[]
+    for k in range(args.workers):
+        log,err=(parts/f'{label}-{k}.log').open('a'),(parts/f'{label}-{k}.err').open('a')
+        procs.append(subprocess.Popen([sys.executable,str(Path(__file__).resolve()),*sys.argv[1:],'--stage',label,
+            '--shard',str(k),'--parent',str(os.getpid())],stdout=log,stderr=err,creationflags=flags))
+    try:
+        sizes=[0]*args.workers;lines=[0]*args.workers;reported=0
+        while any(p.poll() is None for p in procs):
+            time.sleep(5)
+            for k in range(args.workers):
+                path=parts/f'{label}-{k}.jsonl'
+                if not path.exists():continue
+                with path.open('rb') as f:
+                    f.seek(sizes[k]);chunk=f.read();sizes[k]+=len(chunk);lines[k]+=chunk.count(b'\n')
+            if time.monotonic()-started>=reported+60:
+                reported=time.monotonic()-started
+                print(json.dumps(dict(stage=label,completed=sum(lines),total=len(jobs),workers=args.workers,
+                    seconds=round(reported))),flush=True)
+    finally:
+        for p in procs:
+            if p.poll() is None:p.kill()
+    failed=[k for k,p in enumerate(procs) if p.returncode]
+    if failed:raise RuntimeError(f'{label} shards failed: {failed}; see {parts}')
+    records={}
+    for k in range(args.workers):records.update(load_part(parts/f'{label}-{k}.jsonl'))
+    if set(records)!=set(jobs):raise RuntimeError('Missing or duplicate trials')
+    return records
+
+
+def run(args):
+    if train_rl.sha(CHECKPOINT)!=CHECKPOINT_SHA:raise ValueError('Adviser checkpoint identity changed')
+    if args.stage:return work(args)
+    out=args.output/f'budget-{args.budget}';out.mkdir(parents=True,exist_ok=True)
+    plan=dict(budget=args.budget,rules=args.rules,weeks=args.weeks,rate=args.rate,screen_trials=args.screen_trials,
+        confirm_trials=args.confirm_trials,screen_z=args.screen_z,alpha=args.alpha,seed=args.seed,
+        namespace=args.namespace,event_start_hour=17,sleep_until_hour=0,device=args.device,
+        checkpoint=str(CHECKPOINT),checkpoint_sha256=CHECKPOINT_SHA,
+        library=str(LIBRARY),library_sha256=train_rl.sha(LIBRARY),profile=str(PROFILE),profile_sha256=train_rl.sha(PROFILE))
+    if args.workers>1:plan['workers']=args.workers
+    write_once(out/'plan.json',plan)
+    started=time.monotonic()
+    with session(args) as (env,lab,adviser,root,states,snapshots,decisions):
+        sampled=fingerprint(states,decisions)
+        index={n:i for i,n in enumerate(env.action_names)}
+        jobs=[(s['id'],index[a],t) for s in states for t in range(args.screen_trials) for a in s['legal']]
+        screen=execute(args,out,'screen',jobs,sampled,
+            lambda:branch(env,lab,adviser,snapshots,jobs,mix64(root^MASTERS['screen']),'screen'))
+        for s in states:
+            p=index[s['policy']];arms={}
+            for a in s['legal']:
+                ys=[screen[s['id'],index[a],t] for t in range(args.screen_trials)]
+                arms[a]={k:float(np.mean([y[i] for y in ys])) for i,k in enumerate(OUTCOMES)}
+                if a!=s['policy']:
+                    arms[a]['delta'],arms[a]['se']=contrast(screen,s['id'],index[a],p,args.screen_trials)
+            s['screen']=arms
+            alts=[a for a in s['legal'] if a!=s['policy']]
+            best=max(alts,key=lambda a:arms[a]['delta'])
+            s['best_alternative']=best
+            s['flagged']=arms[best]['delta']>args.screen_z*arms[best]['se']>0
+        flagged=[s for s in states if s['flagged']]
+        confirm={}
+        if flagged:
+            jobs=[(s['id'],index[a],t) for s in flagged for t in range(args.confirm_trials)
+                  for a in (s['policy'],s['best_alternative'])]
+            confirm=execute(args,out,'confirm',jobs,sampled,
+                lambda:branch(env,lab,adviser,snapshots,jobs,mix64(root^MASTERS['confirm']),'confirm'))
+        tests=[]
+        for s in flagged:
+            m,se=contrast(confirm,s['id'],index[s['best_alternative']],index[s['policy']],args.confirm_trials)
+            p_value=1-NormalDist().cdf(m/se) if se>0 else (0. if m>0 else 1.)
+            s['confirm']=dict(delta=m,se=se,p_one_sided=p_value);tests.append(s)
+        tests.sort(key=lambda s:s['confirm']['p_one_sided'])
+        for rank,s in enumerate(tests):
+            threshold=args.alpha/(len(tests)-rank)
+            s['confirm']['confirmed']=s['confirm']['p_one_sided']<=threshold and all(
+                t['confirm']['confirmed'] for t in tests[:rank])
     data=out/'screen-records.jsonl.gz'
     with gzip.open(data,'xt',encoding='utf-8') as stream:
         for (s,a,t),y in sorted(screen.items()):
@@ -207,4 +325,7 @@ if __name__=='__main__':
     p.add_argument('--seed',type=int,default=2026102201);p.add_argument('--namespace',type=int,default=0x4C)
     p.add_argument('--envs',type=int,default=512);p.add_argument('--threads',type=int,default=2)
     p.add_argument('--device',choices=('cpu','cuda'),default='cpu');p.add_argument('--rules',default='')
+    p.add_argument('--workers',type=int,default=1)
+    p.add_argument('--stage',choices=tuple(MASTERS),help=argparse.SUPPRESS)
+    p.add_argument('--shard',type=int,help=argparse.SUPPRESS);p.add_argument('--parent',type=int,help=argparse.SUPPRESS)
     run(p.parse_args())
