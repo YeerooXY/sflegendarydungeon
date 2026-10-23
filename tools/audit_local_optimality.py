@@ -62,13 +62,38 @@ class Adviser:
         return actions,targets
 
 
+_CONTEXT={}
+
+
+def visible_context(names, row):
+    """Held effects, stones, the current encounter and both doors, for condition breakdowns."""
+    key=id(names)
+    if key not in _CONTEXT:
+        index={n:i for i,n in enumerate(names)}
+        group=lambda prefix:[(n.split('.')[-1],i) for n,i in index.items() if n.startswith(prefix)]
+        _CONTEXT[key]=dict(index=index,
+            effects={g:[(group(f'{g}.{k}.kind.'),index[f'{g}.{k}.active'],index[f'{g}.{k}.present']) for k in range(3)]
+                     for g in ('blessings','curses')},
+            gems=[(n.split('.',1)[1],i) for n,i in index.items() if n.startswith('owned_gem.')],
+            encounters=[(n.split('.',1)[1],i) for n,i in index.items() if n.startswith('encounter.')],
+            doors=[(group(f'doors.{k}.kind.'),index[f'doors.{k}.trap']) for k in (0,1)])
+    c=_CONTEXT[key];I=c['index'];on=lambda i:row[i]>.5
+    effects={g:[k for kinds,active,_ in slots if on(active) for k,i in kinds if on(i)] for g,slots in c['effects'].items()}
+    doors=[next((k for k,i in kinds if on(i)),None)+(':trap' if on(trap) else '') for kinds,trap in c['doors']] if on(I['phase.doors']) else []
+    return dict(blessings=effects['blessings'],curses=effects['curses'],
+        blessing_slots=int(sum(bool(on(present)) for _,_,present in c['effects']['blessings'])),
+        gems=[g for g,i in c['gems'] if on(i)],
+        encounter=next((e for e,i in c['encounters'] if on(i)),None) if on(I['phase.encounter']) else None,doors=doors)
+
+
 def describe(env, rule, obs, masks, slot, action):
     names=env.observation_names
     phase=next((p for p in PHASES if f'phase.{p}' in names and rule.flag(obs,f'phase.{p}')[slot]),'other')
     return dict(phase=phase,room=int(round(float(rule.v(obs,'room_div100')[slot])*100)),
         hp=round(float(rule.v(obs,'hp')[slot]),4),keys=int(round(float(rule.v(obs,'keys_div20')[slot])*20)),
         hours_left=round(float(rule.v(obs,'hours_left_div168')[slot])*168,3),
-        legal=[env.action_names[a] for a in np.flatnonzero(masks[slot])],policy=env.action_names[int(action)])
+        legal=[env.action_names[a] for a in np.flatnonzero(masks[slot])],policy=env.action_names[int(action)],
+        **visible_context(names,obs[slot]))
 
 
 def sample(env, lab, adviser, weeks, rate, root):
