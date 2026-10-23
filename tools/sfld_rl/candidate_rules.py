@@ -7,7 +7,7 @@ until it passes a fresh paired weekly comparison.
 import numpy as np
 from .player_ideas import PlayerIdeas, CASES
 
-RULES=('lethal_line_door','step_not_full','no_low_hp_reroll','reentry_floor','deadline_heal')
+RULES=('lethal_line_door','step_not_full','no_low_hp_reroll','reentry_floor','deadline_heal','preboss_safe_reentry')
 SAFE_KINDS=('cursed','blessing','wood','stone','souls','metal','arcane','hourglasses')
 
 
@@ -67,13 +67,30 @@ class CandidateRules(PlayerIdeas):
             waiting=(actions>=self.ai['wait_hp_20'])&(actions<=self.ai['wait_deadline'])
             use=recovering&waiting&(v('hours_left_div168')*168<=24+1e-6)&masks[:,self.ai['heal_full']]
             result['deadline_heal']=(use,np.where(use,self.ai['heal_full'],actions))
+        if 'preboss_safe_reentry' in self.rules:
+            # October 23 condition audit: within five rooms of a boss, re-entering below the
+            # boss's maximum hit was the most repeated confirmed mistake. Wait to that line.
+            safe=self.boss[np.minimum(stage,3),1]
+            levels=np.array([.2,.4,.6,.8,1.])
+            waits=np.array([self.ai[f'wait_hp_{k}'] for k in (20,40,60,80,100)])
+            chosen=np.full(n,np.inf)
+            for level,a in zip(levels,waits):chosen[actions==a]=level
+            chosen[actions==self.ai['reenter']]=hp[actions==self.ai['reenter']]
+            goal=np.minimum(1.,safe+.001)
+            legal_wait=masks[:,waits].any(axis=1);first=waits[np.argmax(masks[:,waits],axis=1)]
+            # With mushrooms for a partial heal the adviser's own heal choice did better (gate, 100 and 1,000).
+            broke=v('mushrooms_left_div500')*500<v('heal_step_price_div100')*100-1e-6
+            use=recovering&broke&(room%25>=20)&(chosen<safe)&(goal>hp+1e-4)&legal_wait&(v('hours_left_div168')*168>1e-3)
+            # Any wait action accepts an exact HP target (sfld_rl_step_wait_targets).
+            result['preboss_safe_reentry']=(use,np.where(use,first,actions),np.where(use,goal,-1.))
         return result
 
     def apply(self, obs, masks, actions, targets):
         actions=actions.copy();targets=targets.copy()
-        for rule,(where,target) in self.proposals(obs,masks,actions).items():
-            where=where&(actions!=target)
-            actions[where]=target[where];targets[where]=-1;self.counts[rule]+=int(where.sum())
+        for rule,proposal in self.proposals(obs,masks,actions).items():
+            where,target=proposal[:2];goal=proposal[2] if len(proposal)>2 else None
+            where=where&((actions!=target) if goal is None else np.ones_like(where))
+            actions[where]=target[where];targets[where]=-1 if goal is None else goal[where];self.counts[rule]+=int(where.sum())
         return actions,targets
 
 
