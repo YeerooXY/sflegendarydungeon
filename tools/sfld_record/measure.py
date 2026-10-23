@@ -115,6 +115,8 @@ def measure(database):
                             u = unknown[f'door type {t}'];u['count'] += 1;u['example_packet'] = u['example_packet'] or pid
                         elif DOORS[t] not in ('wall', 'boss', 'shop'):
                             tally[f'traps stage {stage}']['trapped' if trap else 'clear'] += 1
+                            # The model traps only monster and mystery doors; check every type.
+                            tally[f'traps door {DOORS[t]}']['trapped' if trap else 'clear'] += 1
             if 10 <= status <= 12:
                 enc, variant = after[19+status-10], after[22+status-10]
                 if enc not in KNOWN_ENCOUNTERS:
