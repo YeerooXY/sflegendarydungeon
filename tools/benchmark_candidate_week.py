@@ -27,6 +27,9 @@ def weeks(model, saved, profile, budget, count, seed, namespace, rules, teacher=
                    auto_reset=False,event_start_hour=17) as env, torch.inference_mode():
         transfer_changes(saved['metadata']['environment_signature'],env.metadata,True)
         adviser=audit.Adviser(model,env,'cpu')
+        if teacher and teacher.startswith('mfbot'):
+            from sfld_rl.mfbot_policy import MFBotPolicy
+            adviser=mfbot=MFBotPolicy(env,low_hp_entry='lowhp' in teacher,farm_keys='nofarm' not in teacher);teacher=None
         if rules:
             # Rules, like the deployed adviser, assume the shipped profile even when the world differs.
             extra=CandidateRules(env,profile_values(audit.PROFILE),rules);adviser=CandidateAdviser(adviser,extra)
@@ -42,6 +45,7 @@ def weeks(model, saved, profile, budget, count, seed, namespace, rules, teacher=
                 if e<count:rows[e]=[float(info[k][slot]) for k in METRICS]
             if len(ended):obs,masks=env.reset_done(ended)
         if rules:counts=dict(extra.counts)
+        if adviser.__class__.__name__=='MFBotPolicy':counts=dict(mfbot.counts)
     return np.array([rows[i] for i in range(count)]),counts
 
 
@@ -70,7 +74,7 @@ def run(args):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--budget',type=int,required=True);p.add_argument('--rules',default='')
-    p.add_argument('--label',default='candidate');p.add_argument('--versus',choices=('survival','legacy'),help='compare the adviser with a handwritten strategy instead');p.add_argument('--weeks',type=int,default=4096)
+    p.add_argument('--label',default='candidate');p.add_argument('--versus',choices=('survival','legacy','mfbot','mfbot_lowhp','mfbot_nofarm','mfbot_lowhp_nofarm'),help='compare the adviser with a handwritten strategy instead');p.add_argument('--weeks',type=int,default=4096)
     p.add_argument('--profile',type=Path,default=audit.PROFILE);p.add_argument('--alpha',type=float,default=.05)
     p.add_argument('--seed',type=int,default=2026102205);p.add_argument('--namespace',type=int,default=0x54)
     run(p.parse_args())
