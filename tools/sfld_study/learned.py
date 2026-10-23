@@ -19,16 +19,16 @@ ROOT=Path(__file__).resolve().parents[2]
 
 def update_history(v, memory):
     if memory is None:
-        if (v['room']!=1 or v['status']!=1 or v['run_number_event']!=1 or
+        if (v['room']!=1 or v['status']!=1 or not isinstance(v['run_number_event'],int) or v['run_number_event']<1 or
             v['gems'] or v['blessings'] or v['curses'] or v['keys']!=0):
-            raise StudyError('Start this pilot at the first room choice of the event; earlier history is required otherwise.')
-        memory={'schema':1,'room':1,'turn':0,'actions':0,'offered':[], 'shops':[],
+            raise StudyError('Start this pilot at the first room choice of a run; earlier history is required otherwise.')
+        memory={'schema':1,'run':v['run_number_event'],'room':1,'turn':0,'actions':0,'offered':[], 'shops':[],
                 'effect_starts':{},'gold_units':0,'gold_rewards':0,'mushrooms_found':0,
                 'run_start_seconds':v['elapsed_seconds'],'last':None,
                 'budget_cap':v.get('budget_remaining',0),'paid_shops':[],'reroll_spent':0,'shop_rerolls':0}
     m=deepcopy(memory)
-    if m.get('schema')!=1 or v['run_number_event']!=1:
-        raise StudyError('Run transition needs pilot validation before automatic restart.')
+    if m.get('schema')!=1 or v['run_number_event']!=m.get('run',1):
+        raise StudyError('Run history belongs to another run; start the new run from its first room.')
     if not m['room']<=v['room']<=m['room']+1:
         raise StudyError('Room history is discontinuous; stop and reconcile.')
     if v['room']!=m['room']:
@@ -87,7 +87,8 @@ def encode(v, memory, names, actions):
     put('phase.'+phase,1);put('resume_phase.'+resume,1)
     hp=v['hp_current']/v['hp_max']; elapsed=v['elapsed_seconds']/3600
     for name,val in {'hp':hp,'keys_div20':v['keys']/20,'room_div100':v['room']/100,
-        'stage.'+str(v['stage']):1,'first_event_run':1,'run_number_div10':.1,
+        'stage.'+str(v['stage']):1,'first_event_run':m.get('run',1)==1,'run_number_div10':m.get('run',1)/10,
+        'completed_runs_div10':(m.get('run',1)-1)/10,
         'turn_div100':m['turn']/100,'elapsed_hours_div168':elapsed/168,
         'hours_left_div168':v['event_seconds_left']/604800,
         'deadline_hours_div168':(v['elapsed_seconds']+v['event_seconds_left'])/604800,
@@ -156,10 +157,15 @@ def encode(v, memory, names, actions):
             put('gem_offers.'+str(i)+'.'+GEMS[g],1)
             map_action('gem_'+str(i),next(a for a in menu if a.get('gem_id')==g))
     else:
-        encounter='monster' if typ in (1,2,3) else 'boss' if typ in (4,5) else None
+        encounter='monster' if typ in (1,2,3) else 'boss' if typ in (4,5) else v.get('sim_encounter')
         if typ==100:encounter=CONTAINERS[v['encounter_variant']][1]
         if encounter is None: raise StudyError('Unmapped encounter cannot be inferred.')
         put('encounter.'+encounter,1)
+        if v.get('policy_menu'):
+            # Special rooms name their simulator action explicitly.
+            for name,a in v['policy_menu']:
+                if a in menu: map_action(name,a)
+            menu=[]
         for a in menu:
             name={20:'fight',21:'flee',40:'interact',42:'skip'}.get(a.get('code'))
             if name is None:raise StudyError('Unmapped encounter action.')
@@ -191,11 +197,12 @@ class LearnedPilot:
         # UI bookkeeping steps do not correspond to additional simulator turns.
         menu=v['legal_actions'] or []
         if v['status']==0:
-            if (memory is not None or v['run_number_event']!=1 or len(menu)!=1 or
+            if (memory is not None or len(menu)!=1 or
                 menu[0]['kind']!='start' or v['gems'] or v['blessings'] or v['curses']):
-                raise StudyError('Only fresh event entry is supported by this pilot.')
+                raise StudyError('Only a fresh run entry is supported by this pilot.')
             return {'action':menu[0],'memory':None}
-        bookkeeping=(v['status']==100 or v['encounter_type'] in (50,200,250,901,902,903,905,906,907,908,909))
+        bookkeeping=(v['status']==100 or v.get('bookkeeping') or
+                     v['encounter_type'] in (50,200,250,901,902,903,905,906,907,908,909))
         if bookkeeping:
             if len(menu)!=1:raise StudyError('Ambiguous bookkeeping action.')
             m=update_history(v,memory);chosen=menu[0];reason='client_transition'

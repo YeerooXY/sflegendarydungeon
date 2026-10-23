@@ -13,10 +13,18 @@ boss's maximum hit after a boss death, or to the event end, as in the simulator.
 A wait is answered with {"decision": "wait", "seconds": ...}; MFBot then leaves
 the character alone until the wait ends and asks again.
 
-Anything the projection or pilot refuses (special rooms, later runs, unknown
-codes, a history gap) is answered with a fallback, and MFBot's own logic plays
-that screen. Mushroom budget is zero: paid heals and rerolls are never offered
-to the policy.
+Special rooms (client DungeonStep 301-329) are mapped to simulator rooms and
+decided by the policy with the codes MFBot sends for them: 50 to use or fight,
+51 to ignore or leave, 90-92 for rock-paper-scissors. Rooms whose meaning is not
+verified get a fixed conservative action (spider webs and the Empire/Mariachi
+rooms are left; the hole and flooded rooms continue). Every run of the event is
+played: a completed run starts the next one.
+
+MFBot's own dungeon logic never decides. Anything still unhandled (unknown codes,
+a history gap, an unconfirmed command) answers {"decision": "pause"} and the
+character's dungeon waits for review. The one exception is picking up a looted
+item, which is bag management: {"decision": "native"} lets MFBot move it into a
+free slot. Mushroom budget is zero: paid heals and rerolls are never offered.
 
 PROVISIONAL: the healing screen's room numbering after a boss death and whether
 its save shows the destination doors are unverified; doors are encoded only
@@ -56,6 +64,32 @@ NUMERIC = re.compile(r'-?\d+(?:/-?\d+)*')
 PROFILE = Path(__file__).resolve().parents[2]/'profiles/synthetic.profile'
 BOSS_MAX = [float(row.split(':')[1]) for row in profile_values(PROFILE)['boss_damage'].split(',')]
 DAY = 86400
+# Client DungeonStep -> (simulator room, menu kind). Kinds: choice (use 50 / ignore 51),
+# fight (fight 50 / flee 51), must (use 50 only), pig (fight 50 / leave 51), rps,
+# leave (51 only) and continue (50 only); the last two are fixed, not policy, choices.
+SPECIAL = {301: ('fountain', 'choice'), 302: (None, 'continue'), 303: ('rocks', 'must'), 304: ('lava', 'must'),
+           305: ('narrator', 'choice'), 306: (None, 'continue'), 307: ('wishing_well', 'choice'), 308: ('rps', 'rps'),
+           309: ('sewers', 'choice'), 310: ('undead', 'fight'), 311: ('locker', 'choice'), 312: ('sarcophagus', 'choice'),
+           313: ('valaraukar', 'fight'), 314: ('wood', 'must'), 316: ('wheel', 'choice'), 317: (None, 'leave'),
+           319: ('beta', 'fight'), 320: ('tube', 'fight'), 321: ('souls', 'choice'), 322: ('arcane', 'choice'),
+           324: ('rainbow', 'choice'), 325: ('pig', 'pig'), 326: ('auction', 'choice'), 327: (None, 'leave'),
+           328: (None, 'leave'), 329: ('armory', 'choice')}
+
+
+def special(visible):
+    """Menu for a special room, naming each live action's simulator counterpart."""
+    code = visible.get('encounter_type')
+    if code not in SPECIAL:
+        raise StudyError(f'Unmapped special room {code}.')
+    room, kind = SPECIAL[code]
+    use, ignore = action({'kind': 'interact', 'code': 50}), action({'kind': 'interact', 'code': 51})
+    menu = {'choice': [('interact', use), ('skip', ignore)], 'fight': [('fight', use), ('flee', ignore)],
+            # The simulator lets the pig room be fled or skipped; leaving it live is free either way.
+            'must': [('interact', use)], 'pig': [('fight', use), ('flee', ignore), ('skip', ignore)],
+            'rps': [('interact', action({'kind': 'interact', 'code': secrets.choice((90, 91, 92))})), ('skip', ignore)],
+            'leave': [('skip', ignore)], 'continue': [('interact', use)]}[kind]
+    return dict(visible, screen_kind='encounter', sim_encounter=room, policy_menu=menu,
+                legal_actions=list({a['code']: a for _, a in menu}.values()), bookkeeping=kind in ('leave', 'continue'))
 
 
 def recovery(visible, fields):
@@ -142,8 +176,8 @@ class Bridge:
             try:
                 visible, reason, aliased = self.visible(fields, request.get('level'))
             except StudyError as error:
-                self.journal({**base, 'decision': 'fallback', 'reason': 'decode: ' + str(error)})
-                return {'decision': 'fallback', 'reason': 'decode: ' + str(error)}
+                self.journal({**base, 'decision': 'pause', 'reason': 'decode: ' + str(error)})
+                return {'decision': 'pause', 'reason': 'decode: ' + str(error)}
             base.update(aliased=aliased, status=visible.get('status'), room=visible.get('room'),
                         encounter=visible.get('encounter_type'))
             state = self._load(character)
@@ -152,9 +186,20 @@ class Bridge:
             if state.get('pending'):
                 # MFBot never confirmed the last command; its outcome is unknown.
                 state['blocked'] = 'unconfirmed command ' + state['pending']['id'];state.pop('pending')
-            if visible.get('status') == 102 and state.get('memory') is not None:
-                state['completed_runs'] += 1;state['memory'] = None;state['blocked'] = 'later runs need the multi-run adapter'
+            if visible.get('status') in (0, 102) and state.get('memory') is not None:
+                # The run is complete; the next one starts from a fresh history.
+                state['completed_runs'] += 1;state['memory'] = None;state.pop('blocked', None)
             visible['run_number_event'] = 1 + state.get('completed_runs', 0)
+            if visible.get('status') == 102 and not state.get('blocked'):
+                # PROVISIONAL: the completed-run screen is answered by starting the next run.
+                reason = 'run_complete' if visible.get('theme') else 'run_complete_without_theme'
+                if visible.get('theme'):visible = dict(visible, legal_actions=[action({'kind': 'start', 'theme': visible['theme']})])
+            if reason == 'special_room_requires_review' and not state.get('blocked'):
+                try:
+                    visible = special(visible);reason = 'automatic_menu'
+                    base.update(special_room=visible['sim_encounter'] or visible['encounter_type'])
+                except StudyError as error:
+                    reason = 'special: ' + str(error)
             if reason == 'recovery_or_restart_requires_review' and visible.get('status') == 101 and not state.get('blocked'):
                 try:
                     visible, hp = recovery(visible, fields);reason = 'automatic_menu'
@@ -162,8 +207,16 @@ class Bridge:
                                 doors_known=visible['doors'] is not None)
                 except StudyError as error:
                     reason = 'recovery: ' + str(error)
-            fallback = state.get('blocked') or (None if reason == 'automatic_menu' else reason)
-            if fallback is None:
+            fallback = state.get('blocked') or (None if reason in ('automatic_menu', 'run_complete') else reason)
+            if fallback == 'item_inventory_requires_review':
+                # Moving loot into a bag slot is MFBot's inventory code, not a dungeon decision.
+                self._save(character, state)
+                self.journal({**base, 'decision': 'native', 'reason': 'item pickup'})
+                return {'decision': 'native', 'reason': 'item pickup'}
+            if fallback is None and reason == 'run_complete':
+                result = {'action': visible['legal_actions'][0], 'memory': None}
+                req, params = command(result['action'])
+            elif fallback is None:
                 try:
                     result = self.choose(visible, state.get('memory'))
                     if result['action']['kind'] != 'wait':req, params = command(result['action'])
@@ -171,8 +224,8 @@ class Bridge:
                     fallback = 'policy: ' + str(error)
             if fallback:
                 self._save(character, state)
-                self.journal({**base, 'decision': 'fallback', 'reason': fallback})
-                return {'decision': 'fallback', 'reason': fallback}
+                self.journal({**base, 'decision': 'pause', 'reason': fallback})
+                return {'decision': 'pause', 'reason': fallback}
             if result['action']['kind'] == 'wait':
                 # Nothing is sent, so the wait is part of the history at once.
                 state['memory'] = result['memory'];self._save(character, state)
@@ -225,9 +278,9 @@ def serve(bridge, port, token):
             try:
                 body = json.dumps(routes[self.path](json.loads(self.rfile.read(size)))).encode()
                 self.send_response(200)
-            except Exception as error:  # A bridge failure must only make MFBot fall back.
+            except Exception as error:  # A bridge failure pauses the character; never MFBot's logic.
                 bridge.journal({'decision': 'error', 'path': self.path, 'error': type(error).__name__ + ': ' + str(error)[:300]})
-                body = json.dumps({'decision': 'fallback', 'reason': 'bridge error'}).encode();self.send_response(500)
+                body = json.dumps({'decision': 'pause', 'reason': 'bridge error'}).encode();self.send_response(500)
             self.send_header('Content-Type', 'application/json');self.send_header('Content-Length', str(len(body)))
             self.end_headers();self.wfile.write(body)
     server = ThreadingHTTPServer(('127.0.0.1', port), Handler)

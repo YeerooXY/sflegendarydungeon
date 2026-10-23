@@ -16,7 +16,10 @@ EFFECTS = {1:'raider',2:'one_hit',3:'escape',4:'disarm',5:'lockpick',6:'key_mome
            104:'gold_hangover',105:'hard_lock'}
 DOORS = {1:'monster',2:'monster',3:'monster',4:'boss',5:'boss',1000:'wall',
          1001:'mystery',1002:'locked',1003:'unlocked',1004:'epic',1005:'double_locked',
-         1006:'golden',1007:'sacrifice',1008:'cursed',1009:'shop',1010:'blessing',1011:'destiny'}
+         1006:'golden',1007:'sacrifice',1008:'cursed',1009:'shop',1010:'blessing',1011:'destiny',
+         # Client DungeonStep: hungry doors and challenge (trial) doors. Live costs unverified.
+         1012:'wood',1013:'stone',1014:'souls',1015:'metal',1016:'arcane',1017:'hourglasses',
+         1018:'trial',1019:'trial',1020:'trial',1021:'trial',1022:'trial',1023:'exit_trial'}
 CONTAINERS = {0:('bronze_chest','bronze'),1:('silver_chest','silver'),2:('epic_chest','epic'),
               100:('wooden_box','crate'),101:('wooden_box','crate'),102:('wooden_box','crate'),
               200:('other','crate'),201:('other','crate'),202:('other','crate'),

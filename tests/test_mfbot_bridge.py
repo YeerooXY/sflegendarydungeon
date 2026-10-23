@@ -50,14 +50,14 @@ class BridgeTests(unittest.TestCase):
         self.decide(status=10, room=1, types=(100, 0, 0), payloads=(0, 0, 0))
         self.assertEqual(self.policy.calls[1][1], {'room': 1, 'reason': 'learned'})
 
-    def test_refused_screens_fall_back_without_touching_memory(self):
-        self.assertEqual(self.decide(status=101)['decision'], 'fallback')
-        self.assertEqual(self.decide(status=10, room=1, types=(319, 0, 0))['decision'], 'fallback')
+    def test_refused_screens_pause_without_touching_memory(self):
+        self.assertEqual(self.decide(status=101)['decision'], 'pause')
+        self.assertEqual(self.decide(status=10, room=1, types=(318, 0, 0))['decision'], 'pause')
 
     def test_unconfirmed_or_rejected_commands_block_the_run(self):
         first = self.decide()
         second = self.decide()
-        self.assertEqual(second['decision'], 'fallback');self.assertIn('unconfirmed', second['reason'])
+        self.assertEqual(second['decision'], 'pause');self.assertIn('unconfirmed', second['reason'])
         self.assertFalse(self.bridge.confirm({'character': 'Hero@s1', 'id': first['id'], 'ok': True})['committed'])
         other = Bridge(Path(self.dir.name)/'b', choose=FakePolicy())
         reply = other.decide({'character': 'X@s1', 'level': 120, 'fields': mfbot_fields()})
@@ -66,7 +66,7 @@ class BridgeTests(unittest.TestCase):
 
     def test_low_level_entry_falls_back(self):
         reply = self.bridge.decide({'character': 'Low@s1', 'level': 49, 'fields': mfbot_fields(status=0)})
-        self.assertEqual(reply['decision'], 'fallback')
+        self.assertEqual(reply['decision'], 'pause')
 
 
 def healing(room, hours, **extra):
@@ -106,7 +106,45 @@ class RecoveryTests(unittest.TestCase):
 
     def test_missing_healing_start_falls_back(self):
         fields = healing(48, 1);fields.pop('characterstatus')
-        self.assertEqual(self.decide(FakePolicy('reenter'), fields)['decision'], 'fallback')
+        self.assertEqual(self.decide(FakePolicy('reenter'), fields)['decision'], 'pause')
+
+
+class SpecialRoomAndRunTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory();self.policy = FakePolicy()
+        self.bridge = Bridge(self.dir.name, choose=self.policy)
+
+    def tearDown(self):
+        self.dir.cleanup()
+
+    def decide(self, **extra):
+        return self.bridge.decide({'character': 'R@s', 'level': 200, 'fields': mfbot_fields(**extra)})
+
+    def test_special_rooms_name_their_simulator_actions(self):
+        first = self.decide(status=10, room=7, types=(310, 0, 0))
+        self.bridge.confirm({'character': 'R@s', 'id': first['id'], 'ok': True})
+        v = self.policy.calls[-1][0]
+        self.assertEqual(v['sim_encounter'], 'undead');self.assertFalse(v['bookkeeping'])
+        self.assertEqual([(n, a['code']) for n, a in v['policy_menu']], [('fight', 50), ('flee', 51)])
+        self.decide(status=10, room=7, types=(308, 0, 0))
+        codes = [a['code'] for _, a in self.policy.calls[-1][0]['policy_menu']]
+        self.assertIn(codes[0], (90, 91, 92));self.assertEqual(codes[1], 51)
+
+    def test_unverified_rooms_take_a_fixed_action(self):
+        reply = self.decide(status=10, room=7, types=(317, 0, 0))
+        v = self.policy.calls[-1][0]
+        self.assertTrue(v['bookkeeping']);self.assertEqual(reply['params'], '51')
+
+    def test_item_pickup_is_left_to_mfbot(self):
+        self.assertEqual(self.decide(status=10, room=7, types=(900, 0, 0))['decision'], 'native')
+
+    def test_completed_run_starts_the_next(self):
+        reply = self.decide();self.bridge.confirm({'character': 'R@s', 'id': reply['id'], 'ok': True})
+        done = self.decide(status=102, room=100)
+        self.assertEqual(done['req'], 'IADungeonStart');self.bridge.confirm({'character': 'R@s', 'id': done['id'], 'ok': True})
+        self.decide()
+        visible, memory = self.policy.calls[-1]
+        self.assertEqual(visible['run_number_event'], 2);self.assertIsNone(memory)
 
 
 if __name__ == '__main__':
