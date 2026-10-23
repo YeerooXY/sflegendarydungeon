@@ -79,9 +79,12 @@ def encode(v, memory, names, actions):
         mapped[actions.index(name)]=chosen
     typ=v['encounter_type']; phase=v['screen_kind']
     if typ==323: phase='curse_shop'
-    if phase not in ('doors','encounter','shop','curse_shop','gems'):
+    if phase not in ('doors','encounter','shop','curse_shop','gems','recovery'):
         raise StudyError('This transition must be handled before policy inference.')
-    put('phase.'+phase,1);put('resume_phase.'+phase,1)
+    # While healing, the simulator shows the screen the character returns to.
+    resume=v.get('resume_phase') if phase=='recovery' else phase
+    if resume not in ('doors','encounter'):resume=phase
+    put('phase.'+phase,1);put('resume_phase.'+resume,1)
     hp=v['hp_current']/v['hp_max']; elapsed=v['elapsed_seconds']/3600
     for name,val in {'hp':hp,'keys_div20':v['keys']/20,'room_div100':v['room']/100,
         'stage.'+str(v['stage']):1,'first_event_run':1,'run_number_div10':.1,
@@ -121,12 +124,20 @@ def encode(v, memory, names, actions):
             raise StudyError('Only the inspected one-mushroom shop reroll is supported.')
     menu=[a for a in menu if a['mushroom_quote']<=v['budget_remaining'] and
           (not a['mushroom_quote'] or v['mushrooms'] is not None and v['mushrooms']>=a['mushroom_quote'])]
-    if phase=='doors':
-        if len(v['doors'] or [])!=2: raise StudyError('Expected two visible choices.')
+    def door_features():
         for d in v['doors']:
             prefix='doors.'+str(d['index']); put(prefix+'.kind.'+d['kind'],1)
             put(prefix+'.trap',d['trap']>0);put(prefix+'.cursed_trap',d['trap_kind']=='curse')
             put(prefix+'.key_cost_div6',d['key_cost']/6);put(prefix+'.available',not d['blocked'])
+    if phase=='recovery':
+        # Doors are encoded only when the save showed both destination doors.
+        if resume=='doors' and len(v.get('doors') or [])==2: door_features()
+        if resume=='encounter': put('encounter.boss',1)
+        for name,a in v['recovery_menu']:
+            if a in menu: map_action(name,a)
+    elif phase=='doors':
+        if len(v['doors'] or [])!=2: raise StudyError('Expected two visible choices.')
+        door_features()
         for a in menu:
             side=(a['code']&3)-1
             if side not in (0,1): raise StudyError('Unknown door action.')

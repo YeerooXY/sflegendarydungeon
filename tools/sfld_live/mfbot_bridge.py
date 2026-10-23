@@ -6,10 +6,21 @@ one action and returns the game request to send. MFBot sends it through its
 own transport and confirms the outcome. Run memory is committed only after a
 confirmed send, so a lost or failed command never advances the history.
 
-Anything the projection or pilot refuses (healing, special rooms, later runs,
-unknown codes, a history gap) is answered with a fallback, and MFBot's own
-logic plays that screen. Mushroom budget is zero: paid heals and rerolls are
-never offered to the policy.
+Healing screens are decided here too: HP regenerates at 100% per 24 hours from
+the healing start time (word 22 of "characterstatus"), and the policy chooses
+between re-entering (at 20% or more) and waiting to 20/40/60/80/100%, to the
+boss's maximum hit after a boss death, or to the event end, as in the simulator.
+A wait is answered with {"decision": "wait", "seconds": ...}; MFBot then leaves
+the character alone until the wait ends and asks again.
+
+Anything the projection or pilot refuses (special rooms, later runs, unknown
+codes, a history gap) is answered with a fallback, and MFBot's own logic plays
+that screen. Mushroom budget is zero: paid heals and rerolls are never offered
+to the policy.
+
+PROVISIONAL: the healing screen's room numbering after a boss death and whether
+its save shows the destination doors are unverified; doors are encoded only
+when both codes are known, and every recovery decision is journaled.
 
 PROVISIONAL: MFBot's parser reads the main save from "iadungeon" while our
 decoder was reviewed against "iadungeonsave". Both use the same 50-word
@@ -34,13 +45,50 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sfld_record.spool import Spool  # noqa: E402
-from sfld_study.automatic import project  # noqa: E402
+from sfld_rl.player_ideas import profile_values  # noqa: E402
+from sfld_study.automatic import DOORS, project  # noqa: E402
 from sfld_study.protocol import AUTOMATIC_CLIENT_VERSION, command, numeric  # noqa: E402
-from sfld_study.schema import StudyError  # noqa: E402
+from sfld_study.schema import StudyError, action  # noqa: E402
 
 MAX_BODY = 1024 * 1024
 BUDGET = 0
 NUMERIC = re.compile(r'-?\d+(?:/-?\d+)*')
+PROFILE = Path(__file__).resolve().parents[2]/'profiles/synthetic.profile'
+BOSS_MAX = [float(row.split(':')[1]) for row in profile_values(PROFILE)['boss_damage'].split(',')]
+DAY = 86400
+
+
+def recovery(visible, fields):
+    """Healing screen: regenerated HP, return screen and the simulator's recovery menu."""
+    status = numeric(fields.get('characterstatus'))
+    start = status[22] if len(status) > 22 else 0
+    if start <= 0 or 'timestamp' not in fields or visible.get('theme') is None or not visible.get('hp_max'):
+        raise StudyError('Healing screen without a healing start, server time or theme.')
+    now = numeric(fields['timestamp'], 1)[0]
+    hp = min(1.0, max(0.0, (now-start)/DAY))
+    save = numeric(fields.get('iadungeonsave', fields.get('iadungeon')), 50);death_room = save[17]
+    boss = death_room > 0 and death_room % 25 == 0
+    v = dict(visible, screen_kind='recovery', hp_current=int(hp*visible['hp_max']),
+             room=death_room if boss else death_room+1, resume_phase='encounter' if boss else 'doors')
+    doors = []
+    if not boss and all(t in DOORS for t in save[19:21]) and all(0 <= t < 10 for t in save[25:27]):
+        for i in range(2):
+            kind = DOORS[save[19+i]];cost = 2 if kind == 'double_locked' else int(kind in ('locked', 'epic'))
+            doors.append({'index': i, 'type': save[19+i], 'kind': kind, 'trap': save[25+i], 'key_cost': cost,
+                          'blocked': kind == 'wall' or v['keys'] < cost,
+                          'trap_kind': 'none' if not save[25+i] else 'curse' if 11 in (v['gems'] or []) else 'damage'})
+    v['doors'] = doors or None
+    left = v.get('event_seconds_left') or 0
+    menu = []
+    if hp >= .2-1e-9:menu.append(('reenter', action({'kind': 'start', 'theme': v['theme']})))
+    targets = [(f'wait_hp_{k}', k/100) for k in (20, 40, 60, 80, 100)]
+    if boss:targets.append(('wait_boss_safe', min(1.0, max(.2, BOSS_MAX[min(3, (death_room-1)//25)]+.001))))
+    for name, target in targets:
+        seconds = min(left, int((target-hp)*DAY+.999))
+        if seconds >= 1:menu.append((name, action({'kind': 'wait', 'seconds': min(DAY, seconds)})))
+    if left >= 1:menu.append(('wait_deadline', action({'kind': 'wait', 'seconds': min(DAY, int(left))})))
+    v['recovery_menu'] = menu;v['legal_actions'] = [a for _, a in menu]
+    return v, hp
 
 
 def default_directory():
@@ -107,17 +155,30 @@ class Bridge:
             if visible.get('status') == 102 and state.get('memory') is not None:
                 state['completed_runs'] += 1;state['memory'] = None;state['blocked'] = 'later runs need the multi-run adapter'
             visible['run_number_event'] = 1 + state.get('completed_runs', 0)
+            if reason == 'recovery_or_restart_requires_review' and visible.get('status') == 101 and not state.get('blocked'):
+                try:
+                    visible, hp = recovery(visible, fields);reason = 'automatic_menu'
+                    base.update(room=visible['room'], healing_hp=round(hp, 4), resume=visible['resume_phase'],
+                                doors_known=visible['doors'] is not None)
+                except StudyError as error:
+                    reason = 'recovery: ' + str(error)
             fallback = state.get('blocked') or (None if reason == 'automatic_menu' else reason)
             if fallback is None:
                 try:
                     result = self.choose(visible, state.get('memory'))
-                    req, params = command(result['action'])
+                    if result['action']['kind'] != 'wait':req, params = command(result['action'])
                 except StudyError as error:
                     fallback = 'policy: ' + str(error)
             if fallback:
                 self._save(character, state)
                 self.journal({**base, 'decision': 'fallback', 'reason': fallback})
                 return {'decision': 'fallback', 'reason': fallback}
+            if result['action']['kind'] == 'wait':
+                # Nothing is sent, so the wait is part of the history at once.
+                state['memory'] = result['memory'];self._save(character, state)
+                seconds = result['action']['seconds'];why = result['memory'].get('reason', 'learned')
+                self.journal({**base, 'decision': 'wait', 'seconds': seconds, 'why': why})
+                return {'decision': 'wait', 'seconds': seconds, 'why': why}
             decision_id = uuid.uuid4().hex
             state['pending'] = {'id': decision_id, 'memory': result['memory']}
             self._save(character, state)

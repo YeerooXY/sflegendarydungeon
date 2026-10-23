@@ -1,6 +1,7 @@
 """MFBot bridge: synthetic packets only, no network or game commands."""
 from pathlib import Path
 import sys
+import json
 import tempfile
 import unittest
 
@@ -17,13 +18,14 @@ def mfbot_fields(**extra):
 
 
 class FakePolicy:
-    def __init__(self):
-        self.calls = []
+    def __init__(self, pick=None):
+        self.calls = [];self.pick = pick
 
     def __call__(self, visible, memory):
         self.calls.append((visible, memory))
-        if visible['status'] == 101:raise StudyError('recovery')
-        return {'action': visible['legal_actions'][0], 'memory': {'room': visible['room'], 'reason': 'learned'}}
+        if visible['status'] == 101 and self.pick is None:raise StudyError('recovery')
+        pick = visible['legal_actions'][0] if self.pick is None else dict(visible['recovery_menu'])[self.pick]
+        return {'action': pick, 'memory': {'room': visible['room'], 'reason': 'learned'}}
 
 
 class BridgeTests(unittest.TestCase):
@@ -65,6 +67,46 @@ class BridgeTests(unittest.TestCase):
     def test_low_level_entry_falls_back(self):
         reply = self.bridge.decide({'character': 'Low@s1', 'level': 49, 'fields': mfbot_fields(status=0)})
         self.assertEqual(reply['decision'], 'fallback')
+
+
+def healing(room, hours, **extra):
+    """A death in `room` (save word 17), healing for `hours`."""
+    fields = mfbot_fields(status=101, room=room, **extra)
+    now = int(fields['timestamp']);status = ['0']*23;status[22] = str(now-int(hours*3600))
+    fields['characterstatus'] = '/'.join(status);return fields
+
+
+class RecoveryTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self.dir.cleanup()
+
+    def decide(self, policy, fields):
+        return Bridge(self.dir.name, choose=policy).decide({'character': 'H@s', 'level': 200, 'fields': fields})
+
+    def test_menu_follows_regenerated_hp(self):
+        policy = FakePolicy('wait_hp_40');reply = self.decide(policy, healing(48, 2.4))
+        v = policy.calls[0][0];menu = dict(v['recovery_menu'])
+        self.assertEqual(v['screen_kind'], 'recovery');self.assertEqual(v['room'], 49);self.assertEqual(v['resume_phase'], 'doors')
+        self.assertAlmostEqual(v['hp_current']/v['hp_max'], .1, places=3)
+        self.assertNotIn('reenter', menu);self.assertNotIn('wait_boss_safe', menu)
+        self.assertEqual(menu['wait_hp_20']['seconds'], 8640);self.assertEqual(menu['wait_hp_100']['seconds'], 77760)
+        self.assertEqual(reply, {'decision': 'wait', 'seconds': 25920, 'why': 'learned'})
+        self.assertEqual(json.loads((Path(self.dir.name)/'H_s.json').read_text())['memory']['room'], 49)
+
+    def test_reentry_and_boss_retry(self):
+        policy = FakePolicy('reenter');reply = self.decide(policy, healing(50, 5))
+        v = policy.calls[0][0];menu = dict(v['recovery_menu'])
+        self.assertEqual(v['room'], 50);self.assertEqual(v['resume_phase'], 'encounter')
+        # Boss 2 hits at most 28.05%: wait from 5/24 HP to 28.15%.
+        self.assertEqual(menu['wait_boss_safe']['seconds'], int((.2815-5/24)*86400+.999))
+        self.assertEqual(reply['req'], 'IADungeonStart');self.assertEqual(reply['params'], '8/0')
+
+    def test_missing_healing_start_falls_back(self):
+        fields = healing(48, 1);fields.pop('characterstatus')
+        self.assertEqual(self.decide(FakePolicy('reenter'), fields)['decision'], 'fallback')
 
 
 if __name__ == '__main__':
