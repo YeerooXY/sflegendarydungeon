@@ -11,6 +11,8 @@ the closest room type.
 The game's floor counter (save word 17) equals the simulator room inside a room
 and the simulator room minus one on the door screen.
 """
+import math
+
 import numpy as np
 
 DOOR_SCORE = dict(boss=9999, golden=2000, shop=1800, blessing=1700, destiny=1600, unlocked=1500, exit_trial=1450,
@@ -66,6 +68,11 @@ def healing_target(floor, low_hp_entry, minimum=20):
     return max(minimum, 27) if floor > 25 else minimum
 
 
+def boss_safe_targets(profile):
+    """Smallest whole HP percent above each stage boss's maximum damage in a profile dict."""
+    return [math.floor(float(row.split(':')[1])*100)+1 for row in profile['boss_damage'].split(',')]
+
+
 def score_blessing(kind, magnitude, uses, hp, keys, low_hp_entry=False):
     if kind == 'elixir':base = 95 if low_hp_entry or hp < 50 else 40
     elif kind == 'key_moment':base = 90 if keys < 5 else 50
@@ -75,8 +82,10 @@ def score_blessing(kind, magnitude, uses, hp, keys, low_hp_entry=False):
 
 class MFBotPolicy:
     """Callable like audit.Adviser: (obs, masks) -> (actions, wait targets)."""
-    def __init__(self, env, low_hp_entry=False, min_healing=20, farm_keys=True):
+    def __init__(self, env, low_hp_entry=False, min_healing=20, farm_keys=True, boss_safe=None):
         self.low_hp_entry, self.min_healing, self.farm_keys = low_hp_entry, min_healing, farm_keys
+        # Optional per-stage re-entry HP (percent): the current stage boss's worst hit, rounded up.
+        self.boss_safe = boss_safe
         self.env = env;names = env.observation_names;self.i = {n: k for k, n in enumerate(names)}
         self.a = {n: k for k, n in enumerate(env.action_names)}
         self.encounters = [n.split('.', 1)[1] for n in names if n.startswith('encounter.')]
@@ -119,6 +128,9 @@ class MFBotPolicy:
             return 'skip', 'leave_curse_shop'
         if v('phase.recovery') > .5:
             target = healing_target(room-1, self.low_hp_entry, self.min_healing)
+            if self.boss_safe:
+                stage = next((k for k in range(4) if v(f'stage.{k+1}') > .5), 0)
+                target = max(self.min_healing, self.boss_safe[stage])
             if 'reenter' in legal and hp >= target:return 'reenter', 'reenter'
             # Any wait action accepts an exact HP target, so MFBot's 27% or 35% is kept as is.
             waits = [w for w in ('wait_hp_20', 'wait_hp_40', 'wait_hp_60', 'wait_hp_80', 'wait_hp_100') if w in legal]
