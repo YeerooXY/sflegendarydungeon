@@ -614,7 +614,10 @@ def evaluation(args, device):
             obs, masks = env.reset()
             if obs.shape[1] != model.architecture['observation_size'] or masks.shape[1] != model.architecture['action_size']:
                 raise ValueError('Checkpoint observation/action dimensions do not match environment')
-            changes = environment_changes(saved['metadata']['environment_signature'], env.metadata)
+            if args.transfer_environment:
+                changes = {'environment_transfer': environment_transfer(saved['metadata']['environment_signature'], env.metadata)}
+            else:
+                changes = environment_changes(saved['metadata']['environment_signature'], env.metadata)
         finally:
             env.close()
     result = evaluate_model(model, args, device, namespace='final', events=args.events, teacher=args.teacher)
@@ -675,7 +678,7 @@ def parse(argv=None):
     starting.add_argument('--resume', type=Path, help='Continue the same frozen experiment and optimizer settings')
     starting.add_argument('--finetune-from', type=Path, help='New experiment from saved weights/Adam moments; requested PPO settings apply')
     p.add_argument('--transfer-environment', action='store_true',
-                   help='With --finetune-from: allow a new engine build, library or profile when the observation and '
+                   help='With --finetune-from or --mode evaluate --checkpoint: allow a new engine build, library or profile when the observation and '
                         'action schema is identical (engine version aside); the changes are recorded')
     p.add_argument('--checkpoint', type=Path)
     p.add_argument('--events', type=int, default=10000)
@@ -706,8 +709,8 @@ def parse(argv=None):
         p.error('--checkpoint and --teacher are evaluation options; use --resume or --finetune-from for training')
     if args.mode == 'evaluate' and (args.resume or args.finetune_from):
         p.error('--resume and --finetune-from are training options')
-    if args.transfer_environment and not args.finetune_from:
-        p.error('--transfer-environment requires --finetune-from')
+    if args.transfer_environment and not (args.finetune_from or (args.mode == 'evaluate' and args.checkpoint)):
+        p.error('--transfer-environment requires --finetune-from or an evaluated --checkpoint')
     if args.finetune_from and args.bc_steps:
         p.error('--finetune-from cannot be combined with teacher cloning (--bc-steps)')
     if args.shop_policy != 'learned' and (args.stone_priority != 'learned' or args.bc_steps):
