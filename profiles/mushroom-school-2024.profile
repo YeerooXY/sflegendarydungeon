@@ -12,11 +12,12 @@ doors=locked:18.5222414789,cursed:3.81051415367,sacrifice:3.53552859619,wall:2.1
 # 2191 current-event offers without known door-generation modifier stones,
 # pooled 2026-10-24 with 2722 auto-read pairs from 29 further streams
 # (tools/vod_auto_offers.py; stones unknown there). Earlier table: 1287,394,278,50,99,71,11,1.
-# Golden/door set to the census rate alone (4.1%; pooled gave 162): player report 2026-10-24
-# that golden doors are rarer in the sim than in game.
+# Golden/door is the census rate alone without the rooms 90-98 golden/wall Armory
+# offers (3.2%; armory_schedule places those): player report 2026-10-24 that
+# golden doors are rarer in the sim than in game.
 # Physical styles normalized to legacy mass34; six hungry resources split equally.
 # Blessing raised 1.886->2.37: 8.0% of physical doors in the 29-stream census vs 5.6%.
-door_pairs=2885,933,586,201,178,139,25,6
+door_pairs=2885,933,586,157,178,139,25,6
 # Isolated Spying cohort:96 unlocked/(328 locked+96 unlocked); rounded.
 spying_unlock_fraction=0.23
 # Beside a visible monster door, enemy-on-entry weights are removed and the
