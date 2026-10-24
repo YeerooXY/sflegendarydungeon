@@ -35,6 +35,11 @@ decoder was reviewed against "iadungeonsave". Both use the same 50-word
 layout, so a 50-word "iadungeon" is aliased when no "iadungeonsave" is present.
 Every alias is journaled for the event-day packet check.
 
+Every confirmed command is logged with the state it was chosen in and the next
+state seen: choices.jsonl rows {before, action, after}, for event odds such as
+what is behind each door (doors, traps, the chosen door, then the room's
+encounter, effects and resources). The raw numeric fields are kept on both sides.
+
 Listens on 127.0.0.1 only and requires the bearer token written at startup.
 """
 from __future__ import annotations
@@ -125,6 +130,14 @@ def recovery(visible, fields):
     return v, hp
 
 
+SNAPSHOT = ('status', 'screen_kind', 'room', 'stage', 'theme', 'encounter_type', 'encounter_variant', 'doors',
+            'hp_current', 'hp_max', 'keys', 'gems', 'blessings', 'curses', 'mushrooms', 'elapsed_seconds')
+
+
+def snapshot(visible, fields):
+    return {**{k: visible.get(k) for k in SNAPSHOT}, 'fields': fields}
+
+
 def default_directory():
     return Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'sfld' / 'mfbot-bridge'
 
@@ -151,6 +164,10 @@ class Bridge:
 
     def journal(self, entry):
         with (self.directory / 'decisions.jsonl').open('a', encoding='utf-8') as stream:
+            stream.write(json.dumps({'at': time.time(), **entry}, separators=(',', ':')) + '\n')
+
+    def choice(self, entry):
+        with (self.directory / 'choices.jsonl').open('a', encoding='utf-8') as stream:
             stream.write(json.dumps({'at': time.time(), **entry}, separators=(',', ':')) + '\n')
 
     def visible(self, fields, level):
@@ -183,6 +200,9 @@ class Bridge:
             state = self._load(character)
             event = visible.get('event_start')
             if state.get('event_start') != event:state = {'event_start': event, 'memory': None, 'completed_runs': 0}
+            if state.get('open_choice'):
+                # The first state seen after a confirmed command is that choice's outcome.
+                self.choice({'character': character, **state.pop('open_choice'), 'after': snapshot(visible, fields)})
             if state.get('pending'):
                 # MFBot never confirmed the last command; its outcome is unknown.
                 state['blocked'] = 'unconfirmed command ' + state['pending']['id'];state.pop('pending')
@@ -233,7 +253,9 @@ class Bridge:
                 self.journal({**base, 'decision': 'wait', 'seconds': seconds, 'why': why})
                 return {'decision': 'wait', 'seconds': seconds, 'why': why}
             decision_id = uuid.uuid4().hex
-            state['pending'] = {'id': decision_id, 'memory': result['memory']}
+            state['pending'] = {'id': decision_id, 'memory': result['memory'],
+                                'choice': {'before': snapshot(visible, fields), 'action': result['action'], 'req': req,
+                                           'params': params}}
             self._save(character, state)
             reason = (result['memory'] or {}).get('reason', 'fresh_entry')
             self.journal({**base, 'decision': 'command', 'id': decision_id, 'req': req, 'params': params,
@@ -248,7 +270,7 @@ class Bridge:
                 self.journal({'character': character, 'decision': 'confirm_mismatch', 'id': decision_id})
                 return {'committed': False}
             state.pop('pending')
-            if ok:state['memory'] = pending['memory']
+            if ok:state['memory'] = pending['memory'];state['open_choice'] = pending.get('choice')
             else:state['blocked'] = 'command rejected: ' + str(request.get('error'))[:200]
             self._save(character, state)
             self.journal({'character': character, 'decision': 'confirmed' if ok else 'rejected', 'id': decision_id,

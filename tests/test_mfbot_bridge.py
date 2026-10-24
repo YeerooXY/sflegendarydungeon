@@ -50,6 +50,20 @@ class BridgeTests(unittest.TestCase):
         self.decide(status=10, room=1, types=(100, 0, 0), payloads=(0, 0, 0))
         self.assertEqual(self.policy.calls[1][1], {'room': 1, 'reason': 'learned'})
 
+    def test_confirmed_choice_is_logged_with_the_room_behind_it(self):
+        reply = self.decide()
+        self.bridge.confirm({'character': 'Hero@s1', 'id': reply['id'], 'ok': True})
+        self.decide(status=10, room=1, types=(100, 0, 0), payloads=(400, 0, 0))
+        rows = [json.loads(l) for l in (Path(self.dir.name)/'choices.jsonl').read_text(encoding='utf-8').splitlines()]
+        self.assertEqual(len(rows), 1);row = rows[0]
+        self.assertEqual([d['kind'] for d in row['before']['doors']], ['monster', 'mystery'])
+        self.assertEqual(row['action'], self.policy.calls[0][0]['legal_actions'][0])
+        self.assertEqual((row['after']['status'], row['after']['encounter_type'], row['after']['encounter_variant']), (10, 100, 400))
+        self.assertIn('iadungeon', row['before']['fields'])
+        # An unconfirmed command logs no choice.
+        self.decide()
+        self.assertEqual(len((Path(self.dir.name)/'choices.jsonl').read_text(encoding='utf-8').splitlines()), 1)
+
     def test_refused_screens_pause_without_touching_memory(self):
         self.assertEqual(self.decide(status=101)['decision'], 'pause')
         self.assertEqual(self.decide(status=10, room=1, types=(318, 0, 0))['decision'], 'pause')
