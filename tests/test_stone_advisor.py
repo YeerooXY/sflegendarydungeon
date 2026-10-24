@@ -3,7 +3,6 @@ from pathlib import Path
 import sys
 import unittest
 import numpy as np
-import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
@@ -23,7 +22,6 @@ MENU = dict(run=2,held=['moonstone','thirsty'],offered=['deceit','rusty','pendan
 class StoneAdvisorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        torch.set_num_threads(1)
         cls.adviser = StoneAdvisor(device='cpu')
 
     def forecast(self, progress=None, **options):

@@ -7,7 +7,6 @@ import sys
 import unittest
 from unittest.mock import patch
 import numpy as np
-import torch
 
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'tools'))
 from visual_lab import Lab,Session,default_engine,settings
@@ -26,7 +25,6 @@ from engine_build import MISSING  # noqa: E402
 @unittest.skipUnless(EXE.is_file(), MISSING)
 class RuntimeStoneAdviceTests(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):torch.set_num_threads(1)
 
     def setUp(self):self.lab=Lab(EXE,PROFILE)
     def tearDown(self):self.lab.close()

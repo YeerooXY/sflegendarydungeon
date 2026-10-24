@@ -8,7 +8,7 @@ from math import comb
 from pathlib import Path
 from statistics import NormalDist
 import numpy as np
-import train_rl
+import hashlib
 from sfld_rl.final_stones import KEYS, METRICS, counts
 from sfld_rl.player_ideas import profile_values
 
@@ -34,6 +34,10 @@ def paired(values,z):
     mean=float(values.mean())
     se=float(np.sqrt(values.var(axis=1,ddof=1).sum()/n/h**2))
     return dict(mean=mean,se=se,ci=[mean-z*se,mean+z*se])
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def rank_arrays(candidates,arrays,z):
@@ -65,16 +69,16 @@ def verify_load(out):
     if read(out/'status.json')['phase']!='complete':raise RuntimeError('Study incomplete')
     if plan['smoke']:raise RuntimeError('Smoke data cannot produce a full ranking')
     for name,digest in plan['sources'].items():
-        if train_rl.sha(out/'source'/name)!=digest:raise RuntimeError('Frozen source mismatch: '+name)
+        if sha(out/'source'/name)!=digest:raise RuntimeError('Frozen source mismatch: '+name)
     for name,key in [('checkpoint.pt','checkpoint_sha256'),('synthetic.profile','profile_sha256'),('sfld_rl.dll','library_sha256')]:
-        if train_rl.sha(out/name)!=plan[key]:raise RuntimeError('Frozen input mismatch: '+name)
+        if sha(out/name)!=plan[key]:raise RuntimeError('Frozen input mismatch: '+name)
     profile=profile_values(out/'synthetic.profile');data={};total=0
     expected={(run,frozenset(t)) for run,key in ((1,'gems_first_run'),(2,'gems_later_runs'))
               for t in combinations(profile[key].split(','),3)}
     if plan['keys']!=KEYS or plan['hp']!=1 or plan['budget']!=5:raise RuntimeError('Requested grid changed')
     for entry in plan['entries']:
         path=out/'results'/f'set-{entry["id"]}.npz';meta=read(path.with_suffix('.json'))
-        if train_rl.sha(path)!=meta['data_sha256']:raise RuntimeError('Result hash mismatch')
+        if sha(path)!=meta['data_sha256']:raise RuntimeError('Result hash mismatch')
         if meta['stones']!=entry['stones'] or meta['run']!=entry['run'] or meta['keys']!=KEYS:
             raise RuntimeError('Result identity mismatch')
         with np.load(path) as archive:array=archive['data']
@@ -219,12 +223,12 @@ def publish(out):
     for source in (Path(__file__),root/'tools/query_final_stones.py',root/'tests/test_publish_final_stones.py'):
         name=source.relative_to(root).as_posix();target=out/'analysis-source'/name
         target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(source.read_bytes())
-        analysis_sources[name]=train_rl.sha(target)
+        analysis_sources[name]=sha(target)
     verification=dict(passed=True,trajectories=total,final_set_key_cells=len(data)*len(KEYS),pair_key_cells=len(rows),
         candidate_additions=sum(len(r['rankings']) for r in rows),simultaneous_contrasts=family,z=z,
         supported_cells=supported,unresolved_cells=len(rows)-supported,overview=overview,
         max_observed_spend=max(float(a[...,3].max()) for a in data.values()),
-        plan_sha256=train_rl.sha(out/'plan.json'),rankings_sha256=train_rl.sha(out/'rankings.json'),analysis_sources=analysis_sources)
+        plan_sha256=sha(out/'plan.json'),rankings_sha256=sha(out/'rankings.json'),analysis_sources=analysis_sources)
     (out/'verification.json').write_text(json.dumps(verification,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(verification,indent=2))
 

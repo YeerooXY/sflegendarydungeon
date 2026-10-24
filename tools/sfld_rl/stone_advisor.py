@@ -11,26 +11,42 @@ import secrets
 import time
 
 import numpy as np
-import torch
-import train_rl
 from publish_final_stones import rank_arrays
 from .effect_lab import EffectLab, mix64
 from .env import VectorEnv
 from .final_stones import METRICS
 from .interaction_policy import InteractionPolicy
+from .numpy_policy import load, sha
 from .player_ideas import profile_values
+from .signature import compact_metadata
 from .visual_policy import CHECKPOINT, CHECKPOINT_SHA
 
 
 class StoneAdvisor:
     def __init__(self, checkpoint=CHECKPOINT, device=None):
         self.checkpoint = Path(checkpoint).resolve(strict=True)
-        self.checkpoint_sha = train_rl.sha(self.checkpoint)
-        if self.checkpoint == CHECKPOINT.resolve() and self.checkpoint_sha != CHECKPOINT_SHA:
+        self.checkpoint_sha = sha(self.checkpoint)
+        deployed = self.checkpoint == CHECKPOINT.resolve()
+        if deployed and self.checkpoint_sha != CHECKPOINT_SHA:
             raise RuntimeError('The deployed actor no longer matches its declared hash')
-        self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
-        self.saved, self.model = train_rl.load_checkpoint(self.checkpoint, torch.device(self.device))
-        self.model.eval()
+        if deployed:
+            # The deployed actor runs from its NumPy copy: no PyTorch at runtime.
+            info, self.numpy_model = load(self.checkpoint, CHECKPOINT_SHA)
+            self.saved = {'metadata': {'environment_signature': info['environment_signature']}}
+            self.model = None;self.device = 'cpu'
+        else:
+            import torch, train_rl
+            self.numpy_model = None
+            self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
+            self.saved, self.model = train_rl.load_checkpoint(self.checkpoint, torch.device(self.device))
+            self.model.eval()
+
+    def _greedy(self, obs, masks):
+        if self.numpy_model is not None:
+            return self.numpy_model.greedy(obs, masks)
+        import torch, train_rl
+        with torch.inference_mode():
+            return train_rl.policy_actions(self.model, obs, masks, self.device, greedy=True)[0].cpu().numpy()
 
     def validate_environment(self, env):
         # A continuation deliberately varies the remaining horizon and may
@@ -38,7 +54,7 @@ class StoneAdvisor:
         # schemas can be evaluated by this frozen actor; record all other
         # differences instead of silently claiming a training resume.
         saved = self.saved['metadata']['environment_signature']
-        current = train_rl.compact_metadata(env.metadata)
+        current = compact_metadata(env.metadata)
         old,new = dict(saved['schema']),dict(current['schema'])
         old.pop('engine',None);new.pop('engine',None)
         if old != new:
@@ -111,37 +127,36 @@ class StoneAdvisor:
             # effect activation clocks; no progress-format reconstruction here.
             if lab.visible(0) != before:
                 raise RuntimeError('Planning snapshot changed the visible source state')
-            with torch.inference_mode():
-                while active.any():
-                    proposed = train_rl.policy_actions(self.model, obs, masks, self.device, greedy=True)[0].cpu().numpy()
-                    actions, targets, _ = rule.apply(obs, masks, proposed)
-                    starting = active & first
-                    actions[starting] = gem_actions[jobs[starting, 0]]
-                    targets[starting] = -1
-                    first[:] = False
-                    if not masks[np.arange(n), actions].all():
-                        raise RuntimeError('Illegal continuation action')
-                    steps += int(active.sum())
-                    obs, masks, _, done, trunc, info = env.step(
-                        actions, wait_targets=targets if np.any(targets >= 0) else None)
-                    if np.any(trunc & active) or np.any(info['invalid_actions'][active]):
-                        raise RuntimeError('Invalid or action-truncated continuation')
-                    # Unlike first_completion_hours, this works after past runs.
-                    complete = info['completions'] > before['completed_runs']
-                    ended = np.flatnonzero(active & (complete | done))
-                    for index in ended:
-                        arm, replicate = jobs[index]
-                        hours = info['elapsed_hours'][index] - base_hours if complete[index] else remaining
-                        spend = info['mushrooms'][index] - base_spend
-                        deaths = info['deaths'][index] - base_deaths
-                        if not 0 <= spend <= before['mushrooms_left'] or not 0 <= hours <= remaining + 1e-9:
-                            raise RuntimeError('Continuation exceeded its time or spending cap')
-                        data[arm, replicate] = [hours, int(complete[index]), deaths, spend,
-                            info['actions'][index] - before['actions'], int(complete[index] and deaths == 0)]
-                        finished += 1; assign(int(index))
-                    idle_done = np.flatnonzero(~active & done)
-                    for index in idle_done: assign(int(index))
-                    if len(ended) or len(idle_done): obs, masks = lab.observe()
+            while active.any():
+                proposed = self._greedy(obs, masks)
+                actions, targets, _ = rule.apply(obs, masks, proposed)
+                starting = active & first
+                actions[starting] = gem_actions[jobs[starting, 0]]
+                targets[starting] = -1
+                first[:] = False
+                if not masks[np.arange(n), actions].all():
+                    raise RuntimeError('Illegal continuation action')
+                steps += int(active.sum())
+                obs, masks, _, done, trunc, info = env.step(
+                    actions, wait_targets=targets if np.any(targets >= 0) else None)
+                if np.any(trunc & active) or np.any(info['invalid_actions'][active]):
+                    raise RuntimeError('Invalid or action-truncated continuation')
+                # Unlike first_completion_hours, this works after past runs.
+                complete = info['completions'] > before['completed_runs']
+                ended = np.flatnonzero(active & (complete | done))
+                for index in ended:
+                    arm, replicate = jobs[index]
+                    hours = info['elapsed_hours'][index] - base_hours if complete[index] else remaining
+                    spend = info['mushrooms'][index] - base_spend
+                    deaths = info['deaths'][index] - base_deaths
+                    if not 0 <= spend <= before['mushrooms_left'] or not 0 <= hours <= remaining + 1e-9:
+                        raise RuntimeError('Continuation exceeded its time or spending cap')
+                    data[arm, replicate] = [hours, int(complete[index]), deaths, spend,
+                        info['actions'][index] - before['actions'], int(complete[index] and deaths == 0)]
+                    finished += 1; assign(int(index))
+                idle_done = np.flatnonzero(~active & done)
+                for index in idle_done: assign(int(index))
+                if len(ended) or len(idle_done): obs, masks = lab.observe()
             if finished != total or not np.isfinite(data).all():
                 raise RuntimeError('Missing continuation outcomes')
         if source_lab.visible(slot) != before:
@@ -158,7 +173,7 @@ class StoneAdvisor:
             confidence=dict(level=.95, simultaneous_contrasts=family, z=z, method='Fixed-sample paired normal intervals with Bonferroni correction for this decision'),
             checkpoint=str(self.checkpoint), checkpoint_sha256=self.checkpoint_sha,
             environment_changes=environment_changes,
-            library_sha256=metadata['library_sha256'], profile_sha256=train_rl.sha(profile),
+            library_sha256=metadata['library_sha256'], profile_sha256=sha(profile),
             objective='Minimize mean remaining time to finish this run; unfinished continuations count as all remaining hours.',
             limits='Conditional on this exact visible state, current simulator probabilities and frozen continuation policy. '
                    'The intervals describe Monte Carlo error, not uncertainty in real game mechanics or global optimality. '

@@ -33,8 +33,7 @@ def rate_stones(policy, o, vector, profile):
             for position, gem in enumerate(menu):
                 batch[row, names[f'gem_offers.{position}.{gem}']] = 1
                 batch[row, names[f'offered_gem.{gem}']] = 1
-        with policy.torch.inference_mode():
-            logits = policy.model(policy.torch.as_tensor(batch))[0][:, action_ids].numpy()
+        logits = policy.model.logits(batch)[:, action_ids]
         for row, menu in enumerate(chunk):
             for i, gem in enumerate(menu):
                 if gem not in totals:

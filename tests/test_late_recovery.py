@@ -81,7 +81,7 @@ class LateRecoveryTests(unittest.TestCase):
             env.reset();lab=EffectLab(env)
             with lab.planning_fixture(snapshot) as snap:lab.restore(0,snap,773773)
             obs,masks=lab.observe();o=lab.visible()
-            with torch.inference_mode():proposed=policy.model.actions(torch.as_tensor(obs),torch.as_tensor(masks),greedy=True)[0].numpy()
+            proposed=policy.model.greedy(obs,masks)
             actions,targets,_=InteractionPolicy(env,profile_values(PROFILE)).apply(obs,masks,proposed)
             policy.advise(o,{},PROFILE);choice=o['suggestions'][-1]['action']
             self.assertEqual(choice['kind'],'wait');self.assertGreater(targets[0],.65)

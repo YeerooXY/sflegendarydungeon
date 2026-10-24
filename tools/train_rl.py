@@ -20,6 +20,7 @@ import time
 import numpy as np
 import torch
 
+from sfld_rl.signature import compact_metadata
 from sfld_rl.ppo import ActorCritic, PPOConfig, advantages, cloning_update, ppo_update
 from sfld_rl.stone_priority import MODES as STONE_PRIORITIES, with_priority
 from sfld_rl.shop_policy import MODES as SHOP_POLICIES, ShopPolicyActor, with_shop, profile_config
@@ -100,16 +101,6 @@ def transition_guard(rewards, terminated, truncated, infos, previous_completions
 
 def optional_sha(path):
     return sha(path) if Path(path).is_file() else None
-
-
-def compact_metadata(metadata):
-    # The schema and binary/profile content establish compatibility. Preserve
-    # full metadata too; runtime counters and paths need not match on resume.
-    result = {key: value for key, value in metadata.items()
-              if 'sha256' in key or 'schema' in key or key in
-              ('observation_names', 'action_names', 'deadline_hours', 'max_actions')}
-    result['profile_sha256'] = [p['sha256'] for p in metadata.get('profiles', [])]
-    return result
 
 
 def validate_resume_settings(args, metadata):

@@ -79,12 +79,10 @@ def encode(o,names,actions):
 
 class VisualPolicy:
     def __init__(self):
-        import torch
-        from train_rl import load_checkpoint,sha
-        if sha(CHECKPOINT)!=CHECKPOINT_SHA:raise ValueError('Visual policy checkpoint identity changed')
-        torch.set_num_threads(2);self.torch=torch
-        saved,self.model=load_checkpoint(CHECKPOINT,torch.device('cpu'));self.model.eval()
-        schema=saved['metadata']['environment_signature']['schema'];self.names=schema['observation_names'];self.actions=schema['action_names']
+        # NumPy copy of the pinned checkpoint (numpy_policy): no PyTorch at runtime.
+        from .numpy_policy import load
+        info,self.model=load(CHECKPOINT,CHECKPOINT_SHA)
+        self.names=info['observation_names'];self.actions=info['action_names']
         self.rules={};self.profiles={}
 
     def advise(self,o,config,profile):
@@ -95,11 +93,8 @@ class VisualPolicy:
             # guards. No mandatory refresh allowance, key reserve or wait gate.
             self.profiles[key]=profile_values(profile)
             self.rules[key]=Practical(self.names,self.actions,'learned',self.profiles[key])
-        if hasattr(self.model,'shop_config'):
-            raise ValueError('The unrestricted adviser cannot load a shop-constrained policy')
         obs,mask,mapping=encode(o,self.names,self.actions)
-        with self.torch.inference_mode():
-            proposed=self.model.actions(self.torch.as_tensor(obs),self.torch.as_tensor(mask),greedy=True)[0].numpy()
+        proposed=self.model.greedy(obs,mask)
         actual,_,_=self.rules[key].apply(obs,mask,proposed);trained=mapping[int(actual[0])]
         annotate(o)
         chosen,reason,rule=correct_action(o,trained)

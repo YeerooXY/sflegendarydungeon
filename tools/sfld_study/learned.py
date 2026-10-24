@@ -178,15 +178,14 @@ def encode(v, memory, names, actions):
 
 class LearnedPilot:
     def __init__(self):
-        import torch
-        from train_rl import load_checkpoint,sha
+        from sfld_rl.numpy_policy import load
         from sfld_rl.practical import Practical
         from sfld_rl.player_ideas import profile_values
-        if sha(CHECKPOINT)!=CHECKPOINT_SHA: raise StudyError('Pilot checkpoint identity changed.')
-        self.torch=torch;self.device=torch.device('cpu')
-        saved,self.model=load_checkpoint(CHECKPOINT,self.device);self.model.eval()
-        schema=saved['metadata']['environment_signature']['schema']
-        self.names=schema['observation_names'];self.actions=schema['action_names']
+        try:
+            info,self.model=load(CHECKPOINT,CHECKPOINT_SHA)
+        except ValueError as error:
+            raise StudyError('Pilot checkpoint identity changed.') from error
+        self.names=info['observation_names'];self.actions=info['action_names']
         # Share the visual adviser's selected checkpoint and the exact tested
         # soldier-search rule. Never add a shop gate to an unrestricted model.
         self.rule=Practical(self.names,self.actions,'learned',profile_values(ROOT/'profiles/synthetic.profile'))
@@ -208,8 +207,7 @@ class LearnedPilot:
             m=update_history(v,memory);chosen=menu[0];reason='client_transition'
         else:
             obs,mask,mapping,m=encode(v,memory,self.names,self.actions)
-            with self.torch.inference_mode():
-                proposed=self.model.actions(self.torch.as_tensor(obs),self.torch.as_tensor(mask),greedy=True)[0].numpy()
+            proposed=self.model.greedy(obs,mask)
             picked,_,changed=self.rule.apply(obs,mask,proposed)
             chosen=mapping[int(picked[0])]
             reason='guaranteed_escape_soldier_search' if np.any(changed) else 'learned'

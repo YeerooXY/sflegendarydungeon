@@ -39,7 +39,7 @@ class InteractionPolicyTests(unittest.TestCase):
             with self.subTest(case=case['name']):
                 with self.lab.fixture(case['progress'],1000) as snap:self.lab.restore(0,snap,0)
                 obs,mask=self.lab.observe();o=self.lab.visible()
-                with torch.inference_mode():proposed=policy.model.actions(torch.as_tensor(obs),torch.as_tensor(mask),greedy=True)[0].numpy()
+                proposed=policy.model.greedy(obs,mask)
                 actual=rule.apply(obs,mask,proposed)[0][0]
                 policy.advise(o,{},self.profile)
                 _,_,mapping=encode(o,policy.names,policy.actions)
@@ -74,8 +74,7 @@ class InteractionPolicyTests(unittest.TestCase):
         obs,masks=self.lab.observe();o=self.lab.visible()
         policy=VisualPolicy();policy.advise(o,{},self.profile)
         rule=InteractionPolicy(self.env,profile_values(self.profile),'base')
-        with torch.inference_mode():
-            proposed=policy.model.actions(torch.as_tensor(obs),torch.as_tensor(masks),greedy=True)[0].numpy()
+        proposed=policy.model.greedy(obs,masks)
         actual=rule.apply(obs,masks,proposed)[0][0]
         _,_,mapping=encode(o,policy.names,policy.actions)
         self.assertEqual(mapping[int(actual)],o['suggestions'][-1]['action'])
