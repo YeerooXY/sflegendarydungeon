@@ -98,6 +98,10 @@ def transition_guard(rewards, terminated, truncated, infos, previous_completions
         raise RuntimeError('Invalid episode terminal metadata')
 
 
+def optional_sha(path):
+    return sha(path) if Path(path).is_file() else None
+
+
 def compact_metadata(metadata):
     # The schema and binary/profile content establish compatibility. Preserve
     # full metadata too; runtime counters and paths need not match on resume.
@@ -281,8 +285,9 @@ def source_metadata(args, env):
                                  if getattr(args, 'curriculum_cases', None) else None),
             'reward': 'delta completed_runs only', 'gamma': 1.,
             'validation_selection': 'equal mean completions over declared budgets and profiles; exact ties keep earlier checkpoint',
-            'teacher': {'free': {'kind': 'legacy', 'rules': str(args.teacher_free_rules), 'sha256': sha(args.teacher_free_rules)},
-                        'paid': {'kind': 'survival', 'rules': str(args.teacher_paid_rules), 'sha256': sha(args.teacher_paid_rules)}},
+            # Teacher rules are read only for cloning or --teacher; absent files are recorded as null.
+            'teacher': {'free': {'kind': 'legacy', 'rules': str(args.teacher_free_rules), 'sha256': optional_sha(args.teacher_free_rules)},
+                        'paid': {'kind': 'survival', 'rules': str(args.teacher_paid_rules), 'sha256': optional_sha(args.teacher_paid_rules)}},
             'resume_semantics': 'Policy/optimizer/RNG restored; in-flight events abandoned and fresh unused training episode indices allocated; not bit-identical simulator continuation',
             'limitations': ['Synthetic mechanics; finite training does not establish optimality.',
                             'Validation selects a checkpoint and is not an independent final result.']}
@@ -627,7 +632,7 @@ def evaluation(args, device):
                   changes_from_training_environment=changes,
                   environment_compatibility='Same schema and native library required; alternate profiles/horizon/safety cap reported explicitly.',
                   torch=str(torch.__version__), device=str(device), n_envs=args.n_envs,
-                  teacher_rules={'free': sha(args.teacher_free_rules), 'paid': sha(args.teacher_paid_rules)},
+                  teacher_rules={'free': optional_sha(args.teacher_free_rules), 'paid': optional_sha(args.teacher_paid_rules)},
                   warning='Final results must not be used to tune this checkpoint; sampling intervals exclude model uncertainty.')
     write_json(output, result)
     print(json.dumps({'output': str(output), 'summaries': result['summaries']}, allow_nan=False), flush=True)
