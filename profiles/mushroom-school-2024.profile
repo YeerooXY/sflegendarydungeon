@@ -4,7 +4,7 @@
 # Damage and all remaining assumptions retain their documented sources.
 # See docs/CURRENT_COMPARISON.md and docs/VOD_CONTAINER_CENSUS_2026_10_09.md.
 schema=1
-id=vod-working-mushroom-school-2024-v5
+id=vod-working-mushroom-school-2024-v6
 evidence=synthetic
 doors=locked:18.5222414789,cursed:3.81051415367,sacrifice:3.53552859619,wall:2.19988445985,destiny:1.8856152513,blessing:2.37,wood:0.360100134797,stone:0.360100134797,souls:0.360100134797,metal:0.360100134797,arcane:0.360100134797,hourglasses:0.360100134797,monster:25,mystery:25,golden:8,shop:5,trial:1,unlocked:0,double_locked:0,epic:0
 # Joint families: door/mystery, door/monster, mystery/mystery, door/golden,
@@ -26,9 +26,11 @@ mystery=monster:40,barrel:15,crate:15,silver:8,bronze:5,skeleton:5,mimic:2,empty
 # Player-selected working value 2026-10-09: 80% initial monsters in the
 # fallback mystery pool; rescale other outcomes while keeping their relative mix.
 # Double-mystery and wall overrides below, and beside-monster exclusion, remain.
-# Key-counter routes 2026-10-24 (mystery beside locked, n=102): 79% monster,
-# 13% empty, ~5% loot. Monster stays 80; the rest is mostly empty.
-mystery_without_monster=monster:80,barrel:1,crate:1,silver:2,bronze:1,skeleton:1,mimic:1,empty:13
+# VOD door review 2026-10-24 (tools/vod_door_odds.py; 43 streams, entered side
+# from game rules): mystery beside locked 81% monster, 6% empty, n=6188; beside
+# cursed/sacrifice 84-87%. The 13% empty of the key-counter ledger counted
+# quickly beaten monsters as empty. Chest kinds are unreliable at 360p.
+mystery_without_monster=monster:81,barrel:3,crate:3,silver:1.5,bronze:2.5,skeleton:1.5,mimic:1.5,empty:6
 # Exact alternative overrides:250 double-mystery interiors,63 mystery/wall.
 # Chest identity unresolved: preserve2% overall mimic in double mystery,
 # then use the same5/42 chest-conditional mimic share for wall; unmeasured.
@@ -44,7 +46,9 @@ destiny_rewards=1,1,1,1,1,1
 destiny_reward_amounts=1,10,1,1
 # Player reports empty key rooms. Use 10% provisionally; scale the old mix to 90%.
 # Key-counter routes 2026-10-24 (n=127): barrels 11% vs 22.5% assumed; halved.
-locked=barrel:11,crate:22.5,silver:18,bronze:9,skeleton:9,mimic:4.5,epic:4.5,empty:10
+# VOD door review 2026-10-24: locked rooms 20% empty (n=4054); empty raised to 20%
+# of the table, the other contents unchanged relative to each other.
+locked=barrel:11,crate:22.5,silver:18,bronze:9,skeleton:9,mimic:4.5,epic:4.5,empty:19.625
 golden=fountain:10,cleansing_fountain:3,rocks:5,lava:3,narrator:5,flooded:2,wishing_well:5,rps:5,sewers:5,undead:4,sarcophagus:5,locked_sarcophagus:3,wood:5,wheel:5,spider_legs:3,spider_head:3,spider_full:3,souls:5,arcane:5,curse_shop:5
 # Equal weights. Player image/observations 2026-10-05 supply the run restrictions.
 # Rusty is restored from the player's image; its later-only restriction is tentative.

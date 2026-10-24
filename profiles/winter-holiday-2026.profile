@@ -1,5 +1,5 @@
 # WINTER THEME ("Massive Winter Spectacle and Gingerbread Brawl", client theme
-# holiday), 2026-10-24: the mushroom-school v5 odds plus the Flying Terror Tube,
+# holiday), 2026-10-24: the mushroom-school v6 odds plus the Flying Terror Tube,
 # which the in-game guide lists for this theme. Golden rooms all weigh the same
 # (spider variants share one room); no winter footage yet.
 # VOD-INFORMED WORKING SCENARIO, 2026-10-09. Still partly synthetic.
@@ -8,7 +8,7 @@
 # Damage and all remaining assumptions retain their documented sources.
 # See docs/CURRENT_COMPARISON.md and docs/VOD_CONTAINER_CENSUS_2026_10_09.md.
 schema=1
-id=winter-holiday-2026-v1
+id=winter-holiday-2026-v2
 evidence=synthetic
 doors=locked:18.5222414789,cursed:3.81051415367,sacrifice:3.53552859619,wall:2.19988445985,destiny:1.8856152513,blessing:2.37,wood:0.360100134797,stone:0.360100134797,souls:0.360100134797,metal:0.360100134797,arcane:0.360100134797,hourglasses:0.360100134797,monster:25,mystery:25,golden:8,shop:5,trial:1,unlocked:0,double_locked:0,epic:0
 # Joint families: door/mystery, door/monster, mystery/mystery, door/golden,
@@ -32,7 +32,7 @@ mystery=monster:40,barrel:15,crate:15,silver:8,bronze:5,skeleton:5,mimic:2,empty
 # Double-mystery and wall overrides below, and beside-monster exclusion, remain.
 # Key-counter routes 2026-10-24 (mystery beside locked, n=102): 79% monster,
 # 13% empty, ~5% loot. Monster stays 80; the rest is mostly empty.
-mystery_without_monster=monster:80,barrel:1,crate:1,silver:2,bronze:1,skeleton:1,mimic:1,empty:13
+mystery_without_monster=monster:81,barrel:3,crate:3,silver:1.5,bronze:2.5,skeleton:1.5,mimic:1.5,empty:6
 # Exact alternative overrides:250 double-mystery interiors,63 mystery/wall.
 # Chest identity unresolved: preserve2% overall mimic in double mystery,
 # then use the same5/42 chest-conditional mimic share for wall; unmeasured.
@@ -48,7 +48,7 @@ destiny_rewards=1,1,1,1,1,1
 destiny_reward_amounts=1,10,1,1
 # Player reports empty key rooms. Use 10% provisionally; scale the old mix to 90%.
 # Key-counter routes 2026-10-24 (n=127): barrels 11% vs 22.5% assumed; halved.
-locked=barrel:11,crate:22.5,silver:18,bronze:9,skeleton:9,mimic:4.5,epic:4.5,empty:10
+locked=barrel:11,crate:22.5,silver:18,bronze:9,skeleton:9,mimic:4.5,epic:4.5,empty:19.625
 golden=fountain:1,cleansing_fountain:1,rocks:1,lava:1,narrator:1,flooded:1,wishing_well:1,rps:1,sewers:1,undead:1,sarcophagus:1,locked_sarcophagus:1,wood:1,wheel:1,spider_legs:0.333333,spider_head:0.333333,spider_full:0.333333,souls:1,arcane:1,curse_shop:1,tube:1
 # Equal weights. Player image/observations 2026-10-05 supply the run restrictions.
 # Rusty is restored from the player's image; its later-only restriction is tentative.
