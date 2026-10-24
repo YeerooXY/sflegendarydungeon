@@ -42,7 +42,7 @@ function merge(fields, values) {
   return {fields: next, dungeon};
 }
 
-function createLiveAdviser({origin, token, fetch = globalThis.fetch, onAdvice}) {
+function createLiveAdviser({origin, token, fetch = globalThis.fetch, onAdvice, onSent = () => {}}) {
   const characters = new Map();
   let queue = Promise.resolve();
   const post = async (route, body) => {
@@ -59,7 +59,7 @@ function createLiveAdviser({origin, token, fetch = globalThis.fetch, onAdvice}) 
       const merged = merge(characters.get(read.character), read.values);
       if (!merged) return;
       characters.set(read.character, merged.fields);
-      if (/iadungeon/i.test(read.req)) await post('/sent', {character: read.character, req: read.req, params: read.params});
+      if (/iadungeon/i.test(read.req)) onSent(await post('/sent', {character: read.character, req: read.req, params: read.params}));
       if (!merged.dungeon) return;
       const advice = await post('/decide', {character: read.character, level: null, fields: merged.fields});
       onAdvice({...advice, character: read.character});

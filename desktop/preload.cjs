@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('dungeonApp', {
   fullscreen: () => ipcRenderer.invoke('desktop:fullscreen'),
   modal: open => ipcRenderer.invoke('desktop:modal', open),
   mimicExample: () => ipcRenderer.invoke('desktop:mimic-example'),
+  autoplay: on => ipcRenderer.invoke('desktop:autoplay', on),
   onState: callback => { const listener = (_, state) => callback(state); ipcRenderer.on('desktop:update', listener); return () => ipcRenderer.removeListener('desktop:update', listener); }
 });

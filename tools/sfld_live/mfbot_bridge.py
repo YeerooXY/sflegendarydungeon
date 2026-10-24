@@ -165,6 +165,25 @@ def duration(seconds):
     return f'{minutes} min' if minutes < 60 else f'{minutes//60} h {minutes%60:02d} min'
 
 
+def target(chosen, visible):
+    """The on-screen control an action uses, stable across rooms: 'door:1', 'stone:0',
+    'offer:1', 'shop:51', 'special316:50', 'encounter:20', 'start', 'heal:2'."""
+    kind = chosen.get('kind')
+    if kind == 'start':return 'start'
+    if kind == 'end':return 'end'
+    if kind == 'choose_gem':return f"stone:{(visible.get('gem_offers') or []).index(chosen['gem_id'])}"
+    if kind in ('buy_blessing', 'buy_curse'):
+        ids = [o['effect_id'] for o in visible.get('offers') or []]
+        return f"offer:{ids.index(chosen['effect_id'])}"
+    if kind in ('heal_partial', 'heal_full'):return 'heal:' + ('1' if kind == 'heal_partial' else '2')
+    code = chosen['code']
+    if visible.get('screen_kind') == 'doors':return f"door:{(code & 3)-1}" + (':disarm' if code & 8 else '')
+    if visible.get('screen_kind') == 'shop':return f'shop:{code}'
+    if visible.get('policy_menu') or 300 < (visible.get('encounter_type') or 0) < 400:
+        return f"special{visible.get('encounter_type')}:{code}"
+    return f'encounter:{code}'
+
+
 def describe(chosen, visible):
     """A short instruction for the player, e.g. 'Right door (mystery, trapped)'."""
     kind = chosen.get('kind')
@@ -267,7 +286,8 @@ class Bridge:
                     chosen = pending['choice']['action']
                     return {'decision': 'command', 'id': pending['id'], 'req': pending['choice']['req'],
                             'params': pending['choice']['params'], 'why': pending['choice']['why'],
-                            'action': chosen, 'label': describe(chosen, pending['choice']['before']['visible'])}
+                            'action': chosen, 'label': describe(chosen, pending['choice']['before']['visible']),
+                            'target': target(chosen, pending['choice']['before']['visible'])}
                 # The screen moved on without a reported command: rejoin from here.
                 state.pop('pending');state['memory'] = None
             if state.get('pending'):
@@ -333,7 +353,8 @@ class Bridge:
             self.journal({**base, 'decision': 'command', 'id': decision_id, 'req': req, 'params': params,
                           'action': result['action'], 'why': reason})
             return {'decision': 'command', 'id': decision_id, 'req': req, 'params': params, 'why': reason,
-                    'action': result['action'], 'label': describe(result['action'], visible)}
+                    'action': result['action'], 'label': describe(result['action'], visible),
+                    'target': target(result['action'], visible)}
 
     def confirm(self, request):
         character = str(request['character']);decision_id = str(request['id']);ok = bool(request.get('ok'))
@@ -380,7 +401,8 @@ class Bridge:
                 state['memory'] = None;state.pop('blocked', None);outcome = 'history_reset'
             self._save(character, state)
             self.journal({'character': character, 'decision': 'sent', 'req': req, 'params': params, 'outcome': outcome})
-            return {'committed': outcome != 'history_reset', 'outcome': outcome}
+            seen = target(matched, pending['choice']['before']['visible']) if matched is not None else None
+            return {'committed': outcome != 'history_reset', 'outcome': outcome, 'target': seen}
 
     def record(self, request):
         if self.spool is None:return {'recorded': False}

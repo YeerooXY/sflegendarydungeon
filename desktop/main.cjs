@@ -1,5 +1,5 @@
 'use strict';
-const {app, BrowserWindow, WebContentsView, ipcMain, dialog, Menu, screen} = require('electron');
+const {app, BrowserWindow, WebContentsView, ipcMain, dialog, Menu, screen, globalShortcut} = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const {pathToFileURL} = require('node:url');
@@ -10,6 +10,7 @@ const {navigationAllowed, importProfiles, validateSaved} = require('./profiles.c
 const {observeMimics} = require('./live-mimic.cjs');
 const {createRecorder} = require('./ld-recorder.cjs');
 const {createLiveAdviser, adviceScript} = require('./live-adviser.cjs');
+const {createAutoplay} = require('./autoplay.cjs');
 // Every embedded-client dungeon packet goes to the private spool for measurement.
 const recorder = createRecorder();
 
@@ -28,7 +29,7 @@ if (SMOKE || VERIFY_ORIGINAL || PRACTICE_PREVIEW) {
 app.setName('Legendary Dungeon Companion');
 let win, practice, game, host, hostOrigin = '', mode = 'game', modalOpen = false;
 // Live adviser for the original game: created once the local host is ready.
-let liveHost = null, adviser = null, lastAdvice = null;
+let liveHost = null, adviser = null, lastAdvice = null, autoplay = null;
 const earlyPackets = [];
 let fullscreen = false;
 let accounts = [], selected = '', notice = 'Sign in inside the original game to see your characters.';
@@ -38,7 +39,8 @@ let operations = Promise.resolve();
 function state() {
   return {accounts, selected, mode, notice, fullscreen,
     capabilities: {originalGame: true, practiceRecommendations: true, practiceAutoplay: true,
-                   liveRecommendations: true, liveAutoplay: false, liveMimicWarning: true},
+                   liveRecommendations: true, liveAutoplay: true, liveMimicWarning: true},
+    autoplay: autoplay ? autoplay.state() : {enabled: false, status: '', learned: 0},
     advice: lastAdvice && {decision: lastAdvice.decision, label: lastAdvice.label || ''}};
 }
 function publish() { if (win && !win.isDestroyed()) win.webContents.send('desktop:update', state()); }
@@ -118,6 +120,11 @@ async function openGame() {
   }, packet => { recorder.record(packet); livePacket(packet, account.id); });
   win.contentView.addChildView(game); layout();
   startLiveAdviser();
+  game.webContents.on('input-event', (_event, input) => {
+    if (input.type !== 'mouseDown' || !autoplay) return;
+    const bounds = game.getBounds();
+    autoplay.userClick(input.x / bounds.width, input.y / bounds.height);
+  });
   game.webContents.on('did-finish-load', () => { if (lastAdvice) showAdvice(lastAdvice); });
   // Smoke tests do not visit the game or access a user's account cookies.
   if (!SMOKE) await game.webContents.loadURL(account.origin);
@@ -126,8 +133,39 @@ function livePacket(packet, accountId) {
   if (adviser) adviser.handle(packet, accountId);
   else if (earlyPackets.length < 200) earlyPackets.push([packet, accountId]);
 }
+// Autoplay presses the learned position of a control inside the game view.
+function clickGame(x, y) {
+  if (!game || game.webContents.isDestroyed() || mode !== 'game' || modalOpen) { autoplay.stop('Autoplay paused: the game is not in view.'); return; }
+  const bounds = game.getBounds();
+  const px = Math.round(x * bounds.width), py = Math.round(y * bounds.height);
+  for (const type of ['mouseMove', 'mouseDown', 'mouseUp']) {
+    game.webContents.sendInputEvent({type, x: px, y: py, button: 'left', clickCount: 1});
+  }
+}
+function autoplayState(next) {
+  if (mode === 'game' && (next.enabled || next.status.startsWith('Autoplay') || next.status.startsWith('Learned'))) notice = next.status;
+  publish();
+}
+async function setAutoplay(on) {
+  if (typeof on !== 'boolean') throw new Error('Invalid autoplay state.');
+  if (on) {
+    const consent = path.join(app.getPath('userData'), 'autoplay-consent.json');
+    if (!fs.existsSync(consent)) {
+      const choice = await dialog.showMessageBox(win, {type: 'warning', buttons: ['Turn on autoplay', 'Cancel'], defaultId: 1, cancelId: 1,
+        title: 'Autoplay', message: 'Automated play breaks the game\'s rules.',
+        detail: 'Shakes & Fidget can suspend accounts that use automation. Autoplay only clicks what the adviser recommends, stops on anything unexpected and pauses when you click in the game. It never spends mushrooms. Use it at your own risk.'});
+      if (choice.response !== 0) return state();
+      fs.writeFileSync(consent, JSON.stringify({accepted: new Date().toISOString()}) + '\n');
+    }
+    if (mode !== 'game') await setMode('game');
+  }
+  autoplay.setEnabled(on);
+  if (on && lastAdvice) autoplay.advice(lastAdvice);
+  return state();
+}
 function showAdvice(advice) {
   lastAdvice = advice;
+  autoplay?.advice(advice);
   if (game && !game.webContents.isDestroyed()) {
     game.webContents.executeJavaScriptInIsolatedWorld(143, [{code: adviceScript(advice)}]).catch(() => {});
   }
@@ -138,7 +176,8 @@ async function startLiveAdviser() {
   if (adviser) return;
   try {
     await startHost();
-    adviser = createLiveAdviser({origin: liveHost.origin, token: liveHost.token, onAdvice: showAdvice});
+    adviser = createLiveAdviser({origin: liveHost.origin, token: liveHost.token, onAdvice: showAdvice,
+      onSent: result => autoplay?.sent(result)});
     for (const [packet, accountId] of earlyPackets.splice(0)) adviser.handle(packet, accountId);
   } catch {
     notice = 'The adviser could not start; the game still works without it.'; publish();
@@ -187,6 +226,7 @@ async function openPractice() {
 }
 async function setMode(next) {
   if (!['game', 'practice'].includes(next)) throw new Error('Unknown play mode.');
+  if (next !== 'game' && autoplay?.state().enabled) autoplay.stop('Autoplay is off: Practice is open.');
   mode = next;
   notice = next === 'game'
     ? (lastAdvice?.label ? `Adviser: ${lastAdvice.label}` : 'Original game · the adviser shows its recommendation once you enter the Legendary Dungeon.')
@@ -222,6 +262,7 @@ function handler(name, fn) {
 function registerHandlers() {
   handler('state', state);
   handler('mode', setMode);
+  handler('autoplay', setAutoplay);
   handler('modal', open => { if (typeof open !== 'boolean') throw new Error('Invalid dialog state.'); modalOpen = open; layout(); return state(); });
   handler('select', async id => {
     if (!accounts.some(a => a.id === id)) throw new Error('Unknown login profile.');
@@ -385,6 +426,10 @@ app.whenReady().then(async () => {
   savedPath = path.join(app.getPath('userData'), 'login-profiles.json');
   accounts = fs.existsSync(savedPath) ? validateSaved(JSON.parse(fs.readFileSync(savedPath, 'utf8'))) : importProfiles([{label: 'My S&F login'}]);
   selected = accounts[0]?.id; saveProfiles();
+  autoplay = createAutoplay({file: path.join(app.getPath('userData'), 'autoplay-controls.json'), click: clickGame, onState: autoplayState});
+  // F10 stops autoplay from anywhere, even when another window has focus.
+  globalShortcut.register('F10', () => autoplay.stop('Autoplay stopped (F10).'));
+  app.on('will-quit', () => globalShortcut.unregisterAll());
   win = new BrowserWindow({width: 1440, height: 1000, minWidth: 820, minHeight: 620,
     titleBarStyle: 'hidden', titleBarOverlay: {color: '#10171f', symbolColor: '#d7dfe3', height: 60},
     show: !(SMOKE || VERIFY_ORIGINAL), backgroundColor: '#101d25', autoHideMenuBar: true,

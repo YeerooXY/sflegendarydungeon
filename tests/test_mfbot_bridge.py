@@ -225,3 +225,18 @@ class LiveAdviserTests(unittest.TestCase):
         self.assertEqual(describe({'kind': 'choose_gem', 'gem_id': 6}, {}), 'Take the Pendant stone')
         self.assertEqual(describe({'kind': 'buy_blessing', 'effect_id': 3, 'key_price': 2}, {}), 'Buy Escape (2 keys)')
         self.assertEqual(duration(90), '2 min');self.assertEqual(duration(25920), '7 h 12 min')
+
+    def test_targets_name_the_control(self):
+        from sfld_live.mfbot_bridge import target
+        self.assertEqual(target({'kind': 'interact', 'code': 6}, {'screen_kind': 'doors'}), 'door:1')
+        self.assertEqual(target({'kind': 'interact', 'code': 9}, {'screen_kind': 'doors'}), 'door:0:disarm')
+        self.assertEqual(target({'kind': 'choose_gem', 'gem_id': 9}, {'gem_offers': [6, 9, 3]}), 'stone:1')
+        self.assertEqual(target({'kind': 'buy_blessing', 'effect_id': 3, 'key_price': 1},
+                                {'screen_kind': 'shop', 'offers': [{'effect_id': 1}, {'effect_id': 3}]}), 'offer:1')
+        self.assertEqual(target({'kind': 'interact', 'code': 51}, {'screen_kind': 'shop'}), 'shop:51')
+        self.assertEqual(target({'kind': 'interact', 'code': 50}, {'screen_kind': 'encounter', 'encounter_type': 316,
+                                                                    'policy_menu': [1]}), 'special316:50')
+        self.assertEqual(target({'kind': 'interact', 'code': 21}, {'screen_kind': 'encounter', 'encounter_type': 1}), 'encounter:21')
+        reply = self.decide(room=9)
+        self.assertEqual(reply['target'], 'door:' + str(int(reply['params'])-1))
+        self.assertEqual(self.sent(reply['req'], reply['params'])['target'], reply['target'])

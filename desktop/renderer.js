@@ -6,8 +6,12 @@ function render(state) {
   $('notice').parentElement.hidden = !state.notice;
   $('game').setAttribute('aria-pressed', String(state.mode === 'game'));
   $('practice').setAttribute('aria-pressed', String(state.mode === 'practice'));
-  $('mode-label').textContent = state.mode === 'practice' ? 'PRACTICE · LOCAL SIMULATION' : 'ORIGINAL GAME · MANUAL PLAY';
+  $('mode-label').textContent = state.mode === 'practice' ? 'PRACTICE · LOCAL SIMULATION' : 'ORIGINAL GAME · LIVE ADVISER';
   $('fullscreen').textContent = state.fullscreen ? 'Exit fullscreen' : 'Fullscreen';
+  const auto = state.autoplay || {enabled: false};
+  $('autoplay').setAttribute('aria-pressed', String(auto.enabled));
+  $('autoplay').textContent = auto.enabled ? 'Autoplay on · F10 stops' : 'Autoplay';
+  $('autoplay').hidden = state.mode !== 'game';
   $('profile-list').replaceChildren(...state.accounts.map(profile => {
     const row = document.createElement('button'); row.className = 'profile';
     row.setAttribute('aria-pressed', String(profile.id === state.selected));
@@ -21,6 +25,7 @@ async function closeProfiles() { $('profile-dialog').close(); await dungeonApp.m
 $('game').onclick = () => perform(() => dungeonApp.mode('game'));
 $('practice').onclick = () => perform(() => dungeonApp.mode('practice'));
 $('fullscreen').onclick = () => perform(() => dungeonApp.fullscreen());
+$('autoplay').onclick = () => perform(() => dungeonApp.autoplay($('autoplay').getAttribute('aria-pressed') !== 'true'));
 $('accounts').onclick = () => perform(async () => { await dungeonApp.modal(true); $('profile-dialog').showModal(); $('close-profiles').focus(); });
 $('close-profiles').onclick = () => perform(closeProfiles);
 $('profile-dialog').addEventListener('cancel', event => { event.preventDefault(); perform(closeProfiles); });
