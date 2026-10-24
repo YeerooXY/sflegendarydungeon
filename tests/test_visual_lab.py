@@ -157,7 +157,7 @@ class VisualLabTests(unittest.TestCase):
     def test_video_scenario_is_used_for_play_replay_and_comparison(self):
         configuration={"scenario":"mushroom-school","seed":42,"deadline_hours":24}
         result=self.lab.create(configuration); session=self.lab.session(result["session"])
-        self.assertEqual(session.observation["scenario"]["id"],"vod-working-mushroom-school-2024-v4")
+        self.assertEqual(session.observation["scenario"]["id"],"vod-working-mushroom-school-2024-v5")
         session.step(session.observation["suggestions"][1]["action"])
         recording=session.export(); replay=self.lab.create(recording["settings"],recording)
         self.assertEqual(replay["observation"],session.observation)

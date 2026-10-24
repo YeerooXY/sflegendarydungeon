@@ -4,14 +4,19 @@
 # Damage and all remaining assumptions retain their documented sources.
 # See docs/CURRENT_COMPARISON.md and docs/VOD_CONTAINER_CENSUS_2026_10_09.md.
 schema=1
-id=vod-working-mushroom-school-2024-v4
+id=vod-working-mushroom-school-2024-v5
 evidence=synthetic
-doors=locked:18.5222414789,cursed:3.81051415367,sacrifice:3.53552859619,wall:2.19988445985,destiny:1.8856152513,blessing:1.8856152513,wood:0.360100134797,stone:0.360100134797,souls:0.360100134797,metal:0.360100134797,arcane:0.360100134797,hourglasses:0.360100134797,monster:25,mystery:25,golden:8,shop:5,trial:1,unlocked:0,double_locked:0,epic:0
+doors=locked:18.5222414789,cursed:3.81051415367,sacrifice:3.53552859619,wall:2.19988445985,destiny:1.8856152513,blessing:2.37,wood:0.360100134797,stone:0.360100134797,souls:0.360100134797,metal:0.360100134797,arcane:0.360100134797,hourglasses:0.360100134797,monster:25,mystery:25,golden:8,shop:5,trial:1,unlocked:0,double_locked:0,epic:0
 # Joint families: door/mystery, door/monster, mystery/mystery, door/golden,
 # monster/mystery, golden/mystery, golden/monster, golden/golden.
-# 2191 current-event offers without known door-generation modifier stones.
+# 2191 current-event offers without known door-generation modifier stones,
+# pooled 2026-10-24 with 2722 auto-read pairs from 29 further streams
+# (tools/vod_auto_offers.py; stones unknown there). Earlier table: 1287,394,278,50,99,71,11,1.
+# Golden/door set to the census rate alone (4.1%; pooled gave 162): player report 2026-10-24
+# that golden doors are rarer in the sim than in game.
 # Physical styles normalized to legacy mass34; six hungry resources split equally.
-door_pairs=1287,394,278,50,99,71,11,1
+# Blessing raised 1.886->2.37: 8.0% of physical doors in the 29-stream census vs 5.6%.
+door_pairs=2885,933,586,201,178,139,25,6
 # Isolated Spying cohort:96 unlocked/(328 locked+96 unlocked); rounded.
 spying_unlock_fraction=0.23
 # Beside a visible monster door, enemy-on-entry weights are removed and the
@@ -20,8 +25,9 @@ mystery=monster:40,barrel:15,crate:15,silver:8,bronze:5,skeleton:5,mimic:2,empty
 # Player-selected working value 2026-10-09: 80% initial monsters in the
 # fallback mystery pool; rescale other outcomes while keeping their relative mix.
 # Double-mystery and wall overrides below, and beside-monster exclusion, remain.
-# This adopts the prior higher-monster scenario; it is not a newly measured rate.
-mystery_without_monster=monster:80,barrel:4,crate:2.5,silver:1.5,bronze:1,skeleton:7.5,mimic:1,empty:2.5
+# Key-counter routes 2026-10-24 (mystery beside locked, n=102): 79% monster,
+# 13% empty, ~5% loot. Monster stays 80; the rest is mostly empty.
+mystery_without_monster=monster:80,barrel:1,crate:1,silver:2,bronze:1,skeleton:1,mimic:1,empty:13
 # Exact alternative overrides:250 double-mystery interiors,63 mystery/wall.
 # Chest identity unresolved: preserve2% overall mimic in double mystery,
 # then use the same5/42 chest-conditional mimic share for wall; unmeasured.
@@ -36,7 +42,8 @@ destiny_rewards=1,1,1,1,1,1
 # Gold units, lucky coins, hourglass donation units, mushrooms: guessed amounts.
 destiny_reward_amounts=1,10,1,1
 # Player reports empty key rooms. Use 10% provisionally; scale the old mix to 90%.
-locked=barrel:22.5,crate:22.5,silver:18,bronze:9,skeleton:9,mimic:4.5,epic:4.5,empty:10
+# Key-counter routes 2026-10-24 (n=127): barrels 11% vs 22.5% assumed; halved.
+locked=barrel:11,crate:22.5,silver:18,bronze:9,skeleton:9,mimic:4.5,epic:4.5,empty:10
 golden=fountain:10,cleansing_fountain:3,rocks:5,lava:3,narrator:5,flooded:2,wishing_well:5,rps:5,sewers:5,undead:4,sarcophagus:5,locked_sarcophagus:3,wood:5,wheel:5,spider_legs:3,spider_head:3,spider_full:3,souls:5,arcane:5,curse_shop:5
 # Equal weights. Player image/observations 2026-10-05 supply the run restrictions.
 # Rusty is restored from the player's image; its later-only restriction is tentative.
