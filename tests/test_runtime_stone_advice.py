@@ -21,6 +21,9 @@ STATE=(ROOT/'examples/final-stone-moonstone-thirsty.state').read_text(encoding='
 CONFIG=dict(initial_state=STATE,budget=5,event_start_hour=17,run_number=2,stone_advice_samples=512)
 
 
+from engine_build import MISSING  # noqa: E402
+
+@unittest.skipUnless(EXE.is_file(), MISSING)
 class RuntimeStoneAdviceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):torch.set_num_threads(1)

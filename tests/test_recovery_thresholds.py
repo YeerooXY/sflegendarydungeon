@@ -6,12 +6,13 @@ import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.env import VectorEnv
 from sfld_rl.effect_lab import EffectLab
 from sfld_rl.player_ideas import profile_values
 from sfld_rl.recovery_thresholds import RecoveryThresholds, required_health
 
-LIB=ROOT/'build-v0612/Release/sfld_rl.dll'
+LIB=library('build-v0612')
 PROFILE=ROOT/'profiles/synthetic.profile'
 
 
@@ -21,6 +22,7 @@ def recovery(room=10,hp=0,gems='',paid=0,encounter=None):
             (f'encounter={encounter}\n' if encounter else 'doors=monster,mystery\n'))
 
 
+@unittest.skipUnless(LIB.is_file(), MISSING)
 class ThresholdTests(unittest.TestCase):
     def env(self,**kw):
         return VectorEnv(LIB,[PROFILE],1,budgets=[100],auto_reset=False,**kw)

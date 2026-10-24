@@ -4,8 +4,9 @@ import sys
 import unittest
 import importlib.util
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE=importlib.util.find_spec('numpy') is not None
-LIB=ROOT/'build-v0611/Release/sfld_rl.dll'
+LIB=library('build-v0611')
 if AVAILABLE:
     import numpy as np
     from sfld_rl.env import VectorEnv
@@ -19,7 +20,7 @@ if AVAILABLE:
 class OpeningKeysTests(unittest.TestCase):
     def test_key_guard_respects_damage_stage_traps_and_free_alternatives(self):
         profile=ROOT/'profiles/synthetic.profile'
-        with VectorEnv(ROOT/'build-v0611/Release/sfld_rl.dll',[profile],1,budgets=[1000],auto_reset=False) as env:
+        with VectorEnv(LIB,[profile],1,budgets=[1000],auto_reset=False) as env:
             env.reset();lab=EffectLab(env);rule=OpeningKeyPolicy(env,profile_values(profile),'double_lock')
             base=dict(room=12,hp=80,keys=6,gems='none',doors='monster,locked',curses='hard_lock:weak:4,clumsy:weak:5')
             def choice(changes,action='door_1'):

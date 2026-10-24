@@ -5,15 +5,17 @@ import unittest
 import numpy as np
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.env import VectorEnv
 from sfld_rl.effect_lab import EffectLab
 from sfld_rl.player_ideas import profile_values
 from sfld_rl.rusty_recovery import CASES,progress,RustyRecovery
 from sfld_rl.visual_policy import encode
 
-LIB=ROOT/'build-v0612/Release/sfld_rl.dll';PROFILE=ROOT/'profiles/synthetic.profile'
+LIB=library('build-v0612');PROFILE=ROOT/'profiles/synthetic.profile'
 
 
+@unittest.skipUnless(LIB.is_file(), MISSING)
 class RustyTests(unittest.TestCase):
     def env(self):return VectorEnv(LIB,[PROFILE],1,budgets=[0],auto_reset=False)
 

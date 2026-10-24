@@ -17,6 +17,9 @@ PROFILE=REPO/"profiles/synthetic.profile"
 OPENING="schema=1\nroom=5\nrun_number=1\nphase=doors\nhp_percent=70\nkeys=0\ndoors=shop,wall\n"
 SHOP="schema=1\nroom=82\nrun_number=2\nphase=shop\nhp_percent=55\nkeys=8\ngems=rabbit,gambler,greed\noffers=one_hit:strong:8:4,escape:strong:10:6\nshops_seen=1,2,3,4\n"
 
+from engine_build import MISSING  # noqa: E402
+
+@unittest.skipUnless(EXE.is_file(), MISSING)
 class VisualLabTests(unittest.TestCase):
     def setUp(self): self.lab=Lab(EXE,PROFILE)
     def tearDown(self): self.lab.close()

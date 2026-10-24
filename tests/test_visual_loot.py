@@ -6,12 +6,14 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from visual_lab import Lab
 
 
+@unittest.skipUnless(Path(os.environ.get('SFLD_EXE', engine('build-v0611'))).is_file(), MISSING)
 class VisualLootTests(unittest.TestCase):
     def setUp(self):
-        self.lab = Lab(Path(os.environ.get('SFLD_EXE', ROOT / 'build-v0611/Release/sfld.exe')),
+        self.lab = Lab(Path(os.environ.get('SFLD_EXE', engine('build-v0611'))),
                        ROOT / 'profiles/synthetic.profile')
 
     def tearDown(self):

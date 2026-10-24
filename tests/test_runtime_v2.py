@@ -7,8 +7,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE = importlib.util.find_spec('torch') is not None
-LIBRARY = next((p for p in (ROOT/'build-perf/Release/sfld_rl.dll', ROOT/'build/Release/sfld_rl.dll', ROOT/'build/libsfld_rl.so') if p.exists()), None)
+LIBRARY = library('build-perf') if library('build-perf').is_file() else None
 if AVAILABLE:
     import numpy as np
     import torch

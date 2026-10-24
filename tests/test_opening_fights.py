@@ -14,6 +14,9 @@ from sfld_rl.player_ideas import profile_values
 from sfld_rl.opening_fights import OpeningFightPolicy
 
 
+from engine_build import MISSING  # noqa: E402
+
+@unittest.skipUnless(default_engine().with_name('sfld_rl.dll').is_file(), MISSING)
 class OpeningFightTests(unittest.TestCase):
     def setUp(self):
         self.profile = ROOT/'profiles/synthetic.profile'

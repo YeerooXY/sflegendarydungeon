@@ -6,14 +6,16 @@ import unittest
 import numpy as np
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.effect_lab import EffectLab
 from sfld_rl.env import VectorEnv
 from sfld_rl.player_ideas import profile_values
 from sfld_rl.stone_grid import menus,position,crossover_selection,METRICS
 
-PROFILE=ROOT/'profiles/synthetic.profile';LIB=ROOT/'build-v0612/Release/sfld_rl.dll'
+PROFILE=ROOT/'profiles/synthetic.profile';LIB=library('build-v0612')
 
 
+@unittest.skipUnless(LIB.is_file(), MISSING)
 class StoneGridTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

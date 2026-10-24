@@ -8,8 +8,9 @@ from pathlib import Path
 import sys
 import unittest
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE=importlib.util.find_spec('torch') is not None
-BUILD=ROOT/os.environ.get('SFLD_TEST_BUILD','build-v0611')/'Release'
+BUILD=build_dir('build-v0611')
 if AVAILABLE:
  import numpy as np
  import torch

@@ -4,15 +4,17 @@ from pathlib import Path
 import numpy as np
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.env import VectorEnv
 from sfld_rl.player_ideas import profile_values
 from sfld_rl.shop_reserve import ShopReserve, ReserveCase
 
 
+@unittest.skipUnless(library('build-v0610').is_file(), MISSING)
 class ReserveTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        with VectorEnv(ROOT/'build-v0610/Release/sfld_rl.dll',[ROOT/'profiles/synthetic.profile'],1,budgets=[100]) as env:
+        with VectorEnv(library('build-v0610'),[ROOT/'profiles/synthetic.profile'],1,budgets=[100]) as env:
             cls.names=env.observation_names;cls.actions=env.action_names
         cls.profile=profile_values(ROOT/'profiles/synthetic.profile')
 

@@ -8,8 +8,9 @@ import importlib.util
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE=all(importlib.util.find_spec(n) is not None for n in ('numpy','torch'))
-LIB=ROOT/'build-v0611/Release/sfld_rl.dll'
+LIB=library('build-v0611')
 if AVAILABLE:
     import numpy as np
     import train_rl
@@ -23,7 +24,7 @@ class InteractionCurriculumTests(unittest.TestCase):
     def test_all_declared_states_are_valid_on_current_engine(self):
         panel=cases()
         self.assertEqual(len({c['name'] for c in panel}),len(panel))
-        with VectorEnv(ROOT/'build-v0611/Release/sfld_rl.dll',[ROOT/'profiles/synthetic.profile'],1,budgets=[1000]) as env:
+        with VectorEnv(LIB,[ROOT/'profiles/synthetic.profile'],1,budgets=[1000]) as env:
             env.reset();lab=EffectLab(env)
             for case in panel:
                 with self.subTest(case=case['name']):
@@ -33,7 +34,7 @@ class InteractionCurriculumTests(unittest.TestCase):
 
     def test_custom_bank_is_used_and_partial_episodes_are_counted(self):
         panel=[next(c for c in cases() if c['name']=='trial-guaranteed-d4-h50')]
-        with VectorEnv(ROOT/'build-v0611/Release/sfld_rl.dll',[ROOT/'profiles/synthetic.profile'],8,budgets=[1000]) as env:
+        with VectorEnv(LIB,[ROOT/'profiles/synthetic.profile'],8,budgets=[1000]) as env:
             env.reset();curriculum=EffectCurriculum(env,15500,fraction=1,cases=panel)
             try:
                 curriculum.restore_resets(np.arange(8))
@@ -47,7 +48,7 @@ class InteractionCurriculumTests(unittest.TestCase):
     def test_declared_json_requires_curriculum_and_is_in_provenance(self):
         with tempfile.TemporaryDirectory() as folder:
             p=Path(folder)/'cases.json';p.write_text(json.dumps(cases()[:1]))
-            args=train_rl.parse(['--mode','train','--output',folder,'--library',str(ROOT/'build-v0611/Release/sfld_rl.dll'),
+            args=train_rl.parse(['--mode','train','--output',folder,'--library',str(LIB),
                                  '--profile',str(ROOT/'profiles/synthetic.profile'),'--effect-curriculum','--curriculum-cases',str(p)])
             with train_rl.make_env(args,n_envs=1,profiles=[ROOT/'profiles/synthetic.profile']) as env:
                 metadata=train_rl.source_metadata(args,env)

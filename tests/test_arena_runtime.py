@@ -6,13 +6,14 @@ import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.env import VectorEnv
 from sfld_rl.effect_lab import EffectLab
 from sfld_rl.visual_advice import annotate,correct_action,trial_route
 from sfld_rl.interaction_policy import InteractionPolicy
 from sfld_rl.player_ideas import profile_values
 
-LIB=ROOT/'build-adaptive-stones/Release/sfld_rl.dll'
+LIB=library('build-adaptive-stones')
 PROFILE=ROOT/'profiles/synthetic.profile'
 
 
@@ -20,6 +21,7 @@ def state(gems='rabbit,moonstone',hp=60,blessings='none',curses='none'):
     return f'schema=1\nroom=51\nrun_number=2\nphase=doors\nhp_percent={hp}\nkeys=4\ngems={gems}\nshops_seen=2\ndoors=trial,monster\nblessings={blessings}\ncurses={curses}\n'
 
 
+@unittest.skipUnless(LIB.is_file(), MISSING)
 class ArenaRuntimeTests(unittest.TestCase):
     def setUp(self):
         self.env=VectorEnv(LIB,[PROFILE],1,budgets=[100],auto_reset=False)

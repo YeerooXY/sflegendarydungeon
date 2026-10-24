@@ -7,6 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE = importlib.util.find_spec('numpy') is not None
 if AVAILABLE:
     import numpy as np
@@ -15,8 +16,7 @@ if AVAILABLE:
     from sfld_rl.effect_residual import EffectFeatures, EffectResidual, predict_tree, export_tree
 
 LIB = next((p for p in (Path(os.environ.get('SFLD_RL_LIBRARY', '__absent__')),
-    ROOT/'build-perf/Release/sfld_rl.dll', ROOT/'build-effects/Release/sfld_rl.dll',
-    ROOT/'build/libsfld_rl.so') if p.is_file()), None)
+    library('build-perf', 'build-effects')) if p.is_file()), None)
 
 
 @unittest.skipUnless(AVAILABLE and LIB, 'Optional NumPy/native replay library absent')

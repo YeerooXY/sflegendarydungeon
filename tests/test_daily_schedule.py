@@ -10,15 +10,17 @@ import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.env import VectorEnv
 from sfld_rl.effect_lab import EffectLab
 
-LIB=Path(os.environ.get('SFLD_RL_LIB',ROOT/'build-v0612/Release/sfld_rl.dll'))
-EXE=LIB.with_name('sfld.exe')
+LIB=Path(os.environ.get('SFLD_RL_LIB',library('build-v0612')))
+EXE=LIB.with_name(engine().name)
 PROFILE=ROOT/'profiles/synthetic.profile'
 RECOVERY='schema=1\nroom=10\nrun_number=1\nphase=recovery\nresume_phase=doors\nhp_percent=0\nkeys=0\ndoors=monster,mystery\n'
 
 
+@unittest.skipUnless(LIB.is_file(), MISSING)
 class DailyScheduleTests(unittest.TestCase):
     def env(self,**kwargs):
         return VectorEnv(LIB,[PROFILE],1,budgets=[100],auto_reset=False,**kwargs)

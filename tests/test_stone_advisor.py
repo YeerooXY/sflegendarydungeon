@@ -7,17 +7,19 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.effect_lab import EffectLab
 from sfld_rl.env import VectorEnv
 from sfld_rl.stone_advisor import StoneAdvisor
 from sfld_rl.stone_grid import position
 from render_final_stone_guide import build_data
 
-LIB = ROOT/'build-v0612/Release/sfld_rl.dll'
+LIB = library('build-v0612')
 PROFILE = ROOT/'profiles/synthetic.profile'
 MENU = dict(run=2,held=['moonstone','thirsty'],offered=['deceit','rusty','pendant'],rejected=['hero','pearl','explorer','blood'])
 
 
+@unittest.skipUnless(LIB.is_file(), MISSING)
 class StoneAdvisorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

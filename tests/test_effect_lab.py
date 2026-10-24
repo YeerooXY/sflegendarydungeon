@@ -7,13 +7,13 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE=importlib.util.find_spec('numpy') is not None
 if AVAILABLE:
     import numpy as np
     from sfld_rl.env import VectorEnv
     from sfld_rl.effect_lab import EffectLab, EffectCurriculum, challenge_cases, position
-LIB=next((p for p in (Path(os.environ.get('SFLD_RL_LIBRARY','__absent__')),
-    ROOT/'build-effects/Release/sfld_rl.dll',ROOT/'build/Release/sfld_rl.dll',ROOT/'build/libsfld_rl.so') if p.is_file()),None)
+LIB=next((p for p in (Path(os.environ.get('SFLD_RL_LIBRARY','__absent__')),library('build-effects')) if p.is_file()),None)
 PROFILE=ROOT/'profiles/synthetic.profile'
 
 @unittest.skipUnless(AVAILABLE and LIB,'Optional NumPy/native replay library absent')

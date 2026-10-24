@@ -3,8 +3,9 @@ import importlib.util
 import sys
 import unittest
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE=importlib.util.find_spec('torch') is not None
-LIB=next((p for p in (ROOT/'build-effects/Release/sfld_rl.dll',ROOT/'build/Release/sfld_rl.dll',ROOT/'build/libsfld_rl.so') if p.is_file()),None)
+LIB=library('build-effects') if library('build-effects').is_file() else None
 PARENT=ROOT/'docs/rl-current-2026-10-11/shop-aware/checkpoint-000004194304.pt'
 if AVAILABLE:
     import numpy as np

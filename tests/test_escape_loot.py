@@ -6,6 +6,7 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 AVAILABLE=importlib.util.find_spec('numpy') is not None
 if AVAILABLE:
     import numpy as np
@@ -59,9 +60,9 @@ class EscapeLootTests(unittest.TestCase):
         self.state('safe_escape','encounter','skip',**{'encounter.skeleton':1});self.allow('interact')
         before=self.obs.copy();mask=self.mask.copy();self.result()
         np.testing.assert_array_equal(before,self.obs);np.testing.assert_array_equal(mask,self.mask)
-    @unittest.skipUnless((ROOT/'build/Release/sfld_rl.dll').exists(),'Native Windows library absent')
+    @unittest.skipUnless(library().is_file(), MISSING)
     def test_gold_reporting_matches_observation_and_resets(self):
-        with VectorEnv(ROOT/'build/Release/sfld_rl.dll',[ROOT/'profiles/synthetic.profile'],4,budgets=[0],seed=987) as env:
+        with VectorEnv(library(),[ROOT/'profiles/synthetic.profile'],4,budgets=[0],seed=987) as env:
             obs,masks=env.reset();np.testing.assert_array_equal(env.reward_totals()['gold_units'],0)
             for _ in range(120):
                 actions=np.argmax(masks,axis=1).astype(np.int64)

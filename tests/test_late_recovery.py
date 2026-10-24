@@ -6,14 +6,16 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
+from engine_build import MISSING, build_dir, engine, library  # noqa: E402
 from sfld_rl.late_recovery import recovery_action
 from sfld_rl.player_ideas import profile_values
 from visual_lab import Session
 
 PROFILE=ROOT/'docs/key-calibration-2026-10-18/updated.profile'
-BUILD=ROOT/os.environ.get('SFLD_TEST_BUILD','build-calibration-20261018')/'Release'
+BUILD=build_dir('build-calibration-20261018')
 
 
+@unittest.skipUnless((BUILD/'sfld_rl.dll').is_file(), MISSING)
 @unittest.skipUnless(PROFILE.exists(), 'Local research archive absent (not published)')
 class LateRecoveryTests(unittest.TestCase):
     def observation(self,room=98,hours=16,hp=0,budget=0,**changes):
