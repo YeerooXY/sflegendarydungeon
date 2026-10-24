@@ -1064,6 +1064,32 @@ void armory_requires_eligible_equipment_and_generates_only_at_90_to_98() {
         CHECK(game.state().encounter == (room >= 90 && room <= 98 ? Encounter::armory : Encounter::empty));
     }
 }
+void armory_once_per_run_schedule_offers_one_golden_wall_pair_in_90_to_98() {
+    auto p = fixed_damage(); p.armory_schedule = "once_per_run";
+    int at_90 = 0;
+    for (std::uint64_t seed = 1; seed <= 2000; ++seed) {
+        Game game(p, seed, encounter(Encounter::empty, 89)); game.step({ActionKind::interact});
+        CHECK(game.state().room == 90); CHECK(game.state().armory_room == 0 || game.state().armory_room == 90);
+        at_90 += game.state().armory_room == 90;
+    }
+    CHECK(at_90 > 160 && at_90 < 290); // 1/9 of 2000 is 222.
+    // Not yet offered by room 98: it must come now; once offered, never again.
+    auto s = encounter(Encounter::empty, 97);
+    Game last(p, 3, s); last.step({ActionKind::interact});
+    CHECK(last.state().armory_room == 98);
+    const auto& d = last.state().doors;
+    CHECK((d[0].kind == Door::golden && d[1].kind == Door::wall) || (d[0].kind == Door::wall && d[1].kind == Door::golden));
+    last.step({ActionKind::choose_door, d[0].kind == Door::golden ? 0 : 1});
+    CHECK(last.state().encounter == Encounter::armory);
+    s.armory_room = 93;
+    for (std::uint64_t seed = 1; seed <= 50; ++seed) {
+        Game game(p, seed, s); game.step({ActionKind::interact}); CHECK(game.state().armory_room == 93);
+    }
+    for (int room : {60, 89, 99}) {
+        Game game(p, 4, encounter(Encounter::empty, room - 1)); game.step({ActionKind::interact});
+        CHECK(game.state().armory_room == 0);
+    }
+}
 void auction_item_is_not_automatically_epic() {
     auto p = fixed_damage(); auto s = encounter(Encounter::auction, 30);
     p.auction_epic_chance = 0; Game ordinary(p, 2, s); ordinary.step({ActionKind::interact}); CHECK(ordinary.state().epics == 0);
@@ -1800,7 +1826,8 @@ int main() {
         TEST(targeted_rerolls_reject_weak_one_hit_and_stop_at_strong), TEST(targeted_rerolls_stop_when_capped_unaffordable_or_unavailable),
         TEST(shop_policy_accounts_for_losing_oldest_blessing), TEST(recovery_budget_can_reserve_mushrooms_for_rerolls),
         TEST(lantern_zombie_and_flying_tube_have_half_damage), TEST(pig_can_be_skipped_and_does_not_heal_a_lethal_fight),
-        TEST(armory_requires_eligible_equipment_and_generates_only_at_90_to_98), TEST(auction_item_is_not_automatically_epic),
+        TEST(armory_requires_eligible_equipment_and_generates_only_at_90_to_98),
+        TEST(armory_once_per_run_schedule_offers_one_golden_wall_pair_in_90_to_98),TEST(auction_item_is_not_automatically_epic),
         TEST(duration_gems_extend_acquired_effects_and_death_clears_them), TEST(one_hit_does_not_prevent_trap_or_poison_damage),
         TEST(cursed_traps_apply_no_direct_damage_and_poison_is_separate),
         TEST(greed_unlocks_container_blessings_only_on_the_loot_branch),

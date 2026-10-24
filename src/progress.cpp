@@ -154,6 +154,9 @@ StartState StartState::parse(std::string_view text) {
     s.reroll_bank_used = integer(take("reroll_bank_used", std::to_string(s.shop_rerolls)), 0, 1000000);
     s.trial_seen = boolean(take("trial_seen", "false"));
     s.trial_depth = integer(take("trial_depth", "0"), 0, 5);
+    s.armory_room = integer(take("armory_room", "0"), 0, 98);
+    if (s.armory_room != 0 && (s.armory_room < 90 || s.armory_room > s.room))
+        throw std::invalid_argument("armory_room must be 0 or a reached room 90-98");
     s.pending_trial_reward = integer(take("pending_trial_reward", "0"), 0, 5);
     s.donated_resource = integer(take("donated_resource", "-1"), -1, 5);
     if (s.phase == Phase::recovery) start.resume_phase = phase_from(take("resume_phase"));
@@ -357,7 +360,7 @@ std::string StartState::encode() const {
     if (first) out << "none";
     out << "\npaid_heals=" << s.paid_steps << "\nshop_rerolls=" << s.shop_rerolls
         << "\nreroll_shop_visits=" << s.reroll_shop_visits << "\nreroll_bank_used=" << s.reroll_bank_used
-        << "\ntrial_seen=" << (s.trial_seen ? "true" : "false") << "\ntrial_depth=" << s.trial_depth
+        << "\ntrial_seen=" << (s.trial_seen ? "true" : "false") << "\ntrial_depth=" << s.trial_depth << "\narmory_room=" << s.armory_room
         << "\npending_trial_reward=" << s.pending_trial_reward << "\ndonated_resource=" << s.donated_resource << '\n';
     if (s.phase == Phase::recovery) out << "resume_phase=" << name(resume_phase) << '\n';
     switch (decision_phase()) {

@@ -43,7 +43,7 @@ template<class Archive> void fields(Archive& a, PlanningSnapshot& snapshot) {
     a(s.encounter);
     for (auto& o : s.offers) { effect(a, o.effect); a(o.keys); }
     for (auto& v : s.gem_offers) a(v);
-    a(s.trial_depth); a(s.trial_seen); a(s.donated_resource); a(s.pending_trial_reward);
+    a(s.trial_depth); a(s.trial_seen); a(s.armory_room); a(s.donated_resource); a(s.pending_trial_reward);
     a(s.deaths); a(s.paid_steps); a(s.mushrooms); a(s.mushrooms_found);
     a(s.recovery_mushrooms); a(s.reroll_mushrooms); a(s.shop_rerolls);
     a(s.reroll_shop_visits); a(s.reroll_bank_used);

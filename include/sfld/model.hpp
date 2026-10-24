@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace sfld {
-inline constexpr std::string_view engine_version = "0.6.12";
+inline constexpr std::string_view engine_version = "0.6.13";
 enum class Phase { doors, encounter, shop, curse_shop, gems, recovery, complete };
 enum class Door { monster, mystery, locked, double_locked, unlocked, epic, golden,
     shop, cursed, sacrifice, blessing, destiny, wood, stone, souls, metal, arcane,
@@ -86,6 +86,7 @@ struct State {
     std::array<Gem, 3> gem_offers{};
     int trial_depth = 0;
     bool trial_seen = false;
+    int armory_room = 0; // Room of this run's scheduled Armory offer; 0 before it.
     int donated_resource = -1;
     int pending_trial_reward = 0;
     int deaths = 0;
@@ -205,6 +206,7 @@ struct Profile {
     bool free_first_level_shops = true;
     // Legacy profiles retain weighted generation.
     std::string shop_schedule = "weighted"; // weighted, one_per_stage
+    std::string armory_schedule = "weighted"; // weighted (golden table), once_per_run
     bool later_stage_one_shop = true; // Current evidence opts out; first run has room-five shop.
     // Optional inclusive absolute room windows for one_per_stage sensitivity
     // scenarios. Placement within each window is a uniform assumption. A late

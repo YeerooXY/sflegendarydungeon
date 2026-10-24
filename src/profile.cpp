@@ -160,6 +160,7 @@ Profile Profile::load(const std::string& path) {
     if (free != "true" && free != "false") throw std::invalid_argument("Expected true/false for free_first_level_shops");
     p.free_first_level_shops = free == "true";
     if (fields.contains("shop_schedule")) p.shop_schedule = take("shop_schedule");
+    if (fields.contains("armory_schedule")) p.armory_schedule = take("armory_schedule");
     if (fields.contains("shop_windows")) {
         const auto parts = split(take("shop_windows"), ',');
         if (parts.size() != 4) throw std::invalid_argument("shop_windows requires four minimum:maximum room windows");
@@ -216,6 +217,8 @@ void Profile::validate() const {
     }
     if (shop_schedule != "weighted" && shop_schedule != "one_per_stage")
         throw std::invalid_argument("shop_schedule must be weighted or one_per_stage");
+    if (armory_schedule != "weighted" && armory_schedule != "once_per_run")
+        throw std::invalid_argument("armory_schedule must be weighted or once_per_run");
     if (shop_windows) {
         if (shop_schedule != "one_per_stage")
             throw std::invalid_argument("shop_windows requires shop_schedule=one_per_stage");

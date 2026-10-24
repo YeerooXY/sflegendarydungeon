@@ -339,7 +339,7 @@ void Game::restart() {
     state_.blessings.clear(); state_.curses.clear();
     state_.paid_steps = 0; state_.shop_rerolls = 0;
     state_.shops_seen.fill(false);
-    state_.trial_depth = 0; state_.trial_seen = false; state_.pending_trial_reward = 0;
+    state_.trial_depth = 0; state_.trial_seen = false; state_.pending_trial_reward = 0; state_.armory_room = 0;
     state_.donated_resource = -1; state_.encounter = Encounter::empty;
     state_.flooded_seconds = 0; state_.phase = Phase::doors;
     random_ = Random(Random::mix(seed_ ^ static_cast<std::uint64_t>(state_.run_number)));
@@ -366,6 +366,14 @@ void Game::generate_doors() {
     if (state_.room == profile_.trial_entry_room && !state_.trial_seen) {
         // This special pair has no inferred random traps or gem-based replacement.
         state_.doors = {{{Door::monster}, {Door::trial}}}; return;
+    }
+    if (profile_.armory_schedule == "once_per_run" && state_.room >= 90 && state_.room <= 98 && state_.armory_room == 0 &&
+        random_.chance(Stream::schedule, 1.0 / (99 - state_.room))) {
+        // VODs: every run reaching rooms 90-98 met exactly one golden/wall pair
+        // there, entered as the Armory; its room looks uniform.
+        state_.armory_room = state_.room; state_.doors = {{{Door::golden}, {Door::wall}}};
+        if (random_.chance(Stream::doors, .5)) std::swap(state_.doors[0], state_.doors[1]);
+        return;
     }
     auto weights = profile_.door_weights;
     if (state_.run_number > 1 && state_.room <= 25 && !profile_.later_stage_one_shop)
@@ -583,8 +591,9 @@ void Game::enter(DoorView door) {
         if (state_.has(Gem::deceit) && random_.chance(Stream::contents, profile_.hidden_monster_chance)) state_.encounter = Encounter::monster;
         break;
     case Door::golden: {
+        if (state_.armory_room == state_.room) { state_.encounter = Encounter::armory; break; }
         auto weights = profile_.golden_weights;
-        if (state_.room < 90 || state_.room > 98) weights[ix(Encounter::armory)] = 0;
+        if (state_.room < 90 || state_.room > 98 || profile_.armory_schedule == "once_per_run") weights[ix(Encounter::armory)] = 0;
         state_.encounter = std::accumulate(weights.begin(), weights.end(), 0.0) > 0 ? sample(weights) : Encounter::empty;
         break;
     }

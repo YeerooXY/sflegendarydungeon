@@ -177,7 +177,7 @@ std::string observation_json(const Game& game) {
         << ",\"boss_damage_max\":" << game.damage_ceiling(true)
         << ",\"paid_heals\":" << s.paid_steps << ",\"shop_rerolls\":" << s.shop_rerolls
         << ",\"reroll_shop_visits\":" << s.reroll_shop_visits << ",\"reroll_bank_used\":" << s.reroll_bank_used
-        << ",\"trial_depth\":" << s.trial_depth << ",\"trial_seen\":" << s.trial_seen
+        << ",\"trial_depth\":" << s.trial_depth << ",\"trial_seen\":" << s.trial_seen << ",\"armory_room\":" << s.armory_room
         << ",\"pending_trial_reward\":" << s.pending_trial_reward
         << ",\"donated_resource\":" << (phase == Phase::encounter && s.encounter == Encounter::sated_chest ? s.donated_resource : -1)
         << ",\"actions\":" << s.actions << ",\"deaths\":" << s.deaths
@@ -263,7 +263,7 @@ std::string ui_observation_json(const Game& game, const LearnedPolicy* learned, 
     combat_forecast_json(out, game);
     door_forecast_json(out, game);
     out << ",\"scenario\":{\"id\":" << json_string(p.id) << ",\"fingerprint\":" << json_string(p.fingerprint)
-        << ",\"shop_schedule\":" << json_string(p.shop_schedule) << ",\"escape_chance\":" << p.escape_chance
+        << ",\"shop_schedule\":" << json_string(p.shop_schedule) << ",\"armory_schedule\":" << json_string(p.armory_schedule) << ",\"escape_chance\":" << p.escape_chance
         << ",\"key_chance\":" << p.key_chance << ",\"recovery_hours\":" << p.recovery_hours
         << ",\"combat_curse_chance\":" << p.combat_curse_chance
         << ",\"floor_specific_curses\":" << (p.floor_specific_curses ? "true" : "false")

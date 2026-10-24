@@ -163,7 +163,7 @@ std::string state_digest(const State& s) {
     for (auto o : s.offers) { effect(o.effect); add(static_cast<std::uint64_t>(o.keys)); }
     for (auto g : s.gem_offers) add(ix(g));
     for (bool seen : s.shops_seen) add(seen);
-    for (int n : {s.trial_depth, int(s.trial_seen), s.donated_resource, s.pending_trial_reward,
+    for (int n : {s.trial_depth, int(s.trial_seen), s.armory_room, s.donated_resource, s.pending_trial_reward,
         s.deaths, s.paid_steps, s.mushrooms, s.mushrooms_found, s.recovery_mushrooms, s.reroll_mushrooms,
         s.shop_rerolls, s.reroll_shop_visits, s.reroll_bank_used, s.epics, s.legendaries, s.gold_rewards, s.barrels_opened, s.barrels_skipped})
         add(static_cast<std::uint64_t>(n));

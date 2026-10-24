@@ -101,6 +101,9 @@ opening_shop_rerolls=disabled
 # Account has two weapons or weapon + shield, per LD Gadget's Armory rule.
 armory_bonus_eligible=false
 armory_legendary_chance=0.10
+# Guide 2026-10-24: Armory appears between rooms 90 and 98 in every theme. VODs:
+# all 17 hand-reviewed runs through rooms 90-98 met exactly one golden/wall offer there.
+armory_schedule=once_per_run
 # Placeholder: the auction promises an item, only sometimes epic.
 auction_epic_chance=0.50
 # Official F2P tutorial, 7:13: https://www.youtube.com/watch?v=jocVqAO6gkw&t=433s
