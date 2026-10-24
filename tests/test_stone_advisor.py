@@ -93,6 +93,7 @@ class StoneAdvisorTests(unittest.TestCase):
             self.forecast('schema=1\nroom=1\nrun_number=2\nphase=gems\nhp_percent=100\nkeys=0\ngem_offers=deceit,rusty,pendant\n')
 
 
+@unittest.skipUnless((ROOT/'docs/final-stones-five-2026-10-15').exists(), 'Local research archive absent (not published)')
 class FullRankingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

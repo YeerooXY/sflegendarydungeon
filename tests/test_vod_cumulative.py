@@ -37,6 +37,7 @@ class CumulativeEvidenceTests(unittest.TestCase):
         result = stat([{'blessing': False}] * 3, 'blessing', clustered=False)
         self.assertGreater(result['wilson_95'][1], .5)
 
+    @unittest.skipUnless((Path(__file__).resolve().parents[1] / 'data/vods').exists(), 'Local research archive absent (not published)')
     def test_canonical_cumulative_counts_and_cohort_separation(self):
         result = build()
         self.assertEqual(result['coverage']['current_ordinary_offers'], 6538)
