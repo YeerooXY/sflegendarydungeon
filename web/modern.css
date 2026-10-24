@@ -1,0 +1,191 @@
+/* Visual refresh, loaded last: appearance only (color, edges, depth, type).
+   Sizes and positions stay with game.css and play-shell.css. Recommended
+   actions are emerald and also carry their written "Recommended" label. */
+:root {
+  --m-surface: #0e161dd1;
+  --m-surface-solid: #0e161df2;
+  --m-raised: #ffffff0d;
+  --m-raised-hover: #ffffff17;
+  --m-hairline: #ffffff1f;
+  --m-gold-edge: #e7c66c61;
+  --m-text: #f3efe4;
+  --m-muted: #b9c5c9;
+  --m-accent: #2fbf71;
+  --m-accent-deep: #1b7f4b;
+  --m-accent-edge: #6fe3a0;
+  --m-accent-tint: #2fbf712e;
+  --m-accent-text: #effff5;
+  --m-curse-tint: #c9576a24;
+  --m-radius: 14px;
+  --m-radius-small: 10px;
+  --m-shadow: 0 18px 48px #00000073;
+  --m-font: "Segoe UI", system-ui, sans-serif;
+}
+
+/* Floating toolbar: one translucent pill with quiet buttons. */
+html .game-controls,
+html .game-view .game-controls {
+  background: var(--m-surface);
+  border: 1px solid var(--m-hairline);
+  border-radius: 999px;
+  box-shadow: var(--m-shadow);
+  backdrop-filter: blur(14px);
+}
+html .game-controls button { border-radius: 999px; color: var(--m-text); }
+html .game-controls button:hover:not(:disabled) { background: var(--m-raised-hover); color: #fff; }
+html .game-controls .game-play { background: var(--m-text); color: #13202a; }
+html .game-controls .game-play:hover:not(:disabled) { background: #fff; color: #13202a; }
+html .game-controls .game-play.is-playing { background: var(--m-accent-tint); color: var(--m-accent-text); box-shadow: inset 0 0 0 1px var(--m-accent-edge); }
+
+/* Panels: translucent cards with a thin gold edge. */
+html .scene[data-phase="recovery"] .scene-controls,
+html .play-menu {
+  background: var(--m-surface-solid);
+  border: 1px solid var(--m-gold-edge);
+  border-radius: 18px;
+  box-shadow: var(--m-shadow);
+  backdrop-filter: blur(16px);
+}
+html .scene-advice,
+html .decision-banner,
+html .game-view .scene-advice {
+  background: var(--m-surface-solid);
+  border: 1px solid var(--m-hairline);
+  border-radius: var(--m-radius-small);
+  color: var(--m-text);
+  box-shadow: 0 8px 24px #0006;
+}
+html .recovery-heading h2 { font-family: var(--m-font); font-weight: 650; letter-spacing: -.3px; }
+html .recovery-heading small, html .recovery-plan small { color: var(--m-muted); }
+html .recovery-meter { background: #ffffff12; border: 0; }
+
+/* Choices: neutral cards; the recommended one is emerald with a check mark. */
+html .scene .scene-controls .actions button,
+html .scene #refills button,
+html .recovery-targets button {
+  background: var(--m-raised);
+  background-image: none;
+  border: 1px solid var(--m-hairline);
+  border-radius: 12px;
+  color: var(--m-text);
+  box-shadow: none;
+  font-family: var(--m-font);
+}
+html .scene .scene-controls .actions button:hover:not(:disabled),
+html .scene #refills button:hover:not(:disabled),
+html .recovery-targets button:hover:not(:disabled) {
+  background: var(--m-raised-hover);
+  border-color: #ffffff3d;
+  box-shadow: none;
+}
+html .recovery-targets button.suggested,
+html .scene #refills button.suggested {
+  position: relative;
+  background: var(--m-accent-tint);
+  border: 1.5px solid var(--m-accent-edge);
+  color: var(--m-accent-text);
+  box-shadow: 0 0 22px #2fbf7140;
+}
+html .recovery-targets button.suggested::after,
+html .scene #refills button.suggested::after {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 9px;
+  font: 700 15px var(--m-font);
+  color: var(--m-accent-edge);
+}
+/* The one main action of a screen: solid emerald. */
+html .scene .scene-controls .actions button.suggested {
+  background: linear-gradient(var(--m-accent-deep), #155f37);
+  border: 1px solid var(--m-accent-edge);
+  color: var(--m-accent-text);
+  box-shadow: 0 8px 22px #1b7f4b59;
+}
+html .scene .scene-controls .actions button.suggested:hover:not(:disabled),
+html .recovery-targets button.suggested:hover:not(:disabled),
+html .scene #refills button.suggested:hover:not(:disabled) {
+  filter: brightness(1.08);
+  border-color: #b4f5cc;
+  box-shadow: 0 8px 26px #2fbf7159;
+}
+html .scene .actions button:focus-visible,
+html .recovery-targets button:focus-visible,
+html .game-controls button:focus-visible { outline: 2px solid #ffe0a0; outline-offset: 3px; }
+
+/* Door labels and the recommendation badge. */
+html .scene .door-choice .door-info {
+  background: var(--m-surface-solid);
+  border: 1px solid var(--m-hairline);
+  border-radius: var(--m-radius-small);
+  color: var(--m-text);
+  font-family: var(--m-font);
+  box-shadow: 0 6px 18px #0007;
+}
+html .scene .door-choice.recommended::after,
+html .game-view .door-choice.recommended::after {
+  background: var(--m-accent-deep);
+  border: 1px solid var(--m-accent-edge);
+  border-radius: 999px;
+  color: var(--m-accent-text);
+  box-shadow: 0 0 18px #2fbf714d;
+}
+
+/* Shop offers and stones: cards; recommended gets the emerald edge. */
+html .scene .offer,
+html .stone-choice .gem-offer,
+html .game-view .stone-choice .gem-offer {
+  background: var(--m-surface-solid);
+  background-image: none;
+  border: 1px solid var(--m-hairline);
+  border-radius: var(--m-radius);
+  box-shadow: var(--m-shadow);
+}
+html .scene .offer.recommended,
+html .stone-choice .gem-offer.recommended {
+  border: 1.5px solid var(--m-accent-edge);
+  box-shadow: 0 0 0 1px #0d2a1c, 0 0 24px #2fbf7133, var(--m-shadow);
+}
+html .scene .offer:not(.recommended) { border-color: #ffffff24; }
+html .scene .offer.selected,
+html .stone-choice .gem-offer.selected { box-shadow: 0 0 0 2px #fff1c6, var(--m-shadow); }
+html .scene .offer .offer-price {
+  background: linear-gradient(#f1d27a, #c99a3f);
+  border-radius: var(--m-radius-small);
+  color: #241a0d;
+}
+html .scene .offer .offer-price { box-shadow: none; }
+html .scene .offer-suggestion,
+html .stone-choice .gem-offer .stone-recommendation {
+  background: var(--m-accent-deep);
+  color: var(--m-accent-text);
+  border-radius: 999px;
+}
+html .stone-choice .gem-offer .stone-rating { background: #ffffff0a; border-radius: var(--m-radius-small); }
+
+/* HUD: rounded health bar (still red) and glass effect slots. */
+html .hud-health,
+html .game-view .hud-health {
+  border: 1px solid #ffffff2e;
+  border-radius: 12px;
+  background: #0b1218d9;
+  box-shadow: 0 8px 24px #0008;
+}
+html .hud-health-fill { border-radius: 9px; background: linear-gradient(#ef4a3a, #a8161d); }
+html .hud-health strong { font-family: var(--m-font); font-weight: 700; letter-spacing: 0; }
+html .hud-effects .empty-slot,
+html .game-view .hud-effects .empty-slot,
+html .game-view .hud-effect {
+  background: #ffffff0d;
+  border: 1px solid #ffffff1f;
+  border-radius: 10px;
+}
+html .hud-effect-group.curses .empty-slot { background: var(--m-curse-tint); border-color: #e8879a3d; }
+
+/* Menu dialog details. */
+html .play-menu-heading > button { border-radius: 999px; }
+html .menu-actions button, html .menu-pace select { border-radius: var(--m-radius-small); }
+
+@media (prefers-reduced-motion: reduce) {
+  html .scene .actions button, html .recovery-targets button { transition: none; }
+}

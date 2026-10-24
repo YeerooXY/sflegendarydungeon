@@ -342,6 +342,7 @@ async function smoke() {
   assert.ok(largeHud.inside && largeHud.clean, JSON.stringify(largeHud));
   assert.equal(await win.webContents.executeJavaScript('document.querySelector("footer").hidden'),true);
   fs.writeFileSync(path.join(output, 'large-screen-doors.png'), await capturePractice());
+  fs.writeFileSync(path.join(output, 'header.png'), (await win.webContents.capturePage({x: 0, y: 0, width: win.getContentSize()[0], height: 60})).toPNG());
   win.setContentSize(...originalSize); layout();
   assert.equal(practice.webContents.getZoomFactor(), 1);
   await win.webContents.executeJavaScript('window.dungeonApp.fullscreen()');

@@ -385,7 +385,7 @@ def handler_for(lab: Lab):
                 assets=json.loads(manifest.read_text(encoding="utf-8"))["assets"] if manifest.exists() else {}
                 self.reply(200,{"engine":lab.version,"assets":assets,"strategies":STRATEGIES}); return
             known={"/":"index.html","/index.html":"index.html","/app.js":"app.js","/style.css":"style.css",
-                   "/game.css":"game.css","/play-shell.css":"play-shell.css","/presentation.js":"presentation.js",
+                   "/game.css":"game.css","/play-shell.css":"play-shell.css","/modern.css":"modern.css","/presentation.js":"presentation.js",
                    "/rule-guide.html":"rule-guide.html","/rule-guide.js":"rule-guide.js",
                    "/rule-guide.css":"rule-guide.css","/rule-guide-data.json":"rule-guide-data.json"}
             if path in known: target=WEB/known[path]

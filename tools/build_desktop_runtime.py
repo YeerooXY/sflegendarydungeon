@@ -75,7 +75,7 @@ def main():
         f'python{tag}.zip\n.\nLib\\site-packages\n..\\tools\n', encoding='ascii')
 
     copy_tree(ROOT/'tools', out/'tools', {'.py', '.json'})
-    for name in ('index.html', 'app.js', 'style.css', 'game.css', 'play-shell.css', 'presentation.js',
+    for name in ('index.html', 'app.js', 'style.css', 'game.css', 'play-shell.css', 'modern.css', 'presentation.js',
                  'rule-guide.html', 'rule-guide.js', 'rule-guide.css', 'rule-guide-data.json'):
         (out/'web').mkdir(exist_ok=True);shutil.copy2(ROOT/'web'/name, out/'web'/name)
     copy_tree(ROOT/'profiles', out/'profiles', {'.profile'})
