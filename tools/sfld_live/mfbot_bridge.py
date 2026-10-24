@@ -44,6 +44,11 @@ raw numeric field MFBot passed (save words, soul stones, resources, loot), so
 values not decoded today can be read later. Rows also carry the event start, the
 level, the MFBot version and the policy's reason.
 
+The desktop app uses the same service as a live adviser (join_mid_run): it
+reports each dungeon command the game client actually sent (/sent), so the
+history follows the player's own choices, and a run already in progress is
+joined with an approximate history. Replies carry a plain-language label.
+
 Listens on 127.0.0.1 only and requires the bearer token written at startup.
 """
 from __future__ import annotations
@@ -138,14 +143,60 @@ def snapshot(visible, fields):
     return {'visible': visible, 'fields': fields}
 
 
+ACTIONS = ('iadungeoninteract', 'iadungeonstart', 'iadungeonend', 'iadungeonselectsoulstone',
+           'iadungeonmerchantbuy', 'iadungeondebuffmerchantbuy', 'iadungeongetlife')
+EFFECT_NAMES = {1: 'Raider', 2: 'One Hit', 3: 'Escape', 4: 'Disarm', 5: 'Lockpick', 6: 'Key Moment', 7: 'Elixir',
+                8: 'Recovery', 101: 'Broken Armor', 102: 'Poison', 103: 'Clumsy', 104: 'Gold Hangover', 105: 'Hard Lock'}
+STONE_NAMES = {2: 'Rabbit', 18: 'Moonstone', 9: 'Spying', 6: 'Pendant', 8: 'Greasy', 11: 'Gambler', 3: 'Greed',
+               20: 'Hero', 19: 'Time Traveler', 15: 'Thirsty', 22: 'Pearl', 13: 'Blood', 4: 'Explorer',
+               17: 'Misadventurer', 21: 'Devil', 7: 'Deceit', 10: 'Lodestone', 1: 'Bull', 16: 'Hick', 23: 'Rusty'}
+
+
+SCREEN = ('status', 'room', 'encounter_type', 'encounter_variant', 'doors', 'hp_current', 'keys', 'gems',
+          'blessings', 'curses', 'legal_actions')
+
+
+def same_screen(before, visible):
+    return all(before.get(k) == visible.get(k) for k in SCREEN)
+
+
+def duration(seconds):
+    minutes = max(1, round(seconds/60))
+    return f'{minutes} min' if minutes < 60 else f'{minutes//60} h {minutes%60:02d} min'
+
+
+def describe(chosen, visible):
+    """A short instruction for the player, e.g. 'Right door (mystery, trapped)'."""
+    kind = chosen.get('kind')
+    if kind == 'start':return 'Enter the dungeon'
+    if kind == 'end':return 'End the run'
+    if kind == 'choose_gem':return f"Take the {STONE_NAMES.get(chosen['gem_id'], 'offered')} stone"
+    if kind == 'buy_blessing':return f"Buy {EFFECT_NAMES.get(chosen['effect_id'], 'the blessing')} ({chosen['key_price']} keys)"
+    if kind == 'buy_curse':return f"Take {EFFECT_NAMES.get(chosen['effect_id'], 'the curse')} (+{chosen['keys_received']} keys)"
+    if kind in ('heal_partial', 'heal_full'):return 'Heal ' + ('partly' if kind == 'heal_partial' else 'fully')
+    code = chosen.get('code')
+    if visible.get('screen_kind') == 'doors' and code is not None and (code & 3) in (1, 2):
+        door = next((d for d in visible.get('doors') or [] if d['index'] == (code & 3)-1), None)
+        detail = []
+        if door:detail.append(door['kind'].replace('_', ' '))
+        if door and door['trap']:detail.append('trapped')
+        if code & 8:detail.append('disarm')
+        return ('Left' if code & 3 == 1 else 'Right') + ' door' + (f" ({', '.join(detail)})" if detail else '')
+    if visible.get('policy_menu'):
+        room = (visible.get('sim_encounter') or 'room').replace('_', ' ')
+        return {50: f'Use the {room}', 51: 'Leave', 90: 'Rock', 91: 'Paper', 92: 'Scissors'}.get(code, 'Continue')
+    return {20: 'Fight', 21: 'Flee', 30: 'Continue', 31: 'Continue', 40: 'Open it', 42: 'Leave it', 51: 'Leave the shop',
+            60: 'Collect', 70: 'Continue', 80: 'Reroll the shop (1 mushroom)'}.get(code, 'Continue')
+
+
 def default_directory():
     return Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'sfld' / 'mfbot-bridge'
 
 
 class Bridge:
-    def __init__(self, directory, choose=None, spool=None):
+    def __init__(self, directory, choose=None, spool=None, join_mid_run=False):
         self.directory = Path(directory);self.directory.mkdir(parents=True, exist_ok=True)
-        self.lock = threading.Lock();self.spool = spool
+        self.lock = threading.Lock();self.spool = spool;self.join_mid_run = join_mid_run
         if choose is None:
             from sfld_study.learned import choose
         self.choose = choose
@@ -209,6 +260,16 @@ class Bridge:
             if state.get('open_choice'):
                 # The first state seen after a confirmed command is that choice's outcome.
                 self.choice({'character': character, **state.pop('open_choice'), 'after': snapshot(visible, fields)})
+            if state.get('pending') and self.join_mid_run:
+                pending = state['pending']
+                if same_screen(pending['choice']['before']['visible'], visible):
+                    # The same screen again (a repeated response): repeat the advice.
+                    chosen = pending['choice']['action']
+                    return {'decision': 'command', 'id': pending['id'], 'req': pending['choice']['req'],
+                            'params': pending['choice']['params'], 'why': pending['choice']['why'],
+                            'action': chosen, 'label': describe(chosen, pending['choice']['before']['visible'])}
+                # The screen moved on without a reported command: rejoin from here.
+                state.pop('pending');state['memory'] = None
             if state.get('pending'):
                 # MFBot never confirmed the last command; its outcome is unknown.
                 state['blocked'] = 'unconfirmed command ' + state['pending']['id'];state.pop('pending')
@@ -216,6 +277,7 @@ class Bridge:
                 # The run is complete; the next one starts from a fresh history.
                 state['completed_runs'] += 1;state['memory'] = None;state.pop('blocked', None)
             visible['run_number_event'] = 1 + state.get('completed_runs', 0)
+            if self.join_mid_run:visible['join_mid_run'] = True
             if visible.get('status') == 102 and not state.get('blocked'):
                 # PROVISIONAL: the completed-run screen is answered by starting the next run.
                 reason = 'run_complete' if visible.get('theme') else 'run_complete_without_theme'
@@ -238,7 +300,7 @@ class Bridge:
                 # Moving loot into a bag slot is MFBot's inventory code, not a dungeon decision.
                 self._save(character, state)
                 self.journal({**base, 'decision': 'native', 'reason': 'item pickup'})
-                return {'decision': 'native', 'reason': 'item pickup'}
+                return {'decision': 'native', 'reason': 'item pickup', 'label': 'Pick up the item'}
             if fallback is None and reason == 'run_complete':
                 result = {'action': visible['legal_actions'][0], 'memory': None}
                 req, params = command(result['action'])
@@ -251,7 +313,7 @@ class Bridge:
             if fallback:
                 self._save(character, state)
                 self.journal({**base, 'decision': 'pause', 'reason': fallback})
-                return {'decision': 'pause', 'reason': fallback}
+                return {'decision': 'pause', 'reason': fallback, 'label': 'No advice for this screen'}
             if result['action']['kind'] == 'wait':
                 # Nothing is sent, so the wait is part of the history at once.
                 seconds = result['action']['seconds'];why = result['memory'].get('reason', 'learned')
@@ -259,7 +321,8 @@ class Bridge:
                 state['open_choice'] = self._choice_start(request, state, visible, fields, result['action'], why)
                 self._save(character, state)
                 self.journal({**base, 'decision': 'wait', 'seconds': seconds, 'why': why})
-                return {'decision': 'wait', 'seconds': seconds, 'why': why}
+                return {'decision': 'wait', 'seconds': seconds, 'why': why,
+                        'label': f'Wait {duration(seconds)} for HP to regenerate'}
             decision_id = uuid.uuid4().hex
             state['pending'] = {'id': decision_id, 'memory': result['memory'],
                                 'choice': {**self._choice_start(request, state, visible, fields, result['action'],
@@ -269,7 +332,8 @@ class Bridge:
             reason = (result['memory'] or {}).get('reason', 'fresh_entry')
             self.journal({**base, 'decision': 'command', 'id': decision_id, 'req': req, 'params': params,
                           'action': result['action'], 'why': reason})
-            return {'decision': 'command', 'id': decision_id, 'req': req, 'params': params, 'why': reason}
+            return {'decision': 'command', 'id': decision_id, 'req': req, 'params': params, 'why': reason,
+                    'action': result['action'], 'label': describe(result['action'], visible)}
 
     def confirm(self, request):
         character = str(request['character']);decision_id = str(request['id']);ok = bool(request.get('ok'))
@@ -286,6 +350,38 @@ class Bridge:
                           'error': None if ok else str(request.get('error'))[:200]})
             return {'committed': ok}
 
+    def sent(self, request):
+        """The game client sent a dungeon command (desktop): commit what was actually done.
+
+        The advised command confirms its decision. Another legal command replaces
+        the advised choice in the history. Anything else drops the run history; the
+        next screen rejoins with an approximate one (join_mid_run).
+        """
+        character = str(request['character']);req = str(request.get('req') or '');params = str(request.get('params') or '')
+        name = next((a for a in ACTIONS if req.lower().endswith(a)), None)
+        if name is None:return {'committed': False, 'outcome': 'not an action'}
+        with self.lock:
+            state = self._load(character);pending = state.pop('pending', None);matched = None
+            for a in (pending['choice']['before']['visible'].get('legal_actions') or []) if pending else []:
+                try:
+                    r, p = command(a)
+                except StudyError:
+                    continue
+                if r.lower() == name and p == params:matched = a;break
+            if matched is not None:
+                memory = pending['memory'];choice = dict(pending['choice'])
+                if matched != choice['action']:
+                    choice.update(advised=choice['action'], action=matched)
+                    if memory and memory.get('last'):memory = dict(memory, last=dict(memory['last'], choice=matched))
+                state['memory'] = memory;state['open_choice'] = choice;state.pop('blocked', None)
+                outcome = 'own_choice' if 'advised' in choice else 'advised'
+            else:
+                # An unadvised or unrecognised command: rejoin from the next screen.
+                state['memory'] = None;state.pop('blocked', None);outcome = 'history_reset'
+            self._save(character, state)
+            self.journal({'character': character, 'decision': 'sent', 'req': req, 'params': params, 'outcome': outcome})
+            return {'committed': outcome != 'history_reset', 'outcome': outcome}
+
     def record(self, request):
         if self.spool is None:return {'recorded': False}
         values = {k: v for k, v in (request.get('fields') or {}).items() if isinstance(k, str) and isinstance(v, str)}
@@ -294,13 +390,13 @@ class Bridge:
         return {'recorded': row is not None}
 
 
-def serve(bridge, port, token):
+def make_server(bridge, port, token):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
 
         def do_POST(self):
-            routes = {'/decide': bridge.decide, '/confirm': bridge.confirm, '/record': bridge.record}
+            routes = {'/decide': bridge.decide, '/confirm': bridge.confirm, '/record': bridge.record, '/sent': bridge.sent}
             if self.headers.get('Authorization') != 'Bearer ' + token or self.path not in routes:
                 self.send_response(403);self.end_headers();return
             size = int(self.headers.get('Content-Length') or 0)
@@ -314,8 +410,11 @@ def serve(bridge, port, token):
                 body = json.dumps({'decision': 'pause', 'reason': 'bridge error'}).encode();self.send_response(500)
             self.send_header('Content-Type', 'application/json');self.send_header('Content-Length', str(len(body)))
             self.end_headers();self.wfile.write(body)
-    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
-    server.serve_forever()
+    return ThreadingHTTPServer(('127.0.0.1', port), Handler)
+
+
+def serve(bridge, port, token):
+    make_server(bridge, port, token).serve_forever()
 
 
 def main():

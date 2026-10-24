@@ -110,7 +110,8 @@ class RecoveryTests(unittest.TestCase):
         self.assertAlmostEqual(v['hp_current']/v['hp_max'], .1, places=3)
         self.assertNotIn('reenter', menu);self.assertNotIn('wait_boss_safe', menu)
         self.assertEqual(menu['wait_hp_20']['seconds'], 8640);self.assertEqual(menu['wait_hp_100']['seconds'], 77760)
-        self.assertEqual(reply, {'decision': 'wait', 'seconds': 25920, 'why': 'learned'})
+        self.assertEqual(reply, {'decision': 'wait', 'seconds': 25920, 'why': 'learned',
+                                 'label': 'Wait 7 h 12 min for HP to regenerate'})
         self.assertEqual(json.loads((Path(self.dir.name)/'H_s.json').read_text())['memory']['room'], 49)
 
     def test_reentry_and_boss_retry(self):
@@ -166,3 +167,61 @@ class SpecialRoomAndRunTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class LiveAdviserTests(unittest.TestCase):
+    """Desktop mode: the real adviser, joined mid-run, follows commands the client sent."""
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.bridge = Bridge(self.dir.name, join_mid_run=True)
+
+    def tearDown(self):
+        self.dir.cleanup()
+
+    def decide(self, **extra):
+        return self.bridge.decide({'character': 'acct-1', 'level': 120, 'fields': mfbot_fields(**extra)})
+
+    def sent(self, req, params):
+        return self.bridge.sent({'character': 'acct-1', 'req': req, 'params': params})
+
+    def test_joins_a_run_in_progress_and_names_the_door(self):
+        reply = self.decide(room=9)
+        self.assertEqual(reply['decision'], 'command')
+        self.assertRegex(reply['label'], r'^(Left door \(monster\)|Right door \(mystery\))$')
+
+    def test_advised_and_own_choices_update_the_history(self):
+        reply = self.decide(room=9)
+        self.assertEqual(self.sent(reply['req'], reply['params'])['outcome'], 'advised')
+        opened = self.decide(status=10, room=10, types=(100, 0, 0), payloads=(400, 0, 0))
+        self.assertEqual(self.sent(opened['req'], opened['params'])['outcome'], 'advised')
+        rows = [json.loads(l) for l in (Path(self.dir.name)/'choices.jsonl').read_text(encoding='utf-8').splitlines()]
+        self.assertEqual(len(rows), 1);self.assertNotIn('advised', rows[0])
+        # The other door: still a legal command, recorded as the player's own choice.
+        reply = self.decide(room=10)
+        other = '2' if reply['params'] == '1' else '1'
+        self.assertEqual(self.sent('IADungeonInteract', other)['outcome'], 'own_choice')
+        self.decide(status=10, room=11, types=(1, 0, 0), payloads=(0, 0, 0))
+        row = json.loads((Path(self.dir.name)/'choices.jsonl').read_text(encoding='utf-8').splitlines()[-1])
+        self.assertEqual(row['action']['code'], int(other));self.assertEqual(row['advised']['code'], int(reply['params']))
+
+    def test_repeated_screen_repeats_advice_and_an_unreported_change_rejoins(self):
+        first = self.decide(room=9)
+        self.assertEqual(self.decide(room=9)['id'], first['id'])
+        later = self.decide(status=10, room=10, types=(1, 0, 0), payloads=(0, 0, 0))
+        self.assertEqual(later['decision'], 'command');self.assertNotEqual(later['id'], first['id'])
+
+    def test_other_requests_are_ignored_and_unknown_commands_reset_history(self):
+        self.decide(room=9)
+        self.assertEqual(self.sent('IADungeonView', '')['outcome'], 'not an action')
+        self.assertEqual(self.sent('IADungeonInteract', '77')['outcome'], 'history_reset')
+        self.assertEqual(self.decide(room=10)['decision'], 'command')
+
+    def test_labels(self):
+        from sfld_live.mfbot_bridge import describe, duration
+        doors = {'screen_kind': 'doors', 'doors': [{'index': 0, 'kind': 'locked', 'trap': 0}, {'index': 1, 'kind': 'mystery', 'trap': 3}]}
+        self.assertEqual(describe({'kind': 'interact', 'code': 5}, doors), 'Left door (locked)')
+        self.assertEqual(describe({'kind': 'interact', 'code': 10}, doors), 'Right door (mystery, trapped, disarm)')
+        self.assertEqual(describe({'kind': 'interact', 'code': 21}, {'screen_kind': 'encounter'}), 'Flee')
+        self.assertEqual(describe({'kind': 'choose_gem', 'gem_id': 6}, {}), 'Take the Pendant stone')
+        self.assertEqual(describe({'kind': 'buy_blessing', 'effect_id': 3, 'key_price': 2}, {}), 'Buy Escape (2 keys)')
+        self.assertEqual(duration(90), '2 min');self.assertEqual(duration(25920), '7 h 12 min')

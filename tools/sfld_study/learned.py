@@ -17,7 +17,26 @@ from sfld_rl.visual_policy import CHECKPOINT, CHECKPOINT_SHA
 ROOT=Path(__file__).resolve().parents[2]
 
 
+def join_history(v):
+    """Approximate history for a run joined after its first room (desktop adviser).
+
+    Counters the server does not show start from the visible state: one turn per
+    room so far, held stones as the offered set, earlier stages' shops as seen,
+    current effects as started now and no gold, mushroom or reroll history.
+    """
+    run=v['run_number_event'] if isinstance(v.get('run_number_event'),int) and v['run_number_event']>0 else 1
+    room=max(1,v['room'])
+    starts={group:{str(e['id']):{'start':room-1,'remaining':e['remaining'],'power':e['power']} for e in v.get(group) or []}
+            for group in ('blessings','curses')}
+    return {'schema':1,'run':run,'room':room,'turn':room-1,'actions':room-1,'offered':sorted(set(v.get('gems') or [])),
+            'shops':[s for s in range(1,v['stage']) if s>1 or run==1],'effect_starts':starts,'gold_units':0,
+            'gold_rewards':0,'mushrooms_found':0,'run_start_seconds':v['elapsed_seconds'],'last':None,
+            'budget_cap':v.get('budget_remaining',0),'paid_shops':[],'reroll_spent':0,'shop_rerolls':0,'joined':True}
+
+
 def update_history(v, memory):
+    if memory is None and v.get('join_mid_run') and not (v['room']==1 and v['status']==1 and not v['gems']):
+        memory=join_history(v)
     if memory is None:
         if (v['room']!=1 or v['status']!=1 or not isinstance(v['run_number_event'],int) or v['run_number_event']<1 or
             v['gems'] or v['blessings'] or v['curses'] or v['keys']!=0):
