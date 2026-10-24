@@ -6,7 +6,7 @@ for doors (cheap unmasked pass); a positive check opens a door point that lasts
 until the next fade, which is the entry into the chosen room. Per point:
 
 * a review sheet (JPEG, 960x448): the first and the last door frame (the cursor
-  sits on the clicked door), then frames 0.4, 0.8, 1.4 and 2.5 s after the fade,
+  sits on the clicked door), then frames 0.25, 0.375, 0.6 and 1.4 s after the fade,
   labelled. A reviewer (vod_door_review.py) reads the doors, the chosen side and
   the room contents from it. The unmasked door pass is kept as doors_hint.
 * repeated screens: a door frame nearly identical to an earlier point's within
@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SIZE = (320, 224)
-AFTER = (.4, .8, 1.4, 2.5)
+AFTER = (.25, .375, .6, 1.4)  # a quickly beaten monster shows only ~0.1-0.4 s after the fade
 
 
 def scan(video, layout, layout_path, art, fps, out_dir, repeat_window, dark_ratio=.5, start=0, end=None):

@@ -1,7 +1,7 @@
 """Review door-point sheets (vod_door_points.py) with a low-cost vision model.
 
 Each sheet shows a door screen (first frame, last frame at the click) and the
-first 2.5 s after entering. The model names both doors, the entered side and the
+first 1.4 s after entering. The model names both doors, the entered side and the
 initial contents of the room, from fixed vocabularies, with legend images of the
 client's door and content sprites. Calls go through the Codex CLI
 (`codex exec -m gpt-6-luna`, read-only sandbox, JSON schema output), --batch
@@ -35,8 +35,11 @@ contents (labelled sprites). Every following image is one review sheet, in order
 {names}
 
 A sheet has six tiles. Top row: the door screen's first frame, the door screen's last
-frame (the moment of the click), then +0.4 s after entering. Bottom row: +0.8 s,
-+1.4 s and +2.5 s after entering. The door screen shows a left and a right door.
+frame (the moment of the click), then +0.25 s after entering. Bottom row: +0.375 s,
++0.6 s and +1.4 s after entering. The door screen shows a left and a right door.
+The room fades in from black, so the early tiles are dark; a monster that is beaten
+at once is visible only there, often with a red flashing border, and the later
+tiles then show an empty corridor. That room is still "monster".
 
 For each sheet report:
 - left_door, right_door: the door types, from the legend names. "wall" is a solid
