@@ -1,5 +1,29 @@
 # Legendary Dungeon desktop preview
 
+## For players
+
+1. Run `Legendary-Dungeon-Companion-Setup-<version>.exe`, or the portable `.exe`, which needs no installation.
+   Nothing else is required: Python, the simulator and the adviser are included.
+2. Sign in inside the game view as usual and open the Legendary Dungeon.
+3. The **adviser** shows its recommendation at the top of the game: which door, Fight or Flee, which stone or
+   blessing to take. Door choices also get an arrow. You can always click something else; the adviser follows.
+4. **Autoplay** (header button) clicks the recommendation for you. It first needs to see each button once:
+   when it says *"Autoplay needs to learn …"*, click that button yourself and it continues. It stops when
+   - the game sends anything other than the recommended action, or does not respond;
+   - a screen has no advice, the character must wait for HP, or an item needs picking up;
+   - you click in the game, or press **F10** (works from any window).
+
+Autoplay never spends mushrooms. **Automated play breaks the game's rules, and accounts that use it can be
+suspended.** The app asks for confirmation once before autoplay first runs.
+
+The adviser reads the client version `31.500.260929.1`. After a game update it shows *"No advice for this
+screen"* until the app is updated. Practice uses plain graphics in installed copies; the game's own artwork
+is not redistributed. The adviser's decisions and choices are logged privately in
+`%LOCALAPPDATA%\sfld\desktop-adviser`.
+
+Build the installers with `npm run dist` (assembles `out/desktop-runtime`, then writes
+`out/desktop-dist`).
+
 This Windows preview hosts the original S&F browser client in a desktop window.
 Its artwork, animations, controls and sign-in remain those of the original game.
 The separate Practice view runs our simulator with the current trained adviser.
@@ -20,8 +44,9 @@ through all five fights and collects the reward. See the
 | Practice recommendations and Watch play | October 15 checkpoint; final stone choice uses fresh simulations of all three offers |
 | Prominent mimic warning in practice | Verified before the first action |
 | Mimic warning over the original game | Implemented for client `31.500.260929.1`; tested with synthetic responses, not a live dungeon encounter |
-| Live recommendations and background autoplay in this desktop app | Not connected yet |
-| Standalone installer | Not packaged yet; this preview uses the local repository and runtime |
+| Live recommendations over the original game | Implemented; tested with synthetic game responses, not yet in a live dungeon |
+| Autoplay with learned buttons | Implemented and unit-tested; button positions are learned in the live game |
+| Standalone installer | `npm run dist`: Windows installer and portable exe with a bundled Python (NumPy only) and engine |
 
 ## Start on this machine
 

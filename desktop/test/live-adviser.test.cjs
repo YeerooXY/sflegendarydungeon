@@ -8,7 +8,9 @@ const readline = require('node:readline');
 const {spawn} = require('node:child_process');
 const {readPacket, merge, createLiveAdviser, adviceScript} = require('../live-adviser.cjs');
 
-const ROOT = path.resolve(__dirname, '..', '..');
+// SFLD_TEST_RUNTIME: an assembled installer runtime (tools/build_desktop_runtime.py) with its own Python.
+const RUNTIME = process.env.SFLD_TEST_RUNTIME;
+const ROOT = RUNTIME ? path.resolve(RUNTIME) : path.resolve(__dirname, '..', '..');
 
 // Mirrors tests/test_study_automatic.py packet(): a reviewed 50-word save.
 function body({status = 1, room = 0, types = [1, 1001, 99999], payloads = [0, 0, 87654321]} = {}) {
@@ -44,7 +46,7 @@ test('the overlay script only carries fixed strings and the label as text', () =
 
 test('live adviser end to end with the local host', {timeout: 120000}, async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'sfld-live-'));
-  const python = process.env.SFLD_TEST_PYTHON || 'python';
+  const python = RUNTIME ? path.join(ROOT, 'python', 'python.exe') : process.env.SFLD_TEST_PYTHON || 'python';
   const host = spawn(python, ['-u', path.join(ROOT, 'tools/desktop_host.py')], {
     cwd: ROOT, env: {...process.env, SFLD_ADVISER_DIR: directory}, stdio: ['pipe', 'pipe', 'pipe']});
   try {

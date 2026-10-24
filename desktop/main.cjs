@@ -14,7 +14,8 @@ const {createAutoplay} = require('./autoplay.cjs');
 // Every embedded-client dungeon packet goes to the private spool for measurement.
 const recorder = createRecorder();
 
-const ROOT = path.resolve(__dirname, '..');
+// Installed: the bundled runtime (tools/build_desktop_runtime.py). Development: the repository.
+const ROOT = app.isPackaged ? path.join(process.resourcesPath, 'runtime') : path.resolve(__dirname, '..');
 const SHELL = pathToFileURL(path.join(__dirname, 'index.html')).href;
 const SMOKE = process.argv.includes('--smoke');
 const VERIFY_ORIGINAL = process.argv.includes('--verify-original');
@@ -59,11 +60,12 @@ function layout() {
   }
   // Page zoom keeps the HUD, dialogs, hit targets and reward animations in the
   // same coordinate system. Only scale Practice; the live game owns its layout.
-  if (practice) {
+  const practiceAlive = practice?.webContents && !practice.webContents.isDestroyed();
+  if (practiceAlive) {
     const zoom = Math.max(1, Math.min(2.5, width / 1440, viewHeight / 850));
     if (Math.abs(practice.webContents.getZoomFactor() - zoom) > .001) practice.webContents.setZoomFactor(zoom);
   }
-  if (practice && !practice.webContents.isLoadingMainFrame() && practice.fullscreenLayout !== fullscreen) {
+  if (practiceAlive && !practice.webContents.isLoadingMainFrame() && practice.fullscreenLayout !== fullscreen) {
     practice.fullscreenLayout = fullscreen;
     practice.webContents.executeJavaScript(`document.body.classList.toggle('native-fullscreen', ${fullscreen})`).catch(() => {
       practice.fullscreenLayout = undefined;
@@ -185,8 +187,8 @@ async function startLiveAdviser() {
 }
 async function startHost() {
   if (hostOrigin) return hostOrigin;
-  const python = path.join(ROOT, 'out/rl-env/Scripts/python.exe');
-  if (!fs.existsSync(python)) throw new Error('The local simulator environment is missing. Follow desktop/README.md.');
+  const python = [path.join(ROOT, 'python/python.exe'), path.join(ROOT, 'out/rl-env/Scripts/python.exe')].find(p => fs.existsSync(p));
+  if (!python) throw new Error('The local simulator environment is missing. Reinstall the app.');
   host = spawn(python, ['-u', path.join(ROOT, 'tools/desktop_host.py')], {
     cwd: ROOT, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'],
   });
@@ -381,7 +383,9 @@ async function smoke() {
       cursor:getComputedStyle(wait).cursor,menuMushroom:!!document.querySelector('#menu-progress .currency-icon'),
       backpack:!!document.querySelector('#hud-loot .backpack-icon')};
   })()`);
-  assert.ok(recovery.clickable);assert.equal(recovery.cursor,'default');assert.ok(recovery.menuMushroom&&recovery.backpack);
+  assert.ok(recovery.clickable);assert.equal(recovery.cursor,'default');
+  // Icons come from locally extracted game art, which installed copies do not include.
+  if (fs.existsSync(path.join(ROOT, 'web/local-assets/manifest.json'))) assert.ok(recovery.menuMushroom&&recovery.backpack);
   await new Promise(resolve => setTimeout(resolve, 150));
   fs.writeFileSync(path.join(output, 'recovery.png'), await capturePractice());
   const stoneState=fs.readFileSync(path.join(ROOT,'examples/final-stone-moonstone-thirsty.state'),'utf8');

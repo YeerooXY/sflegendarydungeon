@@ -1,6 +1,6 @@
 {
   "name": "sfld-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Local desktop host for the original S&F client and dungeon practice",
   "main": "main.cjs",
@@ -9,9 +9,64 @@
     "watch:four": "electron watch.cjs",
     "test": "node --test test/*.test.cjs",
     "test:window": "electron . --smoke",
-    "test:watch": "electron watch.cjs --smoke --pace=450 --seed=822810"
+    "test:watch": "electron watch.cjs --smoke --pace=450 --seed=822810",
+    "dist": "python ../tools/build_desktop_runtime.py && electron-builder --win nsis && electron-builder --win portable"
   },
   "devDependencies": {
-    "electron": "44.7.2"
+    "electron": "44.7.2",
+    "electron-builder": "26.17.0"
+  },
+  "productName": "Legendary Dungeon Companion",
+  "build": {
+    "appId": "io.github.yeerooxy.sfld-companion",
+    "productName": "Legendary Dungeon Companion",
+    "directories": {
+      "output": "../out/desktop-dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "profiles.cjs",
+      "live-mimic.cjs",
+      "live-adviser.cjs",
+      "autoplay.cjs",
+      "ld-recorder.cjs",
+      "index.html",
+      "renderer.js",
+      "style.css",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../out/desktop-runtime",
+        "to": "runtime"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Legendary-Dungeon-Companion-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Legendary-Dungeon-Companion-${version}-portable.${ext}"
+    }
   }
 }

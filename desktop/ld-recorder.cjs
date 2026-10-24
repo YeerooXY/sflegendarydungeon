@@ -6,7 +6,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const RULES = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'tools', 'sfld_record', 'fields.json'), 'utf8'));
+// Development: the repository's tools; installed: the bundled runtime's copy.
+const RULES_FILE = [path.join(__dirname, '..', 'tools', 'sfld_record', 'fields.json'),
+  path.join(process.resourcesPath || '', 'runtime', 'tools', 'sfld_record', 'fields.json')].find(p => fs.existsSync(p));
+const RULES = JSON.parse(fs.readFileSync(RULES_FILE, 'utf8'));
 const NUMERIC = /^-?\d+(?:\/-?\d+)*$/;
 const base = key => key.split(/[.(]/)[0].toLowerCase();
 
