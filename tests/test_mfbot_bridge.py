@@ -56,10 +56,13 @@ class BridgeTests(unittest.TestCase):
         self.decide(status=10, room=1, types=(100, 0, 0), payloads=(400, 0, 0))
         rows = [json.loads(l) for l in (Path(self.dir.name)/'choices.jsonl').read_text(encoding='utf-8').splitlines()]
         self.assertEqual(len(rows), 1);row = rows[0]
-        self.assertEqual([d['kind'] for d in row['before']['doors']], ['monster', 'mystery'])
-        self.assertEqual(row['action'], self.policy.calls[0][0]['legal_actions'][0])
-        self.assertEqual((row['after']['status'], row['after']['encounter_type'], row['after']['encounter_variant']), (10, 100, 400))
-        self.assertIn('iadungeon', row['before']['fields'])
+        before, after = row['before']['visible'], row['after']['visible']
+        self.assertEqual([d['kind'] for d in before['doors']], ['monster', 'mystery'])
+        self.assertEqual(row['action'], before['legal_actions'][0])
+        self.assertEqual((after['status'], after['encounter_type'], after['encounter_variant']), (10, 100, 400))
+        self.assertEqual((before['stage'], before['gems'], row['run_number_event'], row['level']), (1, [], 1, 120))
+        self.assertIsNotNone(row['event_start']);self.assertEqual(row['id'], reply['id'])
+        self.assertIn('iadungeon', row['before']['fields']);self.assertIn('iadungeonsoulstones', row['after']['fields'])
         # An unconfirmed command logs no choice.
         self.decide()
         self.assertEqual(len((Path(self.dir.name)/'choices.jsonl').read_text(encoding='utf-8').splitlines()), 1)

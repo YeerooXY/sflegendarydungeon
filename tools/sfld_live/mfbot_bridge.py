@@ -35,10 +35,14 @@ decoder was reviewed against "iadungeonsave". Both use the same 50-word
 layout, so a 50-word "iadungeon" is aliased when no "iadungeonsave" is present.
 Every alias is journaled for the event-day packet check.
 
-Every confirmed command is logged with the state it was chosen in and the next
-state seen: choices.jsonl rows {before, action, after}, for event odds such as
-what is behind each door (doors, traps, the chosen door, then the room's
-encounter, effects and resources). The raw numeric fields are kept on both sides.
+Every confirmed command and every wait is logged with the state it was chosen in
+and the next state seen: choices.jsonl rows {before, action, after}, for event
+odds such as what is behind each door. Each side keeps the whole decoded state
+(room, stage, theme, run of the event, doors and traps, encounter, HP, keys,
+stones, blessings and curses with their durations, menu, shop offers) and every
+raw numeric field MFBot passed (save words, soul stones, resources, loot), so
+values not decoded today can be read later. Rows also carry the event start, the
+level, the MFBot version and the policy's reason.
 
 Listens on 127.0.0.1 only and requires the bearer token written at startup.
 """
@@ -130,12 +134,8 @@ def recovery(visible, fields):
     return v, hp
 
 
-SNAPSHOT = ('status', 'screen_kind', 'room', 'stage', 'theme', 'encounter_type', 'encounter_variant', 'doors',
-            'hp_current', 'hp_max', 'keys', 'gems', 'blessings', 'curses', 'mushrooms', 'elapsed_seconds')
-
-
 def snapshot(visible, fields):
-    return {**{k: visible.get(k) for k in SNAPSHOT}, 'fields': fields}
+    return {'visible': visible, 'fields': fields}
 
 
 def default_directory():
@@ -169,6 +169,12 @@ class Bridge:
     def choice(self, entry):
         with (self.directory / 'choices.jsonl').open('a', encoding='utf-8') as stream:
             stream.write(json.dumps({'at': time.time(), **entry}, separators=(',', ':')) + '\n')
+
+    @staticmethod
+    def _choice_start(request, state, visible, fields, chosen, why):
+        return {'event_start': state.get('event_start'), 'run_number_event': visible.get('run_number_event'),
+                'level': request.get('level'), 'mfbot_version': request.get('mfbot_version'), 'why': why,
+                'before': snapshot(visible, fields), 'action': chosen}
 
     def visible(self, fields, level):
         fields = {k: v for k, v in fields.items() if isinstance(k, str) and isinstance(v, str) and NUMERIC.fullmatch(v)}
@@ -248,14 +254,17 @@ class Bridge:
                 return {'decision': 'pause', 'reason': fallback}
             if result['action']['kind'] == 'wait':
                 # Nothing is sent, so the wait is part of the history at once.
-                state['memory'] = result['memory'];self._save(character, state)
                 seconds = result['action']['seconds'];why = result['memory'].get('reason', 'learned')
+                state['memory'] = result['memory']
+                state['open_choice'] = self._choice_start(request, state, visible, fields, result['action'], why)
+                self._save(character, state)
                 self.journal({**base, 'decision': 'wait', 'seconds': seconds, 'why': why})
                 return {'decision': 'wait', 'seconds': seconds, 'why': why}
             decision_id = uuid.uuid4().hex
             state['pending'] = {'id': decision_id, 'memory': result['memory'],
-                                'choice': {'before': snapshot(visible, fields), 'action': result['action'], 'req': req,
-                                           'params': params}}
+                                'choice': {**self._choice_start(request, state, visible, fields, result['action'],
+                                                                (result['memory'] or {}).get('reason', 'fresh_entry')),
+                                           'req': req, 'params': params, 'id': decision_id}}
             self._save(character, state)
             reason = (result['memory'] or {}).get('reason', 'fresh_entry')
             self.journal({**base, 'decision': 'command', 'id': decision_id, 'req': req, 'params': params,
