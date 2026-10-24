@@ -9,6 +9,7 @@ const readline = require('node:readline');
 const {navigationAllowed, importProfiles, validateSaved} = require('./profiles.cjs');
 const {observeMimics} = require('./live-mimic.cjs');
 const {createRecorder} = require('./ld-recorder.cjs');
+const {createLiveAdviser, adviceScript} = require('./live-adviser.cjs');
 // Every embedded-client dungeon packet goes to the private spool for measurement.
 const recorder = createRecorder();
 
@@ -26,6 +27,9 @@ if (SMOKE || VERIFY_ORIGINAL || PRACTICE_PREVIEW) {
 }
 app.setName('Legendary Dungeon Companion');
 let win, practice, game, host, hostOrigin = '', mode = 'game', modalOpen = false;
+// Live adviser for the original game: created once the local host is ready.
+let liveHost = null, adviser = null, lastAdvice = null;
+const earlyPackets = [];
 let fullscreen = false;
 let accounts = [], selected = '', notice = 'Sign in inside the original game to see your characters.';
 let exiting = false, savedPath;
@@ -34,7 +38,8 @@ let operations = Promise.resolve();
 function state() {
   return {accounts, selected, mode, notice, fullscreen,
     capabilities: {originalGame: true, practiceRecommendations: true, practiceAutoplay: true,
-                   liveRecommendations: false, liveAutoplay: false, liveMimicWarning: true}};
+                   liveRecommendations: true, liveAutoplay: false, liveMimicWarning: true},
+    advice: lastAdvice && {decision: lastAdvice.decision, label: lastAdvice.label || ''}};
 }
 function publish() { if (win && !win.isDestroyed()) win.webContents.send('desktop:update', state()); }
 function saveProfiles() {
@@ -109,12 +114,35 @@ async function openGame() {
   protect(game);
   game.mimics = observeMimics(game.webContents, warning => {
     if (warning.kind === 'mimic') notice = `Room ${warning.room}: MIMIC — fake chest. The warning uses the currently revealed encounter.`;
-    else if (mode === 'game') notice = 'Original game · manual play. Live recommendations and autoplay are not connected in this preview.';
     publish();
-  }, packet => recorder.record(packet));
+  }, packet => { recorder.record(packet); livePacket(packet, account.id); });
   win.contentView.addChildView(game); layout();
+  startLiveAdviser();
+  game.webContents.on('did-finish-load', () => { if (lastAdvice) showAdvice(lastAdvice); });
   // Smoke tests do not visit the game or access a user's account cookies.
   if (!SMOKE) await game.webContents.loadURL(account.origin);
+}
+function livePacket(packet, accountId) {
+  if (adviser) adviser.handle(packet, accountId);
+  else if (earlyPackets.length < 200) earlyPackets.push([packet, accountId]);
+}
+function showAdvice(advice) {
+  lastAdvice = advice;
+  if (game && !game.webContents.isDestroyed()) {
+    game.webContents.executeJavaScriptInIsolatedWorld(143, [{code: adviceScript(advice)}]).catch(() => {});
+  }
+  if (mode === 'game') notice = advice.label ? `Adviser: ${advice.label}` : notice;
+  publish();
+}
+async function startLiveAdviser() {
+  if (adviser) return;
+  try {
+    await startHost();
+    adviser = createLiveAdviser({origin: liveHost.origin, token: liveHost.token, onAdvice: showAdvice});
+    for (const [packet, accountId] of earlyPackets.splice(0)) adviser.handle(packet, accountId);
+  } catch {
+    notice = 'The adviser could not start; the game still works without it.'; publish();
+  }
 }
 async function startHost() {
   if (hostOrigin) return hostOrigin;
@@ -131,7 +159,9 @@ async function startHost() {
       try {
         const record = JSON.parse(line);
         if (!ready && record.ready && /^http:\/\/127\.0\.0\.1:\d+$/.test(record.origin)) {
-          ready = true; clearTimeout(timeout); hostOrigin = record.origin; resolve(hostOrigin);
+          ready = true; clearTimeout(timeout); hostOrigin = record.origin;
+          if (/^http:\/\/127\.0\.0\.1:\d+$/.test(record.live || '') && typeof record.token === 'string') liveHost = {origin: record.live, token: record.token};
+          resolve(hostOrigin);
         }
       } catch { /* Engine diagnostics are never displayed as account data. */ }
     });
@@ -159,7 +189,7 @@ async function setMode(next) {
   if (!['game', 'practice'].includes(next)) throw new Error('Unknown play mode.');
   mode = next;
   notice = next === 'game'
-    ? 'Original game · manual play. Live advice and autoplay are not connected in this desktop preview.'
+    ? (lastAdvice?.label ? `Adviser: ${lastAdvice.label}` : 'Original game · the adviser shows its recommendation once you enter the Legendary Dungeon.')
     : '';
   layout(); publish();
   if (next === 'game') await openGame(); else await openPractice();
