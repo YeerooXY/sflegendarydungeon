@@ -8,8 +8,8 @@ from .visual_advice import annotate, correct_action
 from .visual_ratings import rate_stones
 
 ROOT=Path(__file__).resolve().parents[2]
-CHECKPOINT=ROOT/'docs/interaction-training-2026-10-15/ordinary/checkpoint-000016777216.pt'
-CHECKPOINT_SHA='9689128e5df57f75724b6c0384a3df040d866f283629b4bb9d4c61e630fba59e'
+CHECKPOINT=ROOT/'docs/finetune-v6-2026-10-24/checkpoint-000008388608.pt'
+CHECKPOINT_SHA='896e593f5d74b0fd1c75f996f6090b48f1bffdbbec78f0dcb4a1b694455fd9e0'
 
 def encode(o,names,actions):
     x={n:0. for n in names}
