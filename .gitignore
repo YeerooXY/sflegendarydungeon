@@ -12,3 +12,22 @@ __pycache__/
 *.private.json
 /study/
 /web/local-assets/
+
+# Research archives and footage data stay local (not published).
+/data/
+/docs/*
+!/docs/AGENT_RULES.md
+!/docs/BENCHMARK.md
+!/docs/CLIENT_INSPECTION.md
+!/docs/DATA.md
+!/docs/EVENT_PILOT.md
+!/docs/EXPERIMENTS.md
+!/docs/GEM_POOLS.md
+!/docs/MECHANICS.md
+!/docs/MODEL.md
+!/docs/PROGRESS.md
+!/docs/RESEARCH.md
+!/docs/SHOPS.md
+!/docs/client-inspection-2026-10-05.json
+!/docs/event-pilot-2026-10-05.json
+!/docs/mechanics-evidence.json
