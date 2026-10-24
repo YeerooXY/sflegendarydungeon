@@ -14,6 +14,10 @@ def action(kind, index=0):
     return dict(kind=kind, index=index, value=0)
 
 
+from engine_build import MISSING  # noqa: E402
+
+
+@unittest.skipUnless(default_engine().is_file(), MISSING)
 class DecisionForecastTests(unittest.TestCase):
     def setUp(self):
         self.lab = Lab(default_engine(), ROOT / 'profiles/synthetic.profile')
