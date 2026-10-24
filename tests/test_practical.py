@@ -11,6 +11,7 @@ if AVAILABLE:
  from sfld_rl.practical import Practical
  from sfld_rl.player_ideas import profile_values
 
+@unittest.skipUnless((ROOT/'docs/player-ideas-2026-10-11/schema.json').exists(), 'Local research archive absent (not published)')
 @unittest.skipUnless(AVAILABLE,'Optional NumPy is absent')
 class PracticalTests(unittest.TestCase):
  def state(self,case,phase,action,**values):

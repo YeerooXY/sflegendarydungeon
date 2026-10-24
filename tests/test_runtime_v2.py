@@ -19,6 +19,7 @@ if AVAILABLE:
 
 @unittest.skipUnless(AVAILABLE and LIBRARY, 'Optional RL environment absent')
 class RuntimeTests(unittest.TestCase):
+    @unittest.skipUnless((ROOT/'docs/rl-current-2026-10-11/shop-aware/checkpoint-000004194304.pt').exists(), 'Local research archive absent (not published)')
     def test_host_shop_masks_preserve_sampled_and_greedy_outputs(self):
         checkpoint = ROOT/'docs/rl-current-2026-10-11/shop-aware/checkpoint-000004194304.pt'
         for device in ['cpu'] + (['cuda'] if torch.cuda.is_available() else []):
@@ -34,6 +35,7 @@ class RuntimeTests(unittest.TestCase):
                         for a,b in zip(expected, actual): torch.testing.assert_close(a,b,rtol=0,atol=0)
                     obs,masks,*_ = env.step(actual[0].cpu().numpy())
 
+    @unittest.skipUnless((ROOT/'docs/rl-current-2026-10-11/shop-aware/checkpoint-000004194304.pt').exists(), 'Local research archive absent (not published)')
     def test_specialized_action_wrapper_is_not_bypassed(self):
         class Specialized(ShopPolicyActor):
             calls = 0

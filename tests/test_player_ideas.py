@@ -15,6 +15,7 @@ if AVAILABLE:
     from sfld_rl.player_ideas import CASES, PlayerIdeas, profile_values
 
 
+@unittest.skipUnless((ROOT/'docs/shop-arena-2026-10-11/schema.json').exists(), 'Local research archive absent (not published)')
 @unittest.skipUnless(AVAILABLE, 'Optional NumPy/Torch dependencies are absent')
 class PlayerIdeaTests(unittest.TestCase):
     def state(self, case, phase, action, **values):

@@ -199,6 +199,7 @@ class CohortTests(WorkspaceTest):
             with self.assertRaisesRegex(ValueError, 'Cohort overlaps'):
                 study.check_cohorts(self.plan())
 
+    @unittest.skipUnless(Path('docs/rule-strategy-2026-10-09/final/manifest.json').exists(), 'Local research archive absent (not published)')
     def test_rejects_overlap_with_published_previous_final_cohort(self):
         plan = self.plan()
         previous = Path('docs/rule-strategy-2026-10-09/final/manifest.json')

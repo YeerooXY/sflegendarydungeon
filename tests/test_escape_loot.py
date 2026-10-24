@@ -14,6 +14,7 @@ if AVAILABLE:
     from sfld_rl.env import VectorEnv
 
 
+@unittest.skipUnless((ROOT/'docs/player-ideas-2026-10-11/schema.json').exists(), 'Local research archive absent (not published)')
 @unittest.skipUnless(AVAILABLE,'Optional NumPy is absent')
 class EscapeLootTests(unittest.TestCase):
     def state(self,case,phase,action,**values):

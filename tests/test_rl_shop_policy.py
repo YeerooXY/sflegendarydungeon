@@ -13,6 +13,7 @@ if AVAILABLE:
     from sfld_rl.shop_policy import with_shop, profile_config
     from sfld_rl.ppo import ActorCritic
 
+@unittest.skipUnless((ROOT/'docs/pendant-adaptation-2026-10-11/control/selected-checkpoint.pt').exists(), 'Local research archive absent (not published)')
 @unittest.skipUnless(AVAILABLE,'Optional Torch absent')
 class ShopPolicyTests(unittest.TestCase):
     @classmethod
@@ -84,6 +85,7 @@ class ShopPolicyTests(unittest.TestCase):
         gb=torch.autograd.grad(b.entropy().sum()+vb.sum(),params)
         for x,y in zip(ga,gb):torch.testing.assert_close(x,y,rtol=0,atol=0)
 
+    @unittest.skipUnless((ROOT/'docs/effect-slots-2026-10-11/source/tools/sfld_rl/shop_policy.py').exists(), 'Local research archive absent (not published)')
     def test_fast_masks_match_frozen_torch_rules(self):
         # Independent pre-optimization implementation, preserved with the study.
         path=ROOT/'docs/effect-slots-2026-10-11/source/tools/sfld_rl/shop_policy.py'

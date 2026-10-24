@@ -16,6 +16,7 @@ if AVAILABLE:
     from sfld_rl.stone_priority import with_priority
 
 
+@unittest.skipUnless((ROOT/'docs/shop-arena-2026-10-11/schema.json').exists(), 'Local research archive absent (not published)')
 @unittest.skipUnless(AVAILABLE, 'Optional Torch dependencies missing')
 class StonePriorityTests(unittest.TestCase):
     def setUp(self):

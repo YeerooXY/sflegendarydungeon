@@ -14,6 +14,7 @@ if AVAILABLE:
     from benchmark_rl_shop_arena import paired
 
 
+@unittest.skipUnless((ROOT/'docs/shop-arena-2026-10-11/schema.json').exists(), 'Local research archive absent (not published)')
 @unittest.skipUnless(AVAILABLE, 'Optional training dependencies are absent')
 class ShopArenaRules(unittest.TestCase):
     @classmethod

@@ -14,6 +14,7 @@ PROFILE=ROOT/'docs/key-calibration-2026-10-18/updated.profile'
 BUILD=ROOT/os.environ.get('SFLD_TEST_BUILD','build-calibration-20261018')/'Release'
 
 
+@unittest.skipUnless(PROFILE.exists(), 'Local research archive absent (not published)')
 class LateRecoveryTests(unittest.TestCase):
     def observation(self,room=98,hours=16,hp=0,budget=0,**changes):
         fields=dict(schema=1,room=room,run_number=3,phase='recovery',resume_phase='doors',
