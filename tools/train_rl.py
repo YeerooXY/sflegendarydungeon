@@ -132,6 +132,22 @@ def environment_changes(saved_signature, current_metadata, *, resume=False):
     return changed
 
 
+def environment_transfer(saved_signature, current_metadata):
+    """Changes allowed by --transfer-environment: a new engine build, library or
+    profile whose observation and action layouts are exactly the parent's."""
+    old, new = saved_signature.get('schema') or {}, current_metadata.get('schema') or {}
+    for key in set(old) | set(new):
+        if key != 'engine' and old.get(key) != new.get(key):
+            raise ValueError(f'Environment transfer changes the observation/action schema: {key}')
+    current = compact_metadata(current_metadata)
+    changed = {key: {'parent': saved_signature.get(key), 'new': current.get(key)}
+               for key in ('library_sha256', 'profile_sha256', 'schema_sha256')
+               if saved_signature.get(key) != current.get(key)}
+    if old.get('engine') != new.get('engine'):
+        changed['engine'] = {'parent': old.get('engine'), 'new': new.get('engine')}
+    return changed
+
+
 @contextmanager
 def evaluation_rng(device, seed):
     devices = [device.index if device.index is not None else torch.cuda.current_device()] if device.type == 'cuda' else []
@@ -293,7 +309,11 @@ def initialize_finetune(args, env, config, device):
     ancestor_seeds = parent_lineage.get('ancestor_root_seeds', []) + [str(parent_metadata['seed'])]
     if any(seed_fingerprint(seed) == seed_fingerprint(args.seed) for seed in ancestor_seeds):
         raise ValueError('Fine-tuning requires a fresh root-seed fingerprint distinct from every parent run')
-    environment_changes(parent_metadata['environment_signature'], env.metadata, resume=True)
+    transfer = getattr(args, 'transfer_environment', False)
+    if transfer:
+        transferred = environment_transfer(parent_metadata['environment_signature'], env.metadata)
+    else:
+        environment_changes(parent_metadata['environment_signature'], env.metadata, resume=True)
     priority = getattr(args, 'stone_priority', 'learned')
     shop_config = profile_config(args.profiles, getattr(args, 'shop_policy', 'learned'))
     if shop_config != parent_metadata.get('shop_policy'):
@@ -302,14 +322,18 @@ def initialize_finetune(args, env, config, device):
         model = with_priority(model, priority, env.metadata['schema'])
     if shop_config is not None:
         model = with_shop(model, env.metadata['schema'], shop_config)
-    checked = {}
+    checked = {};source_changes = {}
     for path, fingerprint in parent_metadata['sources'].items():
         # The trainer implements the intentional new fine-tuning workflow.
         # Native sources, the environment adapter and PPO math stay frozen.
         if path.replace('\\', '/') == 'tools/train_rl.py':
             continue
-        if sha(ROOT / path) != fingerprint:
-            raise ValueError(f'Fine-tuning dependency source changed: {path}')
+        current = sha(ROOT / path) if (ROOT / path).exists() else None
+        if current != fingerprint:
+            if not transfer:
+                raise ValueError(f'Fine-tuning dependency source changed: {path}')
+            # A transfer is to the current engine and adapter; record what moved.
+            source_changes[path] = {'parent': fingerprint, 'new': current};continue
         checked[path] = fingerprint
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, eps=1e-5)
     parent_rates = [group['lr'] for group in saved['optimizer']['param_groups']]
@@ -344,6 +368,10 @@ def initialize_finetune(args, env, config, device):
                                          'parent_learning_rates': parent_rates,
                                          'applied_learning_rates': [group['lr'] for group in optimizer.param_groups]},
                   'verified_dependency_sources': checked,
+                  **({'environment_transfer': {'changed': transferred, 'changed_sources': source_changes,
+                                               'note': 'Weights moved to a new engine build or profile with an identical '
+                                                       'observation/action schema; not a continuation of the parent environment.'}}
+                     if transfer else {}),
                   'architecture': 'Inherited exactly from parent; --hidden applies only to new models.',
                   'fresh_experiment': 'New root RNG, event indices starting at zero, new step/event counts and validation selection; no parent best score carried over.'}
     # Never restore the parent RNG. Model reconstruction consumes randomness,
@@ -646,6 +674,9 @@ def parse(argv=None):
     starting = p.add_mutually_exclusive_group()
     starting.add_argument('--resume', type=Path, help='Continue the same frozen experiment and optimizer settings')
     starting.add_argument('--finetune-from', type=Path, help='New experiment from saved weights/Adam moments; requested PPO settings apply')
+    p.add_argument('--transfer-environment', action='store_true',
+                   help='With --finetune-from: allow a new engine build, library or profile when the observation and '
+                        'action schema is identical (engine version aside); the changes are recorded')
     p.add_argument('--checkpoint', type=Path)
     p.add_argument('--events', type=int, default=10000)
     p.add_argument('--eval-action', choices=['greedy', 'sample'], default='greedy')
@@ -675,6 +706,8 @@ def parse(argv=None):
         p.error('--checkpoint and --teacher are evaluation options; use --resume or --finetune-from for training')
     if args.mode == 'evaluate' and (args.resume or args.finetune_from):
         p.error('--resume and --finetune-from are training options')
+    if args.transfer_environment and not args.finetune_from:
+        p.error('--transfer-environment requires --finetune-from')
     if args.finetune_from and args.bc_steps:
         p.error('--finetune-from cannot be combined with teacher cloning (--bc-steps)')
     if args.shop_policy != 'learned' and (args.stone_priority != 'learned' or args.bc_steps):

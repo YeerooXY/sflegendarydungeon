@@ -225,6 +225,30 @@ class RLTrainingTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'dependency source changed'):
                     train_rl.initialize_finetune(args, env, PPOConfig(), torch.device('cpu'))
 
+    def test_environment_transfer_allows_new_build_or_profile_only_with_identical_schema(self):
+        with tempfile.TemporaryDirectory(prefix='sfld-finetune-test-') as directory:
+            path, _, _, metadata, args = self.parent_checkpoint(directory)
+            schema = {'schema': 1, 'engine': '0.6.11', 'observation_names': ['a'], 'action_names': ['x']}
+            metadata['environment']['schema'] = schema
+            metadata['environment_signature'] = train_rl.compact_metadata(metadata['environment'])
+            train_rl.checkpoint(Path(directory)/'p2.pt', *train_rl.load_checkpoint(path, 'cpu')[1:2],
+                                torch.optim.Adam(train_rl.load_checkpoint(path, 'cpu')[1].parameters()), {}, metadata, PPOConfig())
+            args.finetune_from = Path(directory)/'p2.pt';args.transfer_environment = True
+            env = SimpleNamespace(metadata=copy.deepcopy(metadata['environment']))
+            env.metadata.update(library_sha256='new', schema={**schema, 'engine': '0.6.13'}, schema_sha256='new')
+            env.metadata['profiles'][0]['sha256'] = 'v6'
+            actual_sha = train_rl.sha
+            with patch.object(train_rl, 'sha', side_effect=lambda p: 'changed' if Path(p).name == 'engine.cpp' else actual_sha(p)):
+                _, _, provenance = train_rl.initialize_finetune(args, env, PPOConfig(), torch.device('cpu'))
+            moved = provenance['environment_transfer']
+            self.assertEqual(set(moved['changed']), {'library_sha256', 'profile_sha256', 'schema_sha256', 'engine'})
+            self.assertIn('src/engine.cpp', moved['changed_sources'])
+            env.metadata['schema'] = {**schema, 'engine': '0.6.13', 'observation_names': ['a', 'b']}
+            with self.assertRaisesRegex(ValueError, 'observation_names'):
+                train_rl.initialize_finetune(args, env, PPOConfig(), torch.device('cpu'))
+        with self.assertRaises(SystemExit), patch('sys.stderr'):
+            train_rl.parse(['--mode', 'train', '--output', 'x', '--transfer-environment'])
+
     def test_finetune_starts_new_counts_and_revalidates_step_zero(self):
         with tempfile.TemporaryDirectory(prefix='sfld-finetune-test-') as directory:
             path, _, _, metadata, args = self.parent_checkpoint(directory)
