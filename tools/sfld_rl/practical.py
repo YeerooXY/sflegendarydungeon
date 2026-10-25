@@ -6,7 +6,7 @@ import numpy as np
 from .escape_loot import EscapeLoot
 
 CASES = ('learned', 'shop5', 'keys', 'trials', 'trades', 'tactics', 'patient52', 'patient_safe')
-REASONS = ('soldier', 'shop', 'reserve_keys', 'late_door', 'trial', 'trade', 'boss_wait', 'free_gold')
+REASONS = ('soldier', 'shop', 'reserve_keys', 'late_door', 'trial', 'trade', 'boss_wait', 'free_gold', 'doomed_loot')
 
 
 class Practical(EscapeLoot):
@@ -39,6 +39,13 @@ class Practical(EscapeLoot):
         free_gold=(self.flag(obs,'phase.encounter')&self.flag(obs,'encounter.sarcophagus')&
                    masks[:,self.ai['interact']]&(actual!=self.ai['interact']))
         actual[free_gold]=self.ai['interact'];reasons[free_gold,REASONS.index('free_gold')]=True
+        # Leaving kills when poison exceeds HP after the exit heal. Death clears
+        # every effect, so the cursed chest's curse is free and its wood is not.
+        rusty=np.where(self.flag(obs,'owned_gem.rusty'),1.4,1)
+        doomed=np.minimum(1,self.v(obs,'hp')+self.effect(obs,'recovery')*rusty)-self.effect(obs,'poison')<=1e-6
+        doomed_loot=(self.flag(obs,'phase.encounter')&self.flag(obs,'encounter.cursed_chest')&doomed&
+                     masks[:,self.ai['interact']]&(actual!=self.ai['interact']))
+        actual[doomed_loot]=self.ai['interact'];reasons[doomed_loot,REASONS.index('doomed_loot')]=True
         if self.variant=='learned':
             # A new One Hit Wonder replaces the old one in place. Never pay
             # (even zero keys) for strictly fewer protected rooms than skipping.
