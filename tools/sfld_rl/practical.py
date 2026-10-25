@@ -6,7 +6,7 @@ import numpy as np
 from .escape_loot import EscapeLoot
 
 CASES = ('learned', 'shop5', 'keys', 'trials', 'trades', 'tactics', 'patient52', 'patient_safe')
-REASONS = ('soldier', 'shop', 'reserve_keys', 'late_door', 'trial', 'trade', 'boss_wait')
+REASONS = ('soldier', 'shop', 'reserve_keys', 'late_door', 'trial', 'trade', 'boss_wait', 'free_gold')
 
 
 class Practical(EscapeLoot):
@@ -34,6 +34,11 @@ class Practical(EscapeLoot):
         actual,old=super().apply(obs,masks,proposed)
         targets=np.full(len(obs),-1.,dtype=np.float64)
         reasons=np.zeros((len(obs),len(REASONS)),bool);reasons[:,0]=old[:,0]
+        # The unlocked sarcophagus pays gold for one action, with no key and no
+        # risk; the policy is trained on clears only and may skip it. Always open.
+        free_gold=(self.flag(obs,'phase.encounter')&self.flag(obs,'encounter.sarcophagus')&
+                   masks[:,self.ai['interact']]&(actual!=self.ai['interact']))
+        actual[free_gold]=self.ai['interact'];reasons[free_gold,REASONS.index('free_gold')]=True
         if self.variant=='learned':
             # A new One Hit Wonder replaces the old one in place. Never pay
             # (even zero keys) for strictly fewer protected rooms than skipping.
